@@ -60,7 +60,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <CardTitle className="text-2xl">Crear cuenta</CardTitle>
-          <CardDescription>Únete a ShopApp hoy</CardDescription>
+          <CardDescription>Únete a JumpUp hoy</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>

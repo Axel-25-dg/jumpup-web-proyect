@@ -38,7 +38,7 @@ export default function AppShell() {
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4">
           <Link to="/" className="flex items-center gap-2 font-bold text-primary">
             <ShoppingBag className="h-5 w-5" />
-            <span>ShopApp</span>
+            <span>JumpUp</span>
           </Link>
 
           <Separator orientation="vertical" className="h-6" />
@@ -144,7 +144,7 @@ export default function AppShell() {
       </main>
 
       <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-        ShopApp © {new Date().getFullYear()}
+        JumpUp © {new Date().getFullYear()}
       </footer>
     </div>
   )

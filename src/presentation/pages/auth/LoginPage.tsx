@@ -55,7 +55,7 @@ export default function LoginPage() {
               <ShoppingBag className="h-6 w-6" />
             </div>
           </div>
-          <CardTitle className="text-2xl">ShopApp</CardTitle>
+          <CardTitle className="text-2xl">JumpUp</CardTitle>
           <CardDescription>Inicia sesión para continuar</CardDescription>
         </CardHeader>
 

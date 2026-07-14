@@ -1,5 +1,5 @@
-const ACCESS_TOKEN_KEY = 'shopappaccess'
-const REFRESH_TOKEN_KEY = 'shopapprefresh'
+const ACCESS_TOKEN_KEY = 'jumpupacess'
+const REFRESH_TOKEN_KEY = 'jumpuprefresh'
 
 export const localTokenStorage = {
   setTokens(access: string, refresh: string) {

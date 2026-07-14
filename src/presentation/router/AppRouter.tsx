@@ -7,6 +7,8 @@ import PlaceholderPage from '../pages/PlaceholderPage'
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
+const CatalogPage = lazy(() => import('../pages/catalog/CatalogPage'))
+const ProductDetailPage = lazy(() => import('../pages/catalog/ProductDetailPage'))
 
 function PageLoader() {
   return (
@@ -31,9 +33,9 @@ export default function AppRouter() {
           <Route path="/register" element={<RegisterPage />} />
 
           <Route element={<AppShell />}>
-            <Route path="/" element={<PlaceholderPage title="Catálogo — Módulo 4" />} />
-            <Route path="/catalog" element={<PlaceholderPage title="Catálogo — Módulo 4" />} />
-            <Route path="/products/:id" element={<PlaceholderPage title="Detalle de producto — Módulo 5" />} />
+            <Route path="/" element={<CatalogPage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/products/:id" element={<ProductDetailPage />} />
 
             <Route path="/cart" element={<ProtectedRoute><PlaceholderPage title="Carrito — Módulo 6" /></ProtectedRoute>} />
             <Route path="/orders" element={<ProtectedRoute><PlaceholderPage title="Órdenes — Módulo 7" /></ProtectedRoute>} />
