@@ -1,0 +1,45 @@
+name: Deploy React
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependencias y Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Subir archivos al VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          source: "dist/*"
+          target: "/tmp/react_build"
+
+      - name: Activar el build en el servidor
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_KEY }}
+          script: |
+            mkdir -p /var/www/react-app
+            rm -rf /var/www/react-app/*
+            cp -r /tmp/react_build/dist/* /var/www/react-app/
+            chown -R www-data:www-data /var/www/react-app
+            nginx -t
+            systemctl reload nginx
