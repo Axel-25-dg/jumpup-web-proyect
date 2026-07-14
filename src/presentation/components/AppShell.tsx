@@ -143,9 +143,9 @@ export default function AppShell() {
         </div>
       </main>
 
-      <footer className="border-t py-4 text-center text-sm text-muted-foreground">
-        <div>JumpUp © {new Date().getFullYear()}</div>
-        <div className="mt-1 text-xs">Autores: Macías, Guamán, Paucar</div>
+      <footer className="border-t py-6 text-center text-muted-foreground">
+        <div className="text-lg font-semibold">JumpUp © {new Date().getFullYear()}</div>
+        <div className="mt-2 text-base font-medium">Autores: Macías, Guamán, Paucar</div>
       </footer>
     </div>
   )
