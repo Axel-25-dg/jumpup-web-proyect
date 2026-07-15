@@ -7,14 +7,17 @@ import { formatPrice } from '@/presentation/utils/formatters'
 import { Badge } from '@/presentation/components/ui/badge'
 import { Button } from '@/presentation/components/ui/button'
 import { Skeleton } from '@/presentation/components/ui/skeleton'
+import { useCartStore } from '@/presentation/store/cart.store'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { addItem: addToCart, isLoading: cartIsLoading } = useCartStore()
 
   const [product, setProduct] = useState<Product | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [quantity, setQuantity] = useState(1)
 
   useEffect(() => {
     if (!id) return
@@ -28,6 +31,16 @@ export default function ProductDetailPage() {
       .catch(() => setError('No se pudo cargar el producto.'))
       .finally(() => setIsLoading(false))
   }, [id])
+
+  const handleAddToCart = async () => {
+    if (!product) return
+    try {
+      await addToCart(product.id, quantity)
+      navigate('/cart')
+    } catch (err) {
+      console.error('Error al agregar al carrito:', err)
+    }
+  }
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-6">
@@ -80,14 +93,32 @@ export default function ProductDetailPage() {
 
             <p className="text-sm leading-relaxed text-muted-foreground">{product.description}</p>
 
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 rounded-lg border p-2">
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-2 py-1 text-muted-foreground hover:text-foreground"
+                >
+                  −
+                </button>
+                <span className="w-8 text-center">{quantity}</span>
+                <button
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-2 py-1 text-muted-foreground hover:text-foreground"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             <Button
               size="lg"
               className="mt-auto"
-              disabled={product.stock === 0}
-              title="Disponible en el módulo 6"
+              disabled={product.stock === 0 || cartIsLoading}
+              onClick={handleAddToCart}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
-              Agregar al carrito
+              {cartIsLoading ? 'Agregando...' : 'Agregar al carrito'}
             </Button>
           </div>
         </div>

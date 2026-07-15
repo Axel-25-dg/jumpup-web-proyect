@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, LogOut, Package, ShoppingBag, ShoppingCart, User } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
+import { useCartStore } from '@/presentation/store/cart.store'
 import { Button } from '@/presentation/components/ui/button'
 import { Badge } from '@/presentation/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
@@ -25,7 +26,8 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
 export default function AppShell() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
-  const cartItemCount = 0
+  const { cart } = useCartStore()
+  const cartItemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0
 
   async function handleLogout() {
     await logout()
@@ -44,19 +46,34 @@ export default function AppShell() {
           <Separator orientation="vertical" className="h-6" />
 
           <nav className="flex items-center gap-4">
-            <NavLink to="/catalog" className={navLinkClass}>
-              Catálogo
-            </NavLink>
             {user && (
               <>
-                <NavLink to="/orders" className={navLinkClass}>
-                  Pedidos
+                <NavLink to="/dashboard" className={navLinkClass}>
+                  Dashboard
                 </NavLink>
-                <NavLink to="/profile" className={navLinkClass}>
-                  Perfil
+                <NavLink to="/courses" className={navLinkClass}>
+                  Cursos
+                </NavLink>
+                <NavLink to="/chat" className={navLinkClass}>
+                  Tutor IA
+                </NavLink>
+                <NavLink to="/forum" className={navLinkClass}>
+                  Foro
+                </NavLink>
+                <NavLink to="/social" className={navLinkClass}>
+                  Social
+                </NavLink>
+                <NavLink to="/classrooms" className={navLinkClass}>
+                  Aulas
+                </NavLink>
+                <NavLink to="/certificates" className={navLinkClass}>
+                  Certificados
                 </NavLink>
               </>
             )}
+            <NavLink to="/catalog" className={navLinkClass}>
+              Catálogo
+            </NavLink>
             {user?.is_staff && (
               <NavLink to="/admin" className={navLinkClass}>
                 Admin
