@@ -18,8 +18,9 @@ function toAuthSession(raw: RawAuthResponse): AuthSession {
 export class AxiosAuthRepository implements AuthRepository {
   async login(username: string, password: string): Promise<AuthSession> {
     try {
+      // El backend espera 'email' en lugar de 'username'
       const { data } = await apiClient.post<RawAuthResponse>('/auth/login/', {
-        username,
+        email: username,
         password,
       })
       const session = toAuthSession(data)

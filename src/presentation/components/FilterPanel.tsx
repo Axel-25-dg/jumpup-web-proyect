@@ -14,12 +14,10 @@ import { useCatalogStore } from '@/presentation/store/catalog.store'
 
 function FilterContent() {
   const resetFilters = useCatalogStore((s) => s.resetFilters)
-  const fetchProducts = useCatalogStore((s) => s.fetchProducts)
   const activeFilterCount = useCatalogStore((s) => s.activeFilterCount)
 
   const handleReset = () => {
     resetFilters()
-    fetchProducts()
   }
 
   return (

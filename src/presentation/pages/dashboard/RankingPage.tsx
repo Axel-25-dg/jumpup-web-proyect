@@ -26,7 +26,9 @@ export default function RankingPage() {
     async function fetchLanguages() {
       try {
         const langRes = await apiClient.get<Language[]>('/languages/')
-        setLanguages(langRes.data)
+        if (Array.isArray(langRes.data)) {
+          setLanguages(langRes.data)
+        }
       } catch (err) {
         console.error('Error fetching languages:', err)
       }
@@ -42,9 +44,14 @@ export default function RankingPage() {
           ? `/ranking/?language=${selectedLanguage}`
           : '/ranking/'
         const rankRes = await apiClient.get<RankingUser[]>(url)
-        setRanking(rankRes.data)
+        if (Array.isArray(rankRes.data)) {
+          setRanking(rankRes.data)
+        } else {
+          setRanking([])
+        }
       } catch (err) {
         console.error('Error fetching ranking:', err)
+        setRanking([])
       } finally {
         setIsLoading(false)
       }
@@ -94,9 +101,9 @@ export default function RankingPage() {
                 </div>
               </div>
               <p className="font-semibold text-sm truncate max-w-[100px]">{ranking[1].user__username}</p>
-              <div className="bg-slate-100 dark:bg-slate-800 rounded-t-lg p-3 w-full h-24 flex flex-col justify-center">
+              <div className="bg-slate-100 rounded-t-lg p-3 w-full h-24 flex flex-col justify-center">
                 <span className="text-xs text-muted-foreground">Nivel {ranking[1].level}</span>
-                <span className="font-bold text-sm text-slate-700 dark:text-slate-300">{ranking[1].total_xp} XP</span>
+                <span className="font-bold text-sm text-slate-700">{ranking[1].total_xp} XP</span>
               </div>
             </div>
           )}
@@ -113,9 +120,9 @@ export default function RankingPage() {
                 </div>
               </div>
               <p className="font-extrabold text-sm truncate max-w-[120px]">{ranking[0].user__username}</p>
-              <div className="bg-amber-100/50 dark:bg-amber-950/20 border border-amber-200 rounded-t-xl p-4 w-full h-32 flex flex-col justify-center">
-                <span className="text-xs text-amber-700 dark:text-amber-400 font-semibold">Nivel {ranking[0].level}</span>
-                <span className="font-extrabold text-base text-amber-800 dark:text-amber-300">{ranking[0].total_xp} XP</span>
+              <div className="bg-amber-100/50 border border-amber-200 rounded-t-xl p-4 w-full h-32 flex flex-col justify-center">
+                <span className="text-xs text-amber-700 font-semibold">Nivel {ranking[0].level}</span>
+                <span className="font-extrabold text-base text-amber-800">{ranking[0].total_xp} XP</span>
               </div>
             </div>
           )}
@@ -132,7 +139,7 @@ export default function RankingPage() {
                 </div>
               </div>
               <p className="font-semibold text-sm truncate max-w-[100px]">{ranking[2].user__username}</p>
-              <div className="bg-amber-50/30 dark:bg-amber-950/10 rounded-t-lg p-3 w-full h-20 flex flex-col justify-center">
+              <div className="bg-amber-50/30 rounded-t-lg p-3 w-full h-20 flex flex-col justify-center">
                 <span className="text-xs text-muted-foreground">Nivel {ranking[2].level}</span>
                 <span className="font-bold text-sm text-amber-700">{ranking[2].total_xp} XP</span>
               </div>

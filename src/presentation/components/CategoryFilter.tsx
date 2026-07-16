@@ -10,11 +10,9 @@ export function CategoryFilter({ layout = 'horizontal' }: CategoryFilterProps) {
   const categories = useCatalogStore((s) => s.categories)
   const filters = useCatalogStore((s) => s.filters)
   const setFilters = useCatalogStore((s) => s.setFilters)
-  const fetchProducts = useCatalogStore((s) => s.fetchProducts)
 
   const handleSelect = (categoryId: number | null) => {
     setFilters({ categoryId })
-    fetchProducts()
   }
 
   const containerClass =

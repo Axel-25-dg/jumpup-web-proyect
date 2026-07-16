@@ -8,6 +8,7 @@ interface AuthState {
   user: LoggedUser | null
   tokens: AuthTokens | null
   isLoading: boolean
+  isInitialized: boolean // Nuevo estado para saber si ya intentamos cargar la sesión
   error: string | null
 }
 
@@ -31,13 +32,14 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => {
     user: null,
     tokens: null,
     isLoading: false,
+    isInitialized: false,
     error: null,
 
     async login(username, password) {
       set({ isLoading: true, error: null })
       try {
         const { user, tokens } = await authUseCase.login({ username, password })
-        set({ user, tokens, isLoading: false })
+        set({ user, tokens, isLoading: false, isInitialized: true })
       } catch (err: unknown) {
         const apiErr = err as { detail?: string; message?: string }
         set({
@@ -52,7 +54,7 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => {
       set({ isLoading: true, error: null })
       try {
         const { user, tokens } = await authUseCase.register({ username, email, password })
-        set({ user, tokens, isLoading: false })
+        set({ user, tokens, isLoading: false, isInitialized: true })
       } catch (err: unknown) {
         const apiErr = err as { detail?: string; message?: string }
         set({
@@ -66,16 +68,23 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => {
     async logout() {
       set({ isLoading: true })
       await authUseCase.logout()
-      set({ user: null, tokens: null, isLoading: false, error: null })
+      set({ user: null, tokens: null, isLoading: false, isInitialized: true, error: null })
     },
 
     async loadSession() {
+      // Si ya está inicializado, no re-intentar para evitar bucles
+      if (get().isInitialized) return;
+
       set({ isLoading: true })
-      const session = await authUseCase.restoreSession()
-      if (session) {
-        set({ user: session.user, tokens: session.tokens, isLoading: false })
-      } else {
-        set({ user: null, tokens: null, isLoading: false })
+      try {
+        const session = await authUseCase.restoreSession()
+        if (session) {
+          set({ user: session.user, tokens: session.tokens, isLoading: false, isInitialized: true })
+        } else {
+          set({ user: null, tokens: null, isLoading: false, isInitialized: true })
+        }
+      } catch {
+        set({ user: null, tokens: null, isLoading: false, isInitialized: true })
       }
     },
 

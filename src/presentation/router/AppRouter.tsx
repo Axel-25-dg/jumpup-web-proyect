@@ -7,13 +7,14 @@ import PlaceholderPage from '../pages/PlaceholderPage'
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
+const HomePage = lazy(() => import('../pages/home/HomePage'))
 const CatalogPage = lazy(() => import('../pages/catalog/CatalogPage'))
 const ProductDetailPage = lazy(() => import('../pages/catalog/ProductDetailPage'))
 const CartPage = lazy(() => import('../pages/cart/CartPage'))
 const OrderConfirmationPage = lazy(() => import('../pages/cart/OrderConfirmationPage'))
 const OrderHistoryPage = lazy(() => import('../pages/cart/OrderHistoryPage'))
 
-// New Student Modules
+// Student Modules
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'))
 const RankingPage = lazy(() => import('../pages/dashboard/RankingPage'))
 const CoursesPage = lazy(() => import('../pages/learning/CoursesPage'))
@@ -25,60 +26,104 @@ const ClassroomsPage = lazy(() => import('../pages/classrooms/ClassroomsPage'))
 const LiveSessionPage = lazy(() => import('../pages/live/LiveSessionPage'))
 const CertificatesPage = lazy(() => import('../pages/certificates/CertificatesPage'))
 
+// Admin & Teacher
+const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'))
+const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
+
 function PageLoader() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+    <div className="flex min-h-screen items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+        <p className="text-xs font-black uppercase tracking-widest text-sky-600 animate-pulse">Saltando...</p>
+      </div>
     </div>
   )
 }
 
+// Componente para proteger rutas públicas (si está logueado, va al dashboard)
+function PublicRoute({ children }: { children: React.ReactNode }) {
+  const user = useAuthStore((s) => s.user)
+  const isLoading = useAuthStore((s) => s.isLoading)
+  const isInitialized = useAuthStore((s) => s.isInitialized)
+
+  if (!isInitialized || isLoading) return <PageLoader />
+
+  if (user) {
+    const defaultPaths: Record<string, string> = {
+      admin: '/admin',
+      teacher: '/teacher',
+      student: '/dashboard'
+    }
+    return <Navigate to={defaultPaths[user.role] || '/dashboard'} replace />
+  }
+
+  return <>{children}</>
+}
+
 export default function AppRouter() {
-  const loadSession = useAuthStore((state) => state.loadSession)
+  const loadSession = useAuthStore((s) => s.loadSession)
+  const isInitialized = useAuthStore((s) => s.isInitialized)
 
   useEffect(() => {
-    loadSession()
-  }, [loadSession])
+    if (!isInitialized) {
+      loadSession()
+    }
+  }, [isInitialized, loadSession])
 
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* Rutas que NO deben verse si ya estás logueado */}
+          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
+          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
 
           <Route element={<AppShell />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
 
-            <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-            <Route path="/ranking" element={<ProtectedRoute><RankingPage /></ProtectedRoute>} />
-            <Route path="/courses" element={<ProtectedRoute><CoursesPage /></ProtectedRoute>} />
-            <Route path="/courses/:courseId/lessons/:lessonId" element={<ProtectedRoute><LessonPage /></ProtectedRoute>} />
-            <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-            <Route path="/forum" element={<ProtectedRoute><ForumPage /></ProtectedRoute>} />
-            <Route path="/social" element={<ProtectedRoute><SocialFeedPage /></ProtectedRoute>} />
-            <Route path="/classrooms" element={<ProtectedRoute><ClassroomsPage /></ProtectedRoute>} />
-            <Route path="/live/:id" element={<ProtectedRoute><LiveSessionPage /></ProtectedRoute>} />
-            <Route path="/certificates" element={<ProtectedRoute><CertificatesPage /></ProtectedRoute>} />
+            {/* Student Protected Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+               <Route path="/dashboard" element={<DashboardPage />} />
+               <Route path="/ranking" element={<RankingPage />} />
+               <Route path="/courses" element={<CoursesPage />} />
+               <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
+               <Route path="/chat" element={<ChatPage />} />
+               <Route path="/social" element={<SocialFeedPage />} />
+               <Route path="/certificates" element={<CertificatesPage />} />
+               <Route path="/cart" element={<CartPage />} />
+               <Route path="/order-confirmation/:id" element={<OrderConfirmationPage />} />
+               <Route path="/orders" element={<OrderHistoryPage />} />
+            </Route>
 
-            <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-            <Route path="/order-confirmation/:id" element={<ProtectedRoute><OrderConfirmationPage /></ProtectedRoute>} />
-            <Route path="/orders" element={<ProtectedRoute><OrderHistoryPage /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><PlaceholderPage title="Perfil — Módulo 7" /></ProtectedRoute>} />
+            {/* Teacher Protected Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
+               <Route path="/teacher" element={<TeacherDashboardPage />} />
+            </Route>
 
-            <Route path="/admin" element={<ProtectedRoute requireStaff><PlaceholderPage title="Admin Dashboard — Módulo 8" /></ProtectedRoute>} />
-            <Route path="/admin/categories" element={<ProtectedRoute requireStaff><PlaceholderPage title="Admin Categorías — Módulo 9" /></ProtectedRoute>} />
-            <Route path="/admin/products" element={<ProtectedRoute requireStaff><PlaceholderPage title="Admin Productos — Módulo 10" /></ProtectedRoute>} />
-            <Route path="/admin/orders" element={<ProtectedRoute requireStaff><PlaceholderPage title="Admin Órdenes — Módulo 11" /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute requireStaff><PlaceholderPage title="Admin Usuarios — Módulo 12" /></ProtectedRoute>} />
+            {/* Shared Authenticated Routes (Students & Teachers) */}
+            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher']} />}>
+               <Route path="/forum" element={<ForumPage />} />
+               <Route path="/classrooms" element={<ClassroomsPage />} />
+               <Route path="/live/:id" element={<LiveSessionPage />} />
+               <Route path="/profile" element={<PlaceholderPage title="Mi Perfil" />} />
+            </Route>
+
+            {/* Admin Protected Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+               <Route path="/admin" element={<AdminDashboardPage />} />
+               <Route path="/admin/users" element={<PlaceholderPage title="Gestión de Usuarios" />} />
+               <Route path="/admin/categories" element={<PlaceholderPage title="Categorías del Sistema" />} />
+               <Route path="/admin/products" element={<PlaceholderPage title="Inventario de Productos" />} />
+               <Route path="/admin/orders" element={<PlaceholderPage title="Registro de Ventas" />} />
+            </Route>
           </Route>
 
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
   )
 }
-

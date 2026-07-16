@@ -1,5 +1,10 @@
 import AppRouter from './presentation/router/AppRouter'
+import { WebSocketProvider } from './presentation/context/WebSocketContext'
 
 export default function App() {
-  return <AppRouter />
+  return (
+    <WebSocketProvider>
+      <AppRouter />
+    </WebSocketProvider>
+  )
 }

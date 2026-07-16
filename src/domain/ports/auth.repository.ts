@@ -7,7 +7,7 @@ export interface AuthSession {
 }
 
 export interface AuthRepository {
-  login(username: string, password: string): Promise<AuthSession>
+  login(email: string, password: string): Promise<AuthSession>
   register(username: string, email: string, password: string): Promise<AuthSession>
   logout(): Promise<void>
   getCurrentUser(): Promise<LoggedUser>

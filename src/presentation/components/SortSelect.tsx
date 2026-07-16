@@ -24,11 +24,9 @@ const SORT_OPTIONS: SortOption[] = [
 export function SortSelect() {
   const ordering = useCatalogStore((s) => s.filters.ordering)
   const setFilters = useCatalogStore((s) => s.setFilters)
-  const fetchProducts = useCatalogStore((s) => s.fetchProducts)
 
   const handleChange = (value: string) => {
     setFilters({ ordering: value as OrderingOption })
-    fetchProducts()
   }
 
   return (

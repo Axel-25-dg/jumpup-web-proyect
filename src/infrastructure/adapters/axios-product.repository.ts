@@ -23,7 +23,13 @@ export class AxiosProductRepository implements ProductRepository {
       const { data } = await apiClient.get<PaginatedResult<Product>>('/products/', { params })
       return data
     } catch (err) {
-      throw parseApiError(err)
+      // Intento fallback si el 404 es por la barra diagonal
+      try {
+        const { data } = await apiClient.get<PaginatedResult<Product>>('/products', { params })
+        return data
+      } catch {
+        throw parseApiError(err)
+      }
     }
   }
 

@@ -12,7 +12,15 @@ export class AxiosCategoryRepository implements CategoryRepository {
       })
       return data.results
     } catch (err) {
-      throw parseApiError(err)
+      // Fallback si falla por el trailing slash
+      try {
+        const { data } = await apiClient.get<PaginatedResult<Category>>('/categories', {
+          params: { page_size: 100 },
+        })
+        return data.results
+      } catch {
+        throw parseApiError(err)
+      }
     }
   }
 }
