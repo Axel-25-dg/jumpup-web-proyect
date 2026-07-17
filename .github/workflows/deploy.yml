@@ -16,6 +16,10 @@ jobs:
           node-version: 20
           cache: 'npm'
 
+      - name: Crear archivo .env para el build
+        run: |
+          printf "%s" "${{ secrets.REACT_ENV }}" > .env.production
+
       - name: Instalar dependencias y Build
         run: |
           npm install
