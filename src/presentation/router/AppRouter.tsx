@@ -29,6 +29,8 @@ const CertificatesPage = lazy(() => import('../pages/certificates/CertificatesPa
 // Admin & Teacher
 const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'))
 const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
+const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
+const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
 
 function PageLoader() {
   return (
@@ -115,7 +117,9 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                <Route path="/admin" element={<AdminDashboardPage />} />
                <Route path="/admin/users" element={<PlaceholderPage title="Gestión de Usuarios" />} />
-               <Route path="/admin/categories" element={<PlaceholderPage title="Categorías del Sistema" />} />
+               <Route path="/admin/categories" element={<CategoryListPage />} />
+               <Route path="/admin/categories/new" element={<CategoryFormPage />} />
+               <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
                <Route path="/admin/products" element={<PlaceholderPage title="Inventario de Productos" />} />
                <Route path="/admin/orders" element={<PlaceholderPage title="Registro de Ventas" />} />
             </Route>
