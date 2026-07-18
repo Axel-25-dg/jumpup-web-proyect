@@ -49,6 +49,8 @@ const AdminForumCategoriesPage = lazy(() => import('../pages/admin/management/Ad
 const AdminForumCategoryFormPage = lazy(() => import('../pages/admin/management/AdminForumCategoryFormPage'))
 const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminResourcesPage'))
 const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
+const AdminLiveSessionsPage = lazy(() => import('../pages/admin/management/AdminLiveSessionsPage'))
+const AdminLiveSessionFormPage = lazy(() => import('../pages/admin/management/AdminLiveSessionFormPage'))
 
 // Admin Management - Users, Classrooms, Certificates (NEW)
 const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
@@ -219,6 +221,11 @@ export default function AppRouter() {
                 <Route path="/admin/resources" element={<AdminResourcesPage />} />
                 <Route path="/admin/resources/new" element={<AdminResourceFormPage />} />
                 <Route path="/admin/resources/:id/edit" element={<AdminResourceFormPage />} />
+
+                {/* Live Sessions */}
+                <Route path="/admin/live-sessions" element={<AdminLiveSessionsPage />} />
+                <Route path="/admin/live-sessions/new" element={<AdminLiveSessionFormPage />} />
+                <Route path="/admin/live-sessions/:id/edit" element={<AdminLiveSessionFormPage />} />
 
                 {/* Admin Management Routes - Courses */}
                 <Route path="/admin/management/courses" element={<AdminCoursesPage />} />
