@@ -8,6 +8,10 @@ import PlaceholderPage from '../pages/PlaceholderPage'
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
 const HomePage = lazy(() => import('../pages/home/HomePage'))
+const StoryPage = lazy(() => import('../pages/home/StoryPage'))
+const TechPage = lazy(() => import('../pages/home/TechPage'))
+const TeamPage = lazy(() => import('../pages/home/TeamPage'))
+const FeaturesPage = lazy(() => import('../pages/home/FeaturesPage'))
 const CatalogPage = lazy(() => import('../pages/catalog/CatalogPage'))
 const ProductDetailPage = lazy(() => import('../pages/catalog/ProductDetailPage'))
 const CartPage = lazy(() => import('../pages/cart/CartPage'))
@@ -81,6 +85,10 @@ export default function AppRouter() {
 
           <Route element={<AppShell />}>
             <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
+            <Route path="/story" element={<PublicRoute><StoryPage /></PublicRoute>} />
+            <Route path="/tech" element={<PublicRoute><TechPage /></PublicRoute>} />
+            <Route path="/team" element={<PublicRoute><TeamPage /></PublicRoute>} />
+            <Route path="/features" element={<PublicRoute><FeaturesPage /></PublicRoute>} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
 
