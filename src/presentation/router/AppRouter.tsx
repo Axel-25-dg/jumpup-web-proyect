@@ -35,13 +35,24 @@ const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
 
 // Admin & Teacher
 const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'))
-//Nuevas Admin
+
+// Admin Management - Courses
 const AdminCoursesPage = lazy(() => import('../pages/admin/management/AdminCoursesPage'))
+const AdminCourseFormPage = lazy(() => import('../pages/admin/management/AdminCourseFormPage'))
 const AdminModulesPage = lazy(() => import('../pages/admin/management/AdminModulesPage'))
 const AdminLessonsPage = lazy(() => import('../pages/admin/management/AdminLessonsPage'))
 const AdminExercisesPage = lazy(() => import('../pages/admin/management/AdminExercisesPage'))
 const AdminLanguagesPage = lazy(() => import('../pages/admin/management/AdminLanguagesPage'))
-const AdminCourseFormPage = lazy(() => import('../pages/admin/management/AdminCourseFormPage'))
+
+// Admin Management - Users, Classrooms, Certificates (NEW)
+const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
+const AdminUserFormPage = lazy(() => import('../pages/admin/management/AdminUserFormPage'))
+const AdminClassroomsPage = lazy(() => import('../pages/admin/management/AdminClassroomsPage'))
+const AdminClassroomFormPage = lazy(() => import('../pages/admin/management/AdminClassroomFormPage'))
+const AdminCertificatesPage = lazy(() => import('../pages/admin/management/AdminCertificatesPage'))
+const AdminIssueCertificatePage = lazy(() => import('../pages/admin/management/AdminIssueCertificatePage'))
+
+// Teacher
 const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
 const TeacherCoursesPage = lazy(() => import('../pages/teacher/courses/TeacherCoursesPage'))
 const CreateCoursePage = lazy(() => import('../pages/teacher/courses/CreateCoursePage'))
@@ -173,15 +184,22 @@ export default function AppRouter() {
             {/* Admin Protected Routes */}
              <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                 <Route path="/admin" element={<AdminDashboardPage />} />
-                <Route path="/admin/users" element={<PlaceholderPage title="Gestión de Usuarios" />} />
+                
+                {/* Users */}
+                <Route path="/admin/users" element={<AdminUsersPage />} />
+                <Route path="/admin/users/new" element={<AdminUserFormPage />} />
+                <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
+                
+                {/* Categories */}
                 <Route path="/admin/categories" element={<CategoryListPage />} />
                 <Route path="/admin/categories/new" element={<CategoryFormPage />} />
                 <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
+                
+                {/* Products / Orders */}
                 <Route path="/admin/products" element={<PlaceholderPage title="Inventario de Productos" />} />
                 <Route path="/admin/orders" element={<PlaceholderPage title="Registro de Ventas" />} />
                 
-                {/* Admin Management Routes */}
-                //Nuevas Admin
+                {/* Admin Management Routes - Courses */}
                 <Route path="/admin/management/courses" element={<AdminCoursesPage />} />
                 <Route path="/admin/management/courses/new" element={<AdminCourseFormPage />} />
                 <Route path="/admin/management/courses/:id/edit" element={<AdminCourseFormPage />} />
@@ -189,6 +207,16 @@ export default function AppRouter() {
                 <Route path="/admin/management/lessons" element={<AdminLessonsPage />} />
                 <Route path="/admin/management/exercises" element={<AdminExercisesPage />} />
                 <Route path="/admin/management/languages" element={<AdminLanguagesPage />} />
+                
+                {/* Admin - Classrooms */}
+                <Route path="/admin/classrooms" element={<AdminClassroomsPage />} />
+                <Route path="/admin/classrooms/new" element={<AdminClassroomFormPage />} />
+                <Route path="/admin/classrooms/:id/edit" element={<AdminClassroomFormPage />} />
+                <Route path="/admin/classrooms/:id/manage" element={<ManageClassroomPage />} />
+                
+                {/* Admin - Certificates */}
+                <Route path="/admin/certificates" element={<AdminCertificatesPage />} />
+                <Route path="/admin/certificates/issue" element={<AdminIssueCertificatePage />} />
              </Route>
           </Route>
 
