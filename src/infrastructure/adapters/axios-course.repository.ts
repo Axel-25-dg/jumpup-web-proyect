@@ -45,4 +45,21 @@ export class AxiosCourseRepository implements CourseRepository {
       throw parseApiError(err);
     }
   }
+
+  async deleteCourse(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/courses/${id}/`);
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async createCourse(payload: Partial<Course>): Promise<Course> {
+    try {
+      const { data } = await apiClient.post<Course>('/courses/', payload);
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
 }

@@ -6,4 +6,6 @@ export interface CourseRepository {
   getById(id: number): Promise<Course>;
   getModulesByCourse(courseId: number): Promise<Module[]>;
   getLessonsByModule(moduleId: number): Promise<Lesson[]>;
+  deleteCourse(id: number): Promise<void>;
+  createCourse(payload: Partial<Course>): Promise<Course>;
 }

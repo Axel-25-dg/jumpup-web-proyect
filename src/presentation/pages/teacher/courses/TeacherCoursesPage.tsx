@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   BookOpen,
   Plus,
@@ -10,7 +10,8 @@ import {
   Users,
   Eye,
   BarChart,
-  ArrowRight
+  ArrowRight,
+  AlertCircle
 } from 'lucide-react'
 import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
@@ -23,13 +24,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/presentation/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/presentation/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Course } from '@/domain/entities/course.entity'
 
 export default function TeacherCoursesPage() {
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [courses, setCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -38,12 +53,29 @@ export default function TeacherCoursesPage() {
         setCourses(result.results || [])
       } catch (error) {
         console.error('Error fetching courses:', error)
+        toast.error('No se pudieron cargar los cursos')
       } finally {
         setIsLoading(false)
       }
     }
     fetchCourses()
   }, [])
+
+  const handleDeleteCourse = async () => {
+    if (!courseToDelete) return
+    setIsDeleting(true)
+    try {
+      await courseRepo.deleteCourse(courseToDelete.id)
+      setCourses(courses.filter(c => c.id !== courseToDelete.id))
+      toast.success(`Curso "${courseToDelete.title}" eliminado con éxito`)
+    } catch (error) {
+      console.error('Error deleting course:', error)
+      toast.error('Ocurrió un error al intentar eliminar el curso')
+    } finally {
+      setIsDeleting(false)
+      setCourseToDelete(null)
+    }
+  }
 
   const filteredCourses = courses.filter(c => c.title.toLowerCase().includes(searchTerm.toLowerCase()))
 
@@ -106,17 +138,17 @@ export default function TeacherCoursesPage() {
       <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
            <div className="relative w-full sm:max-w-md">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
              <Input 
                placeholder="Buscar curso por título..." 
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
-               className="h-12 pl-12 rounded-xl border-slate-200 bg-white font-medium"
+               className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
              />
            </div>
            <div className="flex gap-2">
-             <Button variant="outline" className="h-12 rounded-xl font-bold">Activos</Button>
-             <Button variant="outline" className="h-12 rounded-xl font-bold">Borradores</Button>
+             <Button variant="outline" className="h-12 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">Activos</Button>
+             <Button variant="outline" className="h-12 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">Borradores</Button>
            </div>
         </div>
         <CardContent className="p-0">
@@ -136,47 +168,62 @@ export default function TeacherCoursesPage() {
             ) : filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <div key={course.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="h-24 w-40 rounded-2xl overflow-hidden shrink-0 relative bg-slate-100 flex items-center justify-center">
+                  <div className="h-24 w-40 rounded-2xl overflow-hidden shrink-0 relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                     {course.image_url ? (
                       <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
-                      <BookOpen className="h-8 w-8 text-slate-300" />
+                      <BookOpen className="h-8 w-8 text-slate-300 dark:text-slate-600" />
                     )}
-                    {/* El backend no suele mandar 'status' en la entidad básica, lo simulamos para UI si no existe */}
-                    {(course as any).status === 'draft' && (
-                       <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center">
+                    {course.status === 'draft' && (
+                       <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center">
                          <Badge className="bg-slate-900 text-white font-black uppercase text-[10px]">Borrador</Badge>
                        </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0 text-center md:text-left">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                      <Badge className={(course as any).is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-                        {(course as any).is_active ? 'Publicado' : 'Inactivo'}
+                      <Badge className={course.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+                        {course.is_active ? 'Publicado' : 'Inactivo'}
                       </Badge>
                       <span className="flex items-center text-xs font-bold text-slate-500">
-                        <Users className="h-3.5 w-3.5 mr-1" /> {(course as any).students || 0} estudiantes
+                        <Users className="h-3.5 w-3.5 mr-1" /> {course.students || 0} estudiantes
                       </span>
                     </div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{course.title}</h3>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-10 rounded-xl font-bold">Ver Detalles</Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-10 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+                      onClick={() => navigate(`/teacher/courses/${course.id}/edit`)}
+                    >
+                      Ver Detalles
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
                           <MoreVertical className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48 rounded-2xl">
-                        <DropdownMenuItem className="font-bold py-3 cursor-pointer">
+                      <DropdownMenuContent className="w-48 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 p-2">
+                        <DropdownMenuItem 
+                          onSelect={() => navigate(`/teacher/courses/${course.id}/edit`)}
+                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
+                        >
                           <Edit2 className="mr-2 h-4 w-4" /> Editar Curso
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="font-bold py-3 cursor-pointer">
+                        <DropdownMenuItem 
+                          onSelect={() => navigate(`/courses/${course.id}`)}
+                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
+                        >
                           <Eye className="mr-2 h-4 w-4" /> Previsualizar
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="font-bold py-3 text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
+                        <DropdownMenuItem 
+                          onSelect={() => setCourseToDelete(course)}
+                          className="font-bold py-3 text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl"
+                        >
                           <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -186,14 +233,35 @@ export default function TeacherCoursesPage() {
               ))
             ) : (
               <div className="py-20 text-center">
-                <BookOpen className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900">No se encontraron cursos</h3>
+                <BookOpen className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">No se encontraron cursos</h3>
                 <p className="text-slate-500 font-medium">No tienes cursos que coincidan con tu búsqueda.</p>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!courseToDelete} onOpenChange={(open) => !open && !isDeleting && setCourseToDelete(null)}>
+        <AlertDialogContent className="rounded-3xl">
+          <AlertDialogHeader>
+            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
+              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            </div>
+            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar curso?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center font-medium">
+              Esta acción no se puede deshacer. Esto eliminará permanentemente el curso <br/>
+              <span className="font-bold text-slate-900 dark:text-white">"{courseToDelete?.title}"</span> y todos sus datos asociados.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
+            <AlertDialogCancel disabled={isDeleting} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
+            <AlertDialogAction disabled={isDeleting} onClick={handleDeleteCourse} className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold shadow-lg shadow-red-500/20">
+              {isDeleting ? 'Eliminando...' : 'Sí, eliminar curso'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

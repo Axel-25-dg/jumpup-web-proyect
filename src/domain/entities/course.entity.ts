@@ -15,6 +15,9 @@ export interface Course {
   description: string;
   difficulty_level: DifficultyLevel;
   image_url: string;
+  status?: 'draft' | 'published' | 'archived';
+  is_active?: boolean;
+  students?: number;
 }
 
 export interface Module {
