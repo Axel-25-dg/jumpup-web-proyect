@@ -162,6 +162,17 @@ export class AxiosCourseRepository implements CourseRepository {
     }
   }
 
+  async getExercisesByLesson(lessonId: number): Promise<any[]> {
+    try {
+      const { data } = await apiClient.get<PaginatedResult<any>>('/exercises/', {
+        params: { lesson: lessonId, page_size: 100 },
+      });
+      return data.results;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
   async createExercise(payload: ExercisePayload): Promise<any> {
     try {
       const { data } = await apiClient.post('/exercises/', payload);

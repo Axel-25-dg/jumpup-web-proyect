@@ -79,7 +79,7 @@ export default function AdminDashboardPage() {
     { label: 'Total Usuarios', value: data?.users ?? 0, trend: '+12%', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-900/20' },
     { label: 'Nuevos Registros', value: '24', trend: '+18.2%', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
     { label: 'Aulas', value: data?.classrooms ?? 0, trend: '-5%', icon: Package, color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-900/20' },
-    { label: 'Cursos Activos', value: data?.courses ?? 0, trend: '+2%', icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+    { label: 'Cursos Activos', value: data?.courses ?? 0, trend: '+2%', icon: Package, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
   ]
 
   return (
@@ -101,7 +101,7 @@ export default function AdminDashboardPage() {
              Notificaciones
           </Button>
           <Button asChild size="lg" className="rounded-2xl h-14 bg-sky-600 hover:bg-sky-700 font-black shadow-xl shadow-sky-200 transition-all px-8 group">
-            <Link to="/management/courses/new">
+            <Link to="/admin/management/courses/new">
               <Plus className="mr-2 h-5 w-5 group-hover:rotate-90 transition-transform" />
               Nuevo Curso
             </Link>
@@ -194,15 +194,16 @@ export default function AdminDashboardPage() {
             <CardHeader className="p-10 pb-6">
               <CardTitle className="text-2xl font-black flex items-center gap-3 italic">
                 <LayoutGrid className="text-sky-400" />
-                Módulos
+                Gestión Educativa
               </CardTitle>
             </CardHeader>
             <CardContent className="p-10 pt-0 space-y-4">
                {[
-                 { to: '/management/courses', label: 'Cursos', icon: BookOpen, count: 'Gestionar' },
-                 { to: '/admin/categories', label: 'Categorías', icon: Tags, count: '12' },
-                 { to: '/admin/products', label: 'Tienda XP', icon: ShoppingBag, count: '48' },
-                 { to: '/admin/orders', label: 'Pedidos', icon: Package, count: '156' },
+                 { to: '/admin/management/courses', label: 'Cursos', icon: BookOpen, count: 'CRUD' },
+                 { to: '/admin/management/modules', label: 'Módulos', icon: BookOpen, count: 'CRUD' },
+                 { to: '/admin/management/lessons', label: 'Lecciones', icon: BookOpen, count: 'CRUD' },
+                 { to: '/admin/management/exercises', label: 'Ejercicios', icon: BookOpen, count: 'CRUD' },
+                 { to: '/admin/management/languages', label: 'Idiomas', icon: Tags, count: 'CRUD' },
                  { to: '/admin/users', label: 'Gestión Usuarios', icon: Users, count: '1.2k' },
                ].map((item, i) => (
                  <Link key={i} to={item.to} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
