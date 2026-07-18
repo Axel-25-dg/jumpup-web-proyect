@@ -83,8 +83,10 @@ export default function TeacherDashboardPage() {
         </div>
         <div className="flex gap-3">
           <Button variant="outline" className="h-12 rounded-2xl font-bold border-2 px-6">Ver Horario</Button>
-          <Button className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6">
-            <Plus className="mr-2 h-5 w-5" /> Nueva Sesión Live
+          <Button asChild className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6">
+            <Link to="/teacher/live">
+              <Plus className="mr-2 h-5 w-5" /> Nueva Sesión Live
+            </Link>
           </Button>
         </div>
       </div>
@@ -116,35 +118,11 @@ export default function TeacherDashboardPage() {
               <CardDescription className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Tus clases programadas para hoy y mañana</CardDescription>
             </CardHeader>
             <CardContent className="p-8 pt-0 space-y-4">
-              {[
-                { title: 'Inglés Avanzado - C1', students: 12, time: '14:00', date: 'Hoy', status: 'ready' },
-                { title: 'Conversación Pro - B2', students: 8, time: '16:30', date: 'Hoy', status: 'ready' },
-                { title: 'Gramática Intensiva - A2', students: 24, time: '09:00', date: 'Mañana', status: 'scheduled' },
-              ].map((session, i) => (
-                <div key={i} className="flex items-center justify-between p-5 rounded-3xl bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent hover:border-indigo-100 transition-all group">
-                  <div className="flex items-center gap-5">
-                    <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${session.status === 'ready' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                      <Video className="h-7 w-7" />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-slate-900 dark:text-white text-lg leading-tight">{session.title}</h4>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className="flex items-center gap-1 text-xs font-bold text-slate-500">
-                          <Users className="h-3 w-3" /> {session.students} alumnos
-                        </span>
-                        <span className="flex items-center gap-1 text-xs font-bold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full">
-                          <Clock className="h-3 w-3" /> {session.time}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <Button asChild size="sm" className={`rounded-xl font-black px-6 ${session.status === 'ready' ? 'bg-sky-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                    <Link to="/live/preview">
-                      {session.status === 'ready' ? 'Iniciar Sesión' : 'Configurar'}
-                    </Link>
-                  </Button>
-                </div>
-              ))}
+              {/* Sesiones dinámicas irían aquí */}
+              <div className="text-center py-10 border-2 border-dashed rounded-3xl border-slate-100">
+                <Video className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                <p className="text-sm font-black text-slate-400 uppercase tracking-widest">No hay sesiones programadas</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -167,38 +145,41 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
 
-        {/* Sidebar: Leaderboard of their students */}
+        {/* Sidebar: Live Activity Monitoring */}
         <aside className="space-y-6">
-          <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-slate-900 text-white rounded-[2.5rem] overflow-hidden">
-            <CardHeader className="p-8 pb-4">
-              <CardTitle className="text-xl font-black">Top Alumnos</CardTitle>
-              <CardDescription className="text-indigo-300 font-bold uppercase tracking-widest text-[10px]">Tus mejores JumpUpers</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 pt-0 space-y-4">
-               {[
-                 { name: 'Sofia Mendez', xp: '4,250', level: 12 },
-                 { name: 'Lucas Silva', xp: '3,890', level: 11 },
-                 { name: 'Maria Jose', xp: '3,420', level: 9 },
-                 { name: 'Diego Torres', xp: '2,100', level: 7 },
-               ].map((student, i) => (
-                 <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-transparent hover:border-white/10 transition-all">
-                   <div className="h-8 w-8 rounded-full bg-sky-500 flex items-center justify-center text-[10px] font-black">
-                     {student.name.split(' ').map(n => n[0]).join('')}
-                   </div>
-                   <div className="flex-1">
-                     <p className="text-sm font-black">{student.name}</p>
-                     <p className="text-[10px] font-black text-sky-400 uppercase">Nivel {student.level}</p>
-                   </div>
-                   <div className="text-right">
-                     <p className="text-sm font-black">{student.xp}</p>
-                     <p className="text-[9px] font-black uppercase text-white/30 tracking-tighter">XP</p>
-                   </div>
-                 </div>
-               ))}
-               <Button variant="ghost" className="w-full mt-4 h-12 rounded-xl text-sky-400 hover:text-white hover:bg-white/10 font-black text-xs uppercase tracking-widest">
-                 Ver ranking completo
-               </Button>
-            </CardContent>
+          <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-[#0F0E1A] rounded-[2.5rem] overflow-hidden relative">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl" />
+             <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl" />
+             <CardHeader className="p-8 pb-4 relative z-10">
+               <div className="flex items-center gap-3">
+                 <CardTitle className="text-xl font-black text-white">Live Activity</CardTitle>
+                 <span className="relative flex h-3 w-3">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                 </span>
+               </div>
+               <CardDescription className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Monitoreo en tiempo real</CardDescription>
+             </CardHeader>
+             <CardContent className="p-8 pt-0 space-y-4 relative z-10">
+                <div className="space-y-3">
+                  {/* Mock Activity Logs */}
+                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest mb-1">CURSO Completado</p>
+                    <p className="text-sm font-medium text-slate-200">Ana Silva ha finalizado el Módulo 1 de Inglés B2</p>
+                    <p className="text-xs font-bold text-slate-500 mt-2">Hace 2 min</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">NUEVO ALUMNO</p>
+                    <p className="text-sm font-medium text-slate-200">Carlos Ruiz se ha unido al aula "Grupo Mañana"</p>
+                    <p className="text-xs font-bold text-slate-500 mt-2">Hace 5 min</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest mb-1">Duda en Foro</p>
+                    <p className="text-sm font-medium text-slate-200">Maria José preguntó sobre verbos irregulares</p>
+                    <p className="text-xs font-bold text-slate-500 mt-2">Hace 12 min</p>
+                  </div>
+                </div>
+             </CardContent>
           </Card>
 
           <Card className="border-none bg-amber-500 text-slate-900 rounded-[2.5rem] p-8">

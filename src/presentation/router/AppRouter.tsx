@@ -37,6 +37,7 @@ const CreateExercisePage = lazy(() => import('../pages/teacher/courses/CreateExe
 const CreateClassroomPage = lazy(() => import('../pages/teacher/classrooms/CreateClassroomPage'))
 const ManageClassroomPage = lazy(() => import('../pages/teacher/classrooms/ManageClassroomPage'))
 const ResourceLibraryPage = lazy(() => import('../pages/teacher/resources/ResourceLibraryPage'))
+const ManageLiveSessionsPage = lazy(() => import('../pages/teacher/live/ManageLiveSessionsPage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
 const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
 
@@ -120,6 +121,7 @@ export default function AppRouter() {
                <Route path="/teacher/classrooms/new" element={<CreateClassroomPage />} />
                <Route path="/teacher/classrooms/:id/manage" element={<ManageClassroomPage />} />
                <Route path="/teacher/resources" element={<ResourceLibraryPage />} />
+               <Route path="/teacher/live" element={<ManageLiveSessionsPage />} />
             </Route>
 
             {/* Shared Authenticated Routes (Students & Teachers) */}
