@@ -5,14 +5,32 @@ import type { AuthRepository, AuthSession } from '@/domain/ports/auth.repository
 import type { LoggedUser } from '@/domain/entities/logged-user.entity'
 import type { AuthTokens } from '@/domain/entities/auth-tokens.entity'
 
-interface RawAuthResponse extends LoggedUser {
+interface RawAuthResponse extends Omit<LoggedUser, 'role'> {
+  role?: LoggedUser['role'] | { name?: string } | null
+  role_name?: string
   access: string
   refresh: string
 }
 
+function normalizeUser(raw: Omit<RawAuthResponse, 'access' | 'refresh'>): LoggedUser {
+  const roleValue = typeof raw.role === 'string'
+    ? raw.role
+    : raw.role?.name ?? raw.role_name
+  const role = roleValue?.toLowerCase()
+
+  return {
+    ...raw,
+    role: raw.is_superuser || role === 'admin'
+      ? 'admin'
+      : role === 'teacher' || raw.is_staff
+        ? 'teacher'
+        : 'student',
+  }
+}
+
 function toAuthSession(raw: RawAuthResponse): AuthSession {
   const { access, refresh, ...user } = raw
-  return { user, tokens: { access, refresh } }
+  return { user: normalizeUser(user), tokens: { access, refresh } }
 }
 
 export class AxiosAuthRepository implements AuthRepository {
@@ -60,8 +78,8 @@ export class AxiosAuthRepository implements AuthRepository {
 
   async getCurrentUser(): Promise<LoggedUser> {
     try {
-      const { data } = await apiClient.get<LoggedUser>('/auth/me/')
-      return data
+      const { data } = await apiClient.get<Omit<RawAuthResponse, 'access' | 'refresh'>>('/auth/me/')
+      return normalizeUser(data)
     } catch (err) {
       throw parseApiError(err)
     }
