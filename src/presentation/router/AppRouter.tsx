@@ -34,6 +34,9 @@ const CreateCoursePage = lazy(() => import('../pages/teacher/courses/CreateCours
 const CreateModulePage = lazy(() => import('../pages/teacher/courses/CreateModulePage'))
 const CreateLessonPage = lazy(() => import('../pages/teacher/courses/CreateLessonPage'))
 const CreateExercisePage = lazy(() => import('../pages/teacher/courses/CreateExercisePage'))
+const CreateClassroomPage = lazy(() => import('../pages/teacher/classrooms/CreateClassroomPage'))
+const ManageClassroomPage = lazy(() => import('../pages/teacher/classrooms/ManageClassroomPage'))
+const ResourceLibraryPage = lazy(() => import('../pages/teacher/resources/ResourceLibraryPage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
 const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
 
@@ -114,6 +117,9 @@ export default function AppRouter() {
                <Route path="/teacher/modules/new" element={<CreateModulePage />} />
                <Route path="/teacher/lessons/new" element={<CreateLessonPage />} />
                <Route path="/teacher/exercises/new" element={<CreateExercisePage />} />
+               <Route path="/teacher/classrooms/new" element={<CreateClassroomPage />} />
+               <Route path="/teacher/classrooms/:id/manage" element={<ManageClassroomPage />} />
+               <Route path="/teacher/resources" element={<ResourceLibraryPage />} />
             </Route>
 
             {/* Shared Authenticated Routes (Students & Teachers) */}

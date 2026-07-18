@@ -13,7 +13,8 @@ import {
   Trophy,
   Sparkles,
   Search,
-  PanelRight
+  PanelRight,
+  FolderOpen
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { useCartStore } from '@/presentation/store/cart.store'
@@ -69,6 +70,7 @@ export default function AppShell() {
         { to: '/teacher', label: 'Panel Profesor', icon: LayoutDashboard, protected: true },
         { to: '/teacher/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
         { to: '/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
+        { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
         { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
       ]

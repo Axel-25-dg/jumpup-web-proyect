@@ -1,0 +1,127 @@
+import { useState } from 'react'
+import {
+  FolderOpen,
+  Plus,
+  Search,
+  FileText,
+  Video,
+  Image as ImageIcon,
+  MoreVertical,
+  Download,
+  Trash2
+} from 'lucide-react'
+import { Card, CardContent } from '@/presentation/components/ui/card'
+import { Button } from '@/presentation/components/ui/button'
+import { Input } from '@/presentation/components/ui/input'
+import { Badge } from '@/presentation/components/ui/badge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/presentation/components/ui/dropdown-menu'
+
+const MOCK_RESOURCES = [
+  { id: '1', title: 'Guía de Verbos PDF', type: 'pdf', size: '2.4 MB', date: '12 Oct 2026' },
+  { id: '2', title: 'Audio Pronunciación', type: 'audio', size: '5.1 MB', date: '10 Oct 2026' },
+  { id: '3', title: 'Presentación Clase 1', type: 'video', size: '15.2 MB', date: '08 Oct 2026' },
+  { id: '4', title: 'Infografía Tiempos Verbales', type: 'image', size: '1.2 MB', date: '05 Oct 2026' },
+]
+
+export default function ResourceLibraryPage() {
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const getIcon = (type: string) => {
+    switch (type) {
+      case 'pdf': return <FileText className="h-8 w-8 text-rose-500" />
+      case 'video': return <Video className="h-8 w-8 text-indigo-500" />
+      case 'image': return <ImageIcon className="h-8 w-8 text-emerald-500" />
+      default: return <FolderOpen className="h-8 w-8 text-sky-500" />
+    }
+  }
+
+  const filteredResources = MOCK_RESOURCES.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()))
+
+  return (
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Biblioteca de Recursos</h1>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Sube y organiza tus materiales didácticos</p>
+        </div>
+        <div className="flex gap-3">
+          <Button className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6">
+            <Plus className="mr-2 h-5 w-5" /> Subir Archivo
+          </Button>
+        </div>
+      </div>
+
+      <Card className="border-none shadow-2xl shadow-slate-200/50 bg-white rounded-[2.5rem] overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50">
+           <div className="relative w-full sm:max-w-md">
+             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+             <Input 
+               placeholder="Buscar por nombre de archivo..." 
+               value={searchTerm}
+               onChange={(e) => setSearchTerm(e.target.value)}
+               className="h-12 pl-12 rounded-xl border-slate-200 bg-white font-medium"
+             />
+           </div>
+           <div className="flex gap-2">
+             <Button variant="outline" className="h-12 rounded-xl font-bold">Todos</Button>
+             <Button variant="outline" className="h-12 rounded-xl font-bold">Documentos</Button>
+             <Button variant="outline" className="h-12 rounded-xl font-bold">Multimedia</Button>
+           </div>
+        </div>
+        <CardContent className="p-0">
+          <div className="divide-y divide-slate-100">
+            {filteredResources.length > 0 ? (
+              filteredResources.map((resource) => (
+                <div key={resource.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 transition-colors group">
+                  <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    {getIcon(resource.type)}
+                  </div>
+                  <div className="flex-1 min-w-0 text-center md:text-left">
+                    <h3 className="text-lg font-black text-slate-900 truncate">{resource.title}</h3>
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
+                      <Badge variant="outline" className="bg-white font-bold uppercase tracking-wider text-[10px] text-slate-500">
+                        {resource.type}
+                      </Badge>
+                      <span className="text-xs font-bold text-slate-400">{resource.size}</span>
+                      <span className="text-xs font-bold text-slate-400">&bull; {resource.date}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-10 rounded-xl font-bold text-sky-600 border-sky-200 hover:bg-sky-50">
+                       <Download className="mr-2 h-4 w-4" /> Descargar
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
+                          <MoreVertical className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 rounded-2xl">
+                        <DropdownMenuItem className="font-bold py-3 text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
+                          <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-20 text-center">
+                <FolderOpen className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                <h3 className="text-lg font-black text-slate-900">Tu biblioteca está vacía</h3>
+                <p className="text-slate-500 font-medium">Sube archivos para poder usarlos en tus lecciones.</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
