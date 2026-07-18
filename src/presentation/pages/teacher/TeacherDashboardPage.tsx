@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Users,
   Video,
@@ -10,14 +11,66 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
+import { Skeleton } from '@/presentation/components/ui/skeleton'
 import { Link } from 'react-router-dom'
+import { getTeacherDashboardUseCase } from '@/infrastructure/factories/dashboard.factory'
+import type { TeacherDashboardData } from '@/domain/ports/dashboard.repository'
 
 export default function TeacherDashboardPage() {
+  const [data, setData] = useState<TeacherDashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await getTeacherDashboardUseCase.execute()
+        setData(result)
+      } catch (err: any) {
+        console.error('Error fetching teacher dashboard data:', err)
+        setError(err.message || 'No se pudo cargar la información del panel.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-[2rem]" />
+          ))}
+        </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <Skeleton className="h-96 lg:col-span-2 rounded-[2.5rem]" />
+          <Skeleton className="h-96 rounded-[2.5rem]" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-red-500 font-bold">{error}</p>
+      </div>
+    )
+  }
+
   const teacherStats = [
-    { label: 'Mis Estudiantes', value: '142', sub: 'Activos hoy', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-900/20' },
-    { label: 'Aulas Activas', value: '8', sub: '3 niveles MCER', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-    { label: 'Tareas Pendientes', value: '24', sub: 'Por calificar', icon: MessageSquare, color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-900/20' },
-    { label: 'XP Otorgado', value: '12.5k', sub: 'Este mes', icon: Trophy, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+    { label: 'Mis Estudiantes', value: data?.students ?? 0, sub: 'Activos hoy', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-900/20' },
+    { label: 'Aulas Activas', value: data?.classrooms ?? 0, sub: '3 niveles MCER', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+    { label: 'Recursos', value: data?.resources ?? 0, sub: 'Material didáctico', icon: MessageSquare, color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-900/20' },
+    { label: 'Certificados', value: data?.certificates ?? 0, sub: 'Emitidos', icon: Trophy, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
   ]
 
   return (

@@ -52,12 +52,13 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   if (!isInitialized || isLoading) return <PageLoader />
 
   if (user) {
-    const defaultPaths: Record<string, string> = {
-      admin: '/admin',
-      teacher: '/teacher',
-      student: '/dashboard'
-    }
-    return <Navigate to={defaultPaths[user.role] || '/dashboard'} replace />
+    const role = user.role?.toLowerCase() || ''
+    const isTeacher = role === 'teacher' || role === 'profesor'
+    const isAdmin = role === 'admin' || role === 'administrador'
+    
+    if (isAdmin) return <Navigate to="/admin" replace />
+    if (isTeacher) return <Navigate to="/teacher" replace />
+    return <Navigate to="/dashboard" replace />
   }
 
   return <>{children}</>
