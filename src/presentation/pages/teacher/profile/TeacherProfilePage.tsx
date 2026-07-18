@@ -81,7 +81,7 @@ export default function TeacherProfilePage() {
     loadStats()
   }, [])
 
-  const onSaveProfile = async (data: ProfileForm) => {
+  const onSaveProfile = async (_data: ProfileForm) => {
     setIsSavingProfile(true)
     try {
       // Profile update endpoint — using auth update endpoint
@@ -96,7 +96,7 @@ export default function TeacherProfilePage() {
     }
   }
 
-  const onSavePassword = async (data: PasswordForm) => {
+  const onSavePassword = async (_data: PasswordForm) => {
     setIsSavingPassword(true)
     try {
       // await authChangePasswordUseCase.execute({ current_password: data.current_password, new_password: data.new_password })

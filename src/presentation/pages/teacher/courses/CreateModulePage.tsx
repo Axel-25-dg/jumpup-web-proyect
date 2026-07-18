@@ -18,10 +18,10 @@ import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Course } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
-  course: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona un curso')),
+  course: z.coerce.number().min(1, 'Selecciona un curso'),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   description: z.string().optional(),
-  order: z.preprocess((val) => val ? Number(val) : 1, z.number().min(1, 'El orden debe ser al menos 1').optional()),
+  order: z.coerce.number().min(1, 'El orden debe ser al menos 1').optional(),
 })
 
 type ModuleFormData = z.infer<typeof formSchema>
@@ -35,7 +35,7 @@ export default function CreateModulePage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [isLoadingCourses, setIsLoadingCourses] = useState(true)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ModuleFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       course: preselectedCourse ? Number(preselectedCourse) : undefined,
@@ -137,7 +137,7 @@ export default function CreateModulePage() {
                   ))}
                 </select>
               )}
-              {errors.course && <span className="text-red-500 text-xs font-bold">{errors.course.message}</span>}
+              {errors.course && <span className="text-red-500 text-xs font-bold">{errors.course.message as string}</span>}
             </div>
 
             <div className="space-y-2">
@@ -149,7 +149,7 @@ export default function CreateModulePage() {
                 placeholder="Ej. Unidad 1: Fundamentos del idioma"
                 className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
               />
-              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
+              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
             </div>
 
             <div className="space-y-2">
@@ -177,3 +177,4 @@ export default function CreateModulePage() {
     </form>
   )
 }
+

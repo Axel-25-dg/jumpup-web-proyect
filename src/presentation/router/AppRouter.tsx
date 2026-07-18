@@ -21,6 +21,8 @@ const OrderHistoryPage = lazy(() => import('../pages/cart/OrderHistoryPage'))
 // Student Modules
 const DashboardPage = lazy(() => import('../pages/dashboard/DashboardPage'))
 const RankingPage = lazy(() => import('../pages/dashboard/RankingPage'))
+const AchievementsPage = lazy(() => import('../pages/dashboard/AchievementsPage'))
+const GamesPage = lazy(() => import('../pages/learning/GamesPage'))
 const CoursesPage = lazy(() => import('../pages/learning/CoursesPage'))
 const LessonPage = lazy(() => import('../pages/learning/LessonPage'))
 const ChatPage = lazy(() => import('../pages/chat/ChatPage'))
@@ -29,6 +31,7 @@ const SocialFeedPage = lazy(() => import('../pages/social/SocialFeedPage'))
 const ClassroomsPage = lazy(() => import('../pages/classrooms/ClassroomsPage'))
 const LiveSessionPage = lazy(() => import('../pages/live/LiveSessionPage'))
 const CertificatesPage = lazy(() => import('../pages/certificates/CertificatesPage'))
+const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
 
 // Admin & Teacher
 const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'))
@@ -116,6 +119,8 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
                <Route path="/dashboard" element={<DashboardPage />} />
                <Route path="/ranking" element={<RankingPage />} />
+               <Route path="/achievements" element={<AchievementsPage />} />
+               <Route path="/games" element={<GamesPage />} />
                <Route path="/courses" element={<CoursesPage />} />
                <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
                <Route path="/chat" element={<ChatPage />} />
@@ -157,7 +162,7 @@ export default function AppRouter() {
                <Route path="/forum" element={<ForumPage />} />
                <Route path="/classrooms" element={<ClassroomsPage />} />
                <Route path="/live/:id" element={<LiveSessionPage />} />
-               <Route path="/profile" element={<PlaceholderPage title="Mi Perfil" />} />
+               <Route path="/profile" element={<ProfilePage />} />
             </Route>
 
             {/* Admin Protected Routes */}

@@ -41,13 +41,13 @@ export default function CreateExercisePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [lessons, setLessons] = useState<Lesson[]>([])
-  const [modules, setModules] = useState<Module[]>([])
+  
   const [isLoadingLessons, setIsLoadingLessons] = useState(true)
   const [questions, setQuestions] = useState<Question[]>([
     { id: 1, text: '', options: ['', '', '', ''], correctOption: 0 }
   ])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ExerciseFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       lesson: 0,
@@ -78,7 +78,7 @@ export default function CreateExercisePage() {
           } catch { /* skip */ }
         }
 
-        setModules(allModules)
+        
         setLessons(allLessons)
       } catch {
         toast.error('No se pudieron cargar las lecciones')
@@ -205,7 +205,7 @@ export default function CreateExercisePage() {
                     ))}
                   </select>
                 )}
-                {errors.lesson && <span className="text-red-500 text-xs font-bold">{errors.lesson.message}</span>}
+                {errors.lesson && <span className="text-red-500 text-xs font-bold">{errors.lesson.message as string}</span>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-black text-slate-900 dark:text-white">Puntaje Máximo</label>
@@ -215,7 +215,7 @@ export default function CreateExercisePage() {
                   min={1}
                   className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.max_score ? 'border-red-500' : ''}`}
                 />
-                {errors.max_score && <span className="text-red-500 text-xs font-bold">{errors.max_score.message}</span>}
+                {errors.max_score && <span className="text-red-500 text-xs font-bold">{errors.max_score.message as string}</span>}
               </div>
             </div>
 
@@ -228,7 +228,7 @@ export default function CreateExercisePage() {
                 placeholder="Ej. Quiz de Verbos Irregulares"
                 className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
               />
-              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
+              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
             </div>
           </CardContent>
         </Card>

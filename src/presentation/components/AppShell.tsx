@@ -2,9 +2,6 @@ import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-do
 import {
   LayoutDashboard,
   LogOut,
-  Package,
-  ShoppingBag,
-  ShoppingCart,
   User,
   BookOpen,
   MessageSquare,
@@ -51,8 +48,6 @@ export default function AppShell() {
 
   const menuRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
-
-  const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -697,3 +692,4 @@ export default function AppShell() {
     </div>
   )
 }
+

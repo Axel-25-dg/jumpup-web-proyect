@@ -5,7 +5,6 @@ import {
   Save,
   Video,
   FileText,
-  Upload,
   Loader2
 } from 'lucide-react'
 import { Card, CardContent } from '@/presentation/components/ui/card'
@@ -20,13 +19,13 @@ import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Module } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
-  module: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona un módulo')),
+  module: z.coerce.number().min(1, 'Selecciona un módulo'),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   content_type: z.enum(['video', 'text', 'interactive', 'audio']),
   content: z.string().optional(),
   video_url: z.string().url('URL inválida').optional().or(z.literal('')),
-  order: z.preprocess((val) => val ? Number(val) : 1, z.number().min(1, 'El orden debe ser al menos 1').optional()),
-  xp_reward: z.preprocess((val) => val ? Number(val) : 10, z.number().min(0, 'Mínimo 0 XP').optional()),
+  order: z.coerce.number().min(1, 'El orden debe ser al menos 1').optional(),
+  xp_reward: z.coerce.number().min(0, 'Mínimo 0 XP').optional(),
 })
 
 type LessonFormData = z.infer<typeof formSchema>
@@ -40,7 +39,7 @@ export default function CreateLessonPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [isLoadingModules, setIsLoadingModules] = useState(true)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<LessonFormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       module: preselectedModule ? Number(preselectedModule) : undefined,
@@ -155,7 +154,7 @@ export default function CreateLessonPage() {
                     ))}
                   </select>
                 )}
-                {errors.module && <span className="text-red-500 text-xs font-bold">{errors.module.message}</span>}
+                {errors.module && <span className="text-red-500 text-xs font-bold">{errors.module.message as string}</span>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-black text-slate-900 dark:text-white">Tipo de Contenido</label>
@@ -181,7 +180,7 @@ export default function CreateLessonPage() {
                   placeholder="Ej. Saludos y despedidas"
                   className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
                 />
-                {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
+                {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
               </div>
             </div>
 
@@ -223,7 +222,7 @@ export default function CreateLessonPage() {
                     placeholder="https://youtube.com/watch?v=..."
                     className="max-w-md mx-auto h-12 rounded-xl border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 font-medium"
                   />
-                  {errors.video_url && <span className="text-red-500 text-xs font-bold block mt-2">{errors.video_url.message}</span>}
+                  {errors.video_url && <span className="text-red-500 text-xs font-bold block mt-2">{errors.video_url.message as string}</span>}
                   <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-wider">MP4, WebM o enlace a YouTube/Vimeo</p>
                 </div>
               </div>
@@ -246,3 +245,5 @@ export default function CreateLessonPage() {
     </form>
   )
 }
+
+

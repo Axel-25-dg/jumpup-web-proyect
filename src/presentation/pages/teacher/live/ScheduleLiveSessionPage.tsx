@@ -25,8 +25,8 @@ const formSchema = z.object({
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   scheduled_date: z.string().min(1, 'La fecha es obligatoria'),
   scheduled_time: z.string().min(1, 'La hora es obligatoria'),
-  duration_minutes: z.preprocess((val) => Number(val), z.number().min(15, 'Mínimo 15 minutos').max(480, 'Máximo 8 horas')),
-  classroom_id: z.preprocess((val) => val ? Number(val) : undefined, z.number().optional()),
+  duration_minutes: z.coerce.number().min(15, 'Mínimo 15 minutos').max(480, 'Máximo 8 horas'),
+  classroom_id: z.coerce.number().optional(),
   join_url: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
 })
 
@@ -38,7 +38,7 @@ export default function ScheduleLiveSessionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ScheduleFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
@@ -134,7 +134,7 @@ export default function ScheduleLiveSessionPage() {
                 placeholder="Ej. Clase de conversación — Nivel B2"
                 className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
               />
-              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
+              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
             </div>
 
             {/* Date & Time */}
@@ -148,7 +148,7 @@ export default function ScheduleLiveSessionPage() {
                   type="date"
                   className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.scheduled_date ? 'border-red-500' : ''}`}
                 />
-                {errors.scheduled_date && <span className="text-red-500 text-xs font-bold">{errors.scheduled_date.message}</span>}
+                {errors.scheduled_date && <span className="text-red-500 text-xs font-bold">{errors.scheduled_date.message as string}</span>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -159,7 +159,7 @@ export default function ScheduleLiveSessionPage() {
                   type="time"
                   className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.scheduled_time ? 'border-red-500' : ''}`}
                 />
-                {errors.scheduled_time && <span className="text-red-500 text-xs font-bold">{errors.scheduled_time.message}</span>}
+                {errors.scheduled_time && <span className="text-red-500 text-xs font-bold">{errors.scheduled_time.message as string}</span>}
               </div>
             </div>
 
@@ -176,7 +176,7 @@ export default function ScheduleLiveSessionPage() {
                   max={480}
                   className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.duration_minutes ? 'border-red-500' : ''}`}
                 />
-                {errors.duration_minutes && <span className="text-red-500 text-xs font-bold">{errors.duration_minutes.message}</span>}
+                {errors.duration_minutes && <span className="text-red-500 text-xs font-bold">{errors.duration_minutes.message as string}</span>}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
@@ -205,7 +205,7 @@ export default function ScheduleLiveSessionPage() {
                 placeholder="Ej. https://meet.google.com/abc-xyz"
                 className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.join_url ? 'border-red-500' : ''}`}
               />
-              {errors.join_url && <span className="text-red-500 text-xs font-bold">{errors.join_url.message}</span>}
+              {errors.join_url && <span className="text-red-500 text-xs font-bold">{errors.join_url.message as string}</span>}
               <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">Zoom, Google Meet, Teams u otra plataforma.</p>
             </div>
           </CardContent>
@@ -231,3 +231,4 @@ export default function ScheduleLiveSessionPage() {
     </form>
   )
 }
+
