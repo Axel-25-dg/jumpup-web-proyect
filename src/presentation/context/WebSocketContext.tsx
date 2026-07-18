@@ -30,7 +30,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const token = localTokenStorage.getAccessToken();
       if (!token) return;
 
-      const ws = new WebSocket(`${API_CONFIG.WS_URL}/global/?token=${token}`);
+      // El backend Django registra NotificationConsumer en ws/notifications/.
+      const ws = new WebSocket(`${API_CONFIG.WS_URL}/notifications/?token=${token}`);
       socketRef.current = ws;
 
       ws.onopen = () => {

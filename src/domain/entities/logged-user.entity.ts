@@ -5,5 +5,6 @@ export interface LoggedUser {
   username: string;
   email: string;
   is_staff: boolean;
+  is_superuser?: boolean;
   role: UserRole;
 }
