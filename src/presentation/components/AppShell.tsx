@@ -15,8 +15,7 @@ import {
   Search,
   PanelRight,
   FolderOpen,
-  Mail,
-  User
+  Mail
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { useCartStore } from '@/presentation/store/cart.store'
