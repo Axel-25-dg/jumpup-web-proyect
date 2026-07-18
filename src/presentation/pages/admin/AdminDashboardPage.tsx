@@ -5,7 +5,6 @@ import {
   ShoppingBag,
   Package,
   Tags,
-  BarChart3,
   ArrowUpRight,
   ArrowDownRight,
   Search,

@@ -5,13 +5,15 @@ import type { AuthRepository, AuthSession } from '@/domain/ports/auth.repository
 import type { LoggedUser } from '@/domain/entities/logged-user.entity'
 import type { AuthTokens } from '@/domain/entities/auth-tokens.entity'
 
-interface RawAuthResponse extends LoggedUser {
+interface RawAuthResponse extends Omit<LoggedUser, 'role'> {
+  role?: LoggedUser['role'] | { name?: string } | null
+  role_name?: string
   access: string
   refresh: string
 }
 
 function safeExtractRole(rawUser: any): string {
-  let r = rawUser.role;
+  let r = rawUser.role || rawUser.role_name;
   if (r) {
     if (typeof r === 'string') return r.toLowerCase();
     if (Array.isArray(r) && r.length > 0) r = r[0];
@@ -26,18 +28,23 @@ function safeExtractRole(rawUser: any): string {
   return 'student';
 }
 
-function toAuthSession(raw: any): AuthSession {
-  const { access, refresh, ...rest } = raw;
-  
+function normalizeUser(raw: any): LoggedUser {
   // Si el backend envía los datos dentro de { user: { ... } }, extraemos eso.
-  const userData = (rest.user && typeof rest.user === 'object') ? rest.user : rest;
+  const userData = (raw.user && typeof raw.user === 'object') ? raw.user : raw;
   
   if (userData.id && !userData.user_id) {
     userData.user_id = userData.id;
   }
   
-  userData.role = safeExtractRole(userData);
-  return { user: userData as LoggedUser, tokens: { access, refresh } }
+  return {
+    ...userData,
+    role: safeExtractRole(userData)
+  } as LoggedUser;
+}
+
+function toAuthSession(raw: RawAuthResponse): AuthSession {
+  const { access, refresh, ...rest } = raw;
+  return { user: normalizeUser(rest), tokens: { access, refresh } }
 }
 
 export class AxiosAuthRepository implements AuthRepository {
@@ -85,18 +92,8 @@ export class AxiosAuthRepository implements AuthRepository {
 
   async getCurrentUser(): Promise<LoggedUser> {
     try {
-      let { data } = await apiClient.get<any>('/auth/me/')
-      
-      if (data.user && typeof data.user === 'object') {
-        data = data.user;
-      }
-      
-      if (data.id && !data.user_id) {
-        data.user_id = data.id;
-      }
-      
-      data.role = safeExtractRole(data);
-      return data as LoggedUser;
+      const { data } = await apiClient.get<any>('/auth/me/')
+      return normalizeUser(data)
     } catch (err) {
       throw parseApiError(err)
     }
