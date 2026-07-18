@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
-import { ArrowLeft, CheckCircle2, Sparkles, Volume2, HelpCircle, Loader2, ChevronRight } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Sparkles, Volume2, HelpCircle, Loader2, ChevronRight, BookOpen } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Badge } from '@/presentation/components/ui/badge'
@@ -9,7 +9,7 @@ import { Badge } from '@/presentation/components/ui/badge'
 interface Exercise {
   id: number
   title: string
-  prompt: string
+  question_text: string
   exercise_type: 'multiple_choice' | 'translate' | 'listen' | 'fill_blank' | 'match'
   options: string[] | Record<string, string> | any // puede ser array o JSON object
   correct_answer: string
@@ -25,7 +25,7 @@ interface Lesson {
 }
 
 export default function LessonPage() {
-  const { lessonId } = useParams<{ lessonId: string }>()
+  const { courseId, lessonId } = useParams<{ courseId: string, lessonId: string }>()
 
   const [lesson, setLesson] = useState<Lesson | null>(null)
   const [exercises, setExercises] = useState<Exercise[]>([])
@@ -35,6 +35,8 @@ export default function LessonPage() {
   const [isCorrect, setIsCorrect] = useState(false)
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0)
   const [isFinished, setIsFinished] = useState(false)
+  const [checkingAnswer, setCheckingAnswer] = useState(false)
+  const [correctAnswerFeedback, setCorrectAnswerFeedback] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -46,8 +48,11 @@ export default function LessonPage() {
           apiClient.get<Lesson>(`/lessons/${lessonId}/`),
           apiClient.get<Exercise[]>(`/exercises/?lesson=${lessonId}`)
         ])
+        const rawExercisesData = exercisesRes.data as any
+        const exercisesData: Exercise[] = Array.isArray(rawExercisesData) ? rawExercisesData : (rawExercisesData?.data || rawExercisesData?.results || [])
+        
         setLesson(lessonRes.data)
-        setExercises(exercisesRes.data)
+        setExercises(exercisesData)
       } catch (err) {
         console.error('Error loading lesson details:', err)
       } finally {
@@ -82,6 +87,21 @@ export default function LessonPage() {
   const currentExercise = exercises[currentIdx]
   const progressPercent = Math.round(((currentIdx) / exercises.length) * 100)
 
+  if (!currentExercise) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] animate-in fade-in zoom-in-95">
+        <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-full mb-6">
+          <BookOpen className="h-12 w-12 text-slate-400" />
+        </div>
+        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No hay ejercicios aún</h3>
+        <p className="text-slate-500 font-medium">El profesor no ha agregado ejercicios a esta leccin todava.</p>
+        <Button variant="outline" className="mt-8 font-black rounded-xl" asChild>
+          <Link to="/courses">Volver a cursos</Link>
+        </Button>
+      </div>
+    )
+  }
+
   // Parseo seguro de opciones para el ejercicio actual
   let parsedOptions: string[] = []
   if (currentExercise.options) {
@@ -104,22 +124,32 @@ export default function LessonPage() {
     setSelectedAnswer(option)
   }
 
-  const handleCheckAnswer = () => {
-    if (hasChecked) return
+  const handleCheckAnswer = async () => {
+    if (hasChecked || checkingAnswer) return
+    setCheckingAnswer(true)
 
-    let userCorrect = false
-    if (currentExercise.exercise_type === 'match') {
-      // Lógica simplificada de match
-      userCorrect = true
-    } else {
-      userCorrect = selectedAnswer.trim().toLowerCase() === currentExercise.correct_answer.trim().toLowerCase()
+    try {
+      const res = await apiClient.post(`/exercises/${currentExercise.id}/validar/`, {
+        respuesta_usuario: selectedAnswer
+      })
+      const userCorrect = res.data.es_correcto === true
+      setIsCorrect(userCorrect)
+      if (userCorrect) {
+        setCorrectAnswersCount(prev => prev + 1)
+      } else if (res.data.retroalimentacion) {
+        setCorrectAnswerFeedback(res.data.retroalimentacion)
+      } else {
+        setCorrectAnswerFeedback('La respuesta fue incorrecta.')
+      }
+      setHasChecked(true)
+    } catch (error) {
+      console.error('Error validating answer:', error)
+      setIsCorrect(false)
+      setCorrectAnswerFeedback('Error de validación. Intenta nuevamente.')
+      setHasChecked(true)
+    } finally {
+      setCheckingAnswer(false)
     }
-
-    setIsCorrect(userCorrect)
-    if (userCorrect) {
-      setCorrectAnswersCount(prev => prev + 1)
-    }
-    setHasChecked(true)
   }
 
   const handleNext = async () => {
@@ -128,6 +158,7 @@ export default function LessonPage() {
       setSelectedAnswer('')
       setHasChecked(false)
       setIsCorrect(false)
+      setCorrectAnswerFeedback('')
     } else {
       // Finalizar lección y guardar progreso
       setIsSaving(true)
@@ -179,11 +210,11 @@ export default function LessonPage() {
               Excelente trabajo. ¡Sigue practicando todos los días para mantener activa tu racha diaria!
             </p>
           </CardContent>
-          <CardFooter className="bg-muted/30 px-6 py-4 flex flex-col gap-2">
-            <Button className="w-full" size="lg" asChild>
-              <Link to="/courses">Continuar aprendizaje</Link>
+          <CardFooter className="bg-muted/30 px-6 py-4 flex flex-col gap-3">
+            <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95" asChild>
+              <Link to={courseId ? `/courses/${courseId}` : '/courses'}>Volver a la Clase</Link>
             </Button>
-            <Button variant="ghost" className="w-full text-xs" asChild>
+            <Button variant="ghost" className="w-full h-12 text-slate-500 hover:text-slate-800 font-bold rounded-xl hover:bg-slate-200/50 transition-all active:scale-95" asChild>
               <Link to="/dashboard">Ver mi Dashboard</Link>
             </Button>
           </CardFooter>
@@ -236,7 +267,7 @@ export default function LessonPage() {
             </div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{currentExercise.title}</h2>
             <p className="text-lg font-bold text-slate-500 leading-relaxed italic">
-              "{currentExercise.prompt}"
+              "{currentExercise.question_text}"
             </p>
           </div>
         </CardHeader>
@@ -336,7 +367,7 @@ export default function LessonPage() {
               <div className="flex-1">
                 <h5 className="font-black text-lg leading-none mb-1">{isCorrect ? '¡Fabuloso!' : '¡Casi lo logras!'}</h5>
                 <p className="text-sm font-bold opacity-90">
-                  {isCorrect ? 'Respuesta perfecta, sumas puntos a tu racha.' : `La respuesta correcta era: ${currentExercise.correct_answer}`}
+                  {isCorrect ? 'Respuesta perfecta, sumas puntos a tu racha.' : (correctAnswerFeedback || '¡Sigue intentándolo!')}
                 </p>
               </div>
             </div>
@@ -346,12 +377,12 @@ export default function LessonPage() {
           <div className="w-full">
             {!hasChecked ? (
               <Button
-                disabled={!selectedAnswer.trim()}
+                disabled={!selectedAnswer.trim() || checkingAnswer}
                 onClick={handleCheckAnswer}
                 className="w-full h-16 rounded-[1.5rem] font-black text-lg bg-slate-900 hover:bg-black shadow-xl shadow-slate-200 transition-all active:scale-95 group"
               >
-                Comprobar
-                <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                {checkingAnswer ? 'Comprobando...' : 'Comprobar'}
+                {!checkingAnswer && <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />}
               </Button>
             ) : (
               <Button

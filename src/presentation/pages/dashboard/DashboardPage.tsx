@@ -13,7 +13,6 @@ import {
   ArrowRight,
   TrendingUp,
   Sparkles,
-  ShoppingBag,
   RefreshCw,
   Zap,
   Star
@@ -233,7 +232,7 @@ export default function DashboardPage() {
               { to: '/courses', title: 'Explorar', desc: 'Mis niveles activos', icon: Compass, color: 'text-sky-500', bg: 'bg-sky-50' },
               { to: '/chat', title: 'IA Tutor', desc: 'Soporte 24/7 Pro', icon: Sparkles, color: 'text-blue-500', bg: 'bg-blue-50' },
               { to: '/forum', title: 'Comunidad', desc: 'Foros de estudio', icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { to: '/catalog', title: 'Tienda XP', desc: 'Canjea tus logros', icon: ShoppingBag, color: 'text-sky-400', bg: 'bg-sky-50' },
+              { to: '/achievements', title: 'Logros', desc: 'Tus medallas', icon: Trophy, color: 'text-amber-500', bg: 'bg-amber-50' },
             ].map((link, i) => (
               <Link key={i} to={link.to} className="group block">
                 <div className="h-full p-6 rounded-[2.5rem] bg-white border border-slate-100 shadow-xl shadow-slate-200/30 hover:shadow-sky-200/30 hover:border-sky-200 transition-all duration-300 flex items-center gap-6">

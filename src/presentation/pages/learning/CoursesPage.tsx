@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from 'sonner'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { BookOpen, CheckCircle2, ChevronRight, PlayCircle, Loader2, Trophy, Sparkles } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/presentation/components/ui/card'
@@ -44,18 +45,29 @@ export default function CoursesPage() {
   useEffect(() => {
     async function fetchInitialData() {
       try {
-        const [coursesRes, progressRes] = await Promise.all([
+        const [coursesRes, progressRes, classRes] = await Promise.all([
           apiClient.get<Course[]>('/courses/'),
-          apiClient.get<{ completed_lessons?: number[] } | any>('/progress/summary/').catch(() => ({ data: {} }))
+          apiClient.get<{ completed_lessons?: number[] } | any>('/progress/summary/').catch(() => ({ data: {} })),
+          apiClient.get<any>('/classrooms/mine/')
         ])
-        setCourses(coursesRes.data)
+        
+        // Obtener aulas en las que está inscrito el estudiante para permitir solo esos cursos
+        const classData = classRes.data as any
+        const classArray = Array.isArray(classData) ? classData : (classData?.data || classData?.results || [])
+        const allowedCourseIds = new Set(classArray.map((c: any) => c.course).filter(Boolean))
+
+        // Extract array safely and filter by enrolled courses
+        const coursesData = coursesRes.data as any
+        const coursesArray = Array.isArray(coursesData) ? coursesData : (coursesData?.data || coursesData?.results || [])
+        const filteredCourses = coursesArray.filter((c: Course) => allowedCourseIds.has(c.id))
+        
+        setCourses(filteredCourses)
         
         // Extraer IDs de lecciones completadas si vienen en el resumen o progreso
         const progressData = progressRes.data
         if (progressData && Array.isArray(progressData.completed_lesson_ids)) {
           setCompletedLessonIds(progressData.completed_lesson_ids)
         } else {
-          // Intentar otra fuente o dejar vacío
           setCompletedLessonIds([])
         }
       } catch (err) {
@@ -72,15 +84,18 @@ export default function CoursesPage() {
     setIsLoadingModules(true)
     try {
       const modulesRes = await apiClient.get<Module[]>(`/modules/?course=${course.id}`)
-      const modulesData = modulesRes.data
+      const rawModulesData = modulesRes.data as any
+      const modulesData: Module[] = Array.isArray(rawModulesData) ? rawModulesData : (rawModulesData?.data || rawModulesData?.results || [])
 
       // Cargar lecciones por cada módulo
       const modulesWithLessons = await Promise.all(
         modulesData.map(async (mod) => {
           const lessonsRes = await apiClient.get<Lesson[]>(`/lessons/?module=${mod.id}`)
+          const rawLessonsData = lessonsRes.data as any
+          const lessonsData: Lesson[] = Array.isArray(rawLessonsData) ? rawLessonsData : (rawLessonsData?.data || rawLessonsData?.results || [])
           return {
             ...mod,
-            lessons: lessonsRes.data.map(l => ({
+            lessons: lessonsData.map(l => ({
               ...l,
               is_completed: completedLessonIds.includes(l.id)
             }))
@@ -123,7 +138,17 @@ export default function CoursesPage() {
           <p className="text-sm font-medium text-slate-500 mt-1 mb-6">Continúa tu camino al dominio.</p>
 
           <div className="space-y-3">
-            {courses.map((course) => (
+            {courses.length === 0 ? (
+              <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                <BookOpen className="h-8 w-8 text-slate-300 mx-auto mb-3" />
+                <h3 className="text-sm font-bold text-slate-700">Sin cursos</h3>
+                <p className="text-xs text-slate-500 mt-1 mb-4">Inscríbete en un aula virtual para ver tus cursos.</p>
+                <Button asChild size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">
+                  <Link to="/classrooms">Ir a Aulas</Link>
+                </Button>
+              </div>
+            ) : (
+              courses.map((course) => (
               <button
                 key={course.id}
                 onClick={() => handleSelectCourse(course)}
@@ -149,7 +174,7 @@ export default function CoursesPage() {
                   </div>
                 )}
               </button>
-            ))}
+            )))}
           </div>
         </div>
 
@@ -195,9 +220,14 @@ export default function CoursesPage() {
                 <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4">
                   {selectedCourse.title}
                 </h1>
-                <p className="text-lg text-slate-500 font-medium max-w-2xl leading-relaxed">
+                <p className="text-lg text-slate-500 font-medium max-w-2xl leading-relaxed mb-6">
                   {selectedCourse.description}
                 </p>
+                <div className="flex gap-4">
+                  <Button onClick={() => toast.success('Solicitud de acceso enviada. Espera la confirmacin de un profesor.')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-6 py-5 rounded-xl shadow-lg shadow-indigo-200">
+                    Solicitar Unirse
+                  </Button>
+                </div>
               </div>
 
               {/* Decorative element */}

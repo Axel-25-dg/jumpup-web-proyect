@@ -21,8 +21,28 @@ export interface RankingUser {
   level: number;
 }
 
+export interface TeacherDashboardData {
+  classrooms: number;
+  students: number;
+  resources: number;
+  lessons: number;
+  certificates: number;
+}
+
+export interface AdminDashboardData {
+  users: number;
+  teachers: number;
+  students: number;
+  courses: number;
+  classrooms: number;
+  ventas_directas: number;
+  certificates: number;
+}
+
 export interface DashboardRepository {
   getStudentData(): Promise<StudentDashboardData>;
+  getTeacherData(): Promise<TeacherDashboardData>;
+  getAdminData(): Promise<AdminDashboardData>;
   getRanking(limit?: number): Promise<RankingUser[]>;
   getAchievements(limit?: number): Promise<Achievement[]>;
 }

@@ -43,13 +43,18 @@ export default function ProtectedRoute({
   }
 
   // Verificar roles específicos si se definen
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    const defaultPaths: Record<UserRole, string> = {
-      admin: '/admin',
-      teacher: '/teacher',
-      student: '/dashboard'
+  if (allowedRoles) {
+    const userRoleStr = user.role?.toLowerCase() || ''
+    const mappedRole = 
+      (userRoleStr === 'teacher' || userRoleStr === 'profesor') ? 'teacher' :
+      (userRoleStr === 'admin' || userRoleStr === 'administrador') ? 'admin' : 
+      'student';
+
+    if (!allowedRoles.includes(mappedRole as UserRole)) {
+      if (mappedRole === 'admin') return <Navigate to="/admin" replace />
+      if (mappedRole === 'teacher') return <Navigate to="/teacher" replace />
+      return <Navigate to="/dashboard" replace />
     }
-    return <Navigate to={defaultPaths[user.role] || '/'} replace />
   }
 
   return children ? <>{children}</> : <Outlet />

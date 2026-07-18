@@ -12,25 +12,39 @@ interface RawAuthResponse extends Omit<LoggedUser, 'role'> {
   refresh: string
 }
 
-function normalizeUser(raw: Omit<RawAuthResponse, 'access' | 'refresh'>): LoggedUser {
-  const roleValue = typeof raw.role === 'string'
-    ? raw.role
-    : raw.role?.name ?? raw.role_name
-  const role = roleValue?.toLowerCase()
-
-  return {
-    ...raw,
-    role: raw.is_superuser || role === 'admin'
-      ? 'admin'
-      : role === 'teacher' || raw.is_staff
-        ? 'teacher'
-        : 'student',
+function safeExtractRole(rawUser: any): string {
+  let r = rawUser.role || rawUser.role_name;
+  if (r) {
+    if (typeof r === 'string') return r.toLowerCase();
+    if (Array.isArray(r) && r.length > 0) r = r[0];
+    if (typeof r === 'object') {
+      if (r.name) return String(r.name).toLowerCase();
+      if (r.role) return String(r.role).toLowerCase();
+    }
+    return String(r).toLowerCase();
   }
+  if (rawUser.is_superuser) return 'admin';
+  if (rawUser.is_staff) return 'teacher';
+  return 'student';
+}
+
+function normalizeUser(raw: any): LoggedUser {
+  // Si el backend envía los datos dentro de { user: { ... } }, extraemos eso.
+  const userData = (raw.user && typeof raw.user === 'object') ? raw.user : raw;
+  
+  if (userData.id && !userData.user_id) {
+    userData.user_id = userData.id;
+  }
+  
+  return {
+    ...userData,
+    role: safeExtractRole(userData)
+  } as LoggedUser;
 }
 
 function toAuthSession(raw: RawAuthResponse): AuthSession {
-  const { access, refresh, ...user } = raw
-  return { user: normalizeUser(user), tokens: { access, refresh } }
+  const { access, refresh, ...rest } = raw;
+  return { user: normalizeUser(rest), tokens: { access, refresh } }
 }
 
 export class AxiosAuthRepository implements AuthRepository {
@@ -78,7 +92,7 @@ export class AxiosAuthRepository implements AuthRepository {
 
   async getCurrentUser(): Promise<LoggedUser> {
     try {
-      const { data } = await apiClient.get<Omit<RawAuthResponse, 'access' | 'refresh'>>('/auth/me/')
+      const { data } = await apiClient.get<any>('/auth/me/')
       return normalizeUser(data)
     } catch (err) {
       throw parseApiError(err)

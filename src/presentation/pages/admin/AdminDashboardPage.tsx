@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   Users,
   BookOpen,
@@ -18,14 +19,66 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Badge } from '@/presentation/components/ui/badge'
+import { Skeleton } from '@/presentation/components/ui/skeleton'
 import { Link } from 'react-router-dom'
+import { getAdminDashboardUseCase } from '@/infrastructure/factories/dashboard.factory'
+import type { AdminDashboardData } from '@/domain/ports/dashboard.repository'
 
 export default function AdminDashboardPage() {
+  const [data, setData] = useState<AdminDashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await getAdminDashboardUseCase.execute()
+        setData(result)
+      } catch (err: any) {
+        console.error('Error fetching admin dashboard data:', err)
+        setError(err.message || 'No se pudo cargar la información del panel.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-3xl" />
+          ))}
+        </div>
+        <div className="grid gap-8 lg:grid-cols-3">
+          <Skeleton className="h-96 lg:col-span-2 rounded-[2.5rem]" />
+          <Skeleton className="h-96 rounded-[2.5rem]" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <p className="text-red-500 font-bold">{error}</p>
+      </div>
+    )
+  }
+
   const stats = [
-    { label: 'Total Usuarios', value: '1,284', trend: '+12.5%', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50' },
-    { label: 'Ingresos Mensuales', value: '$12,450', trend: '+18.2%', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Pedidos Activos', value: '24', trend: '-4.1%', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Cursos en Catálogo', value: '42', trend: '+2.4%', icon: LayoutGrid, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { label: 'Total Usuarios', value: data?.users ?? 0, trend: '+12%', icon: Users, color: 'text-sky-600', bg: 'bg-sky-50 dark:bg-sky-900/20' },
+    { label: 'Nuevos Registros', value: '24', trend: '+18.2%', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+    { label: 'Aulas', value: data?.classrooms ?? 0, trend: '-5%', icon: Package, color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-900/20' },
+    { label: 'Cursos Activos', value: data?.courses ?? 0, trend: '+2%', icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
   ]
 
   return (
