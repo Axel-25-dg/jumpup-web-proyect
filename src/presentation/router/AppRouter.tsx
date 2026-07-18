@@ -47,6 +47,8 @@ const AdminAnnouncementsPage = lazy(() => import('../pages/admin/management/Admi
 const AdminAnnouncementFormPage = lazy(() => import('../pages/admin/management/AdminAnnouncementFormPage'))
 const AdminForumCategoriesPage = lazy(() => import('../pages/admin/management/AdminForumCategoriesPage'))
 const AdminForumCategoryFormPage = lazy(() => import('../pages/admin/management/AdminForumCategoryFormPage'))
+const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminResourcesPage'))
+const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
 
 // Admin Management - Users, Classrooms, Certificates (NEW)
 const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
@@ -212,6 +214,11 @@ export default function AppRouter() {
                 <Route path="/admin/forum-categories" element={<AdminForumCategoriesPage />} />
                 <Route path="/admin/forum-categories/new" element={<AdminForumCategoryFormPage />} />
                 <Route path="/admin/forum-categories/:id/edit" element={<AdminForumCategoryFormPage />} />
+
+                {/* Resources */}
+                <Route path="/admin/resources" element={<AdminResourcesPage />} />
+                <Route path="/admin/resources/new" element={<AdminResourceFormPage />} />
+                <Route path="/admin/resources/:id/edit" element={<AdminResourceFormPage />} />
 
                 {/* Admin Management Routes - Courses */}
                 <Route path="/admin/management/courses" element={<AdminCoursesPage />} />
