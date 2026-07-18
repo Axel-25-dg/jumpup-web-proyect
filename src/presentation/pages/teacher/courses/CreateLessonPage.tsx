@@ -20,16 +20,16 @@ import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Module } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
-  module: z.coerce.number().min(1, 'Selecciona un módulo'),
+  module: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona un módulo')),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   content_type: z.enum(['video', 'text', 'interactive', 'audio']),
   content: z.string().optional(),
   video_url: z.string().url('URL inválida').optional().or(z.literal('')),
-  order: z.coerce.number().min(1, 'El orden debe ser al menos 1').optional(),
-  xp_reward: z.coerce.number().min(0, 'Mínimo 0 XP').optional(),
+  order: z.preprocess((val) => val ? Number(val) : 1, z.number().min(1, 'El orden debe ser al menos 1').optional()),
+  xp_reward: z.preprocess((val) => val ? Number(val) : 10, z.number().min(0, 'Mínimo 0 XP').optional()),
 })
 
-type FormData = z.infer<typeof formSchema>
+type LessonFormData = z.infer<typeof formSchema>
 
 export default function CreateLessonPage() {
   const navigate = useNavigate()
@@ -40,7 +40,7 @@ export default function CreateLessonPage() {
   const [modules, setModules] = useState<Module[]>([])
   const [isLoadingModules, setIsLoadingModules] = useState(true)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<LessonFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       module: preselectedModule ? Number(preselectedModule) : undefined,
@@ -78,7 +78,7 @@ export default function CreateLessonPage() {
     loadModules()
   }, [])
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LessonFormData) => {
     setIsSubmitting(true)
     try {
       await courseRepo.createLesson({

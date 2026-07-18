@@ -41,6 +41,7 @@ const ResourceLibraryPage = lazy(() => import('../pages/teacher/resources/Resour
 const ManageLiveSessionsPage = lazy(() => import('../pages/teacher/live/ManageLiveSessionsPage'))
 const ScheduleLiveSessionPage = lazy(() => import('../pages/teacher/live/ScheduleLiveSessionPage'))
 const EditCoursePage = lazy(() => import('../pages/teacher/courses/EditCoursePage'))
+const ModuleExercisesPage = lazy(() => import('../pages/teacher/courses/ModuleExercisesPage'))
 const TeacherInboxPage = lazy(() => import('../pages/teacher/inbox/TeacherInboxPage'))
 const TeacherProfilePage = lazy(() => import('../pages/teacher/profile/TeacherProfilePage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
@@ -123,6 +124,7 @@ export default function AppRouter() {
                <Route path="/teacher/modules/new" element={<CreateModulePage />} />
                <Route path="/teacher/lessons/new" element={<CreateLessonPage />} />
                <Route path="/teacher/exercises/new" element={<CreateExercisePage />} />
+               <Route path="/teacher/modules/:id/exercises" element={<ModuleExercisesPage />} />
                <Route path="/teacher/classrooms" element={<TeacherClassroomsPage />} />
                <Route path="/teacher/classrooms/new" element={<CreateClassroomPage />} />
                <Route path="/teacher/classrooms/:id/manage" element={<ManageClassroomPage />} />

@@ -61,7 +61,7 @@ export default function AppShell() {
 
   const getNavItems = () => {
     if (!user) {
-      return [{ to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false }]
+      return []
     }
     
     const role = user.role?.toLowerCase() || ''
@@ -74,8 +74,7 @@ export default function AppShell() {
         { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
         { to: '/teacher/inbox', label: 'Mensajes', icon: Mail, protected: true },
-        { to: '/teacher/profile', label: 'Mi Perfil', icon: User, protected: true },
-        { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
+        { to: '/teacher/profile', label: 'Mi Perfil', icon: User, protected: true }
       ]
     }
     if (role === 'admin' || role === 'administrador') {
@@ -89,7 +88,6 @@ export default function AppShell() {
       { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, protected: true },
       { to: '/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
       { to: '/chat', label: 'Tutor IA', icon: Sparkles, protected: true },
-      { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
       { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
       { to: '/social', label: 'Social', icon: Users, protected: true },
       { to: '/classrooms', label: 'Aulas Vivas', icon: Users, protected: true },
@@ -148,17 +146,6 @@ export default function AppShell() {
                   <Trophy className="h-3.5 w-3.5" />
                   <span>1,240 XP</span>
                 </Badge>
-
-                <Button variant="ghost" size="icon" asChild className="relative rounded-xl hover:bg-slate-100 transition-colors">
-                  <Link to="/cart">
-                    <ShoppingCart className="h-5 w-5 text-slate-600" />
-                    {cartItemCount > 0 && (
-                      <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white ring-2 ring-white">
-                        {cartItemCount > 99 ? '99+' : cartItemCount}
-                      </span>
-                    )}
-                  </Link>
-                </Button>
               </>
             )}
 
@@ -194,14 +181,6 @@ export default function AppShell() {
                     >
                       <div className="bg-slate-100 p-1.5 rounded-lg"><User className="h-4 w-4" /></div>
                       <span className="font-bold text-sm text-slate-700">Mi Perfil</span>
-                    </Link>
-                    <Link
-                      to="/orders"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="bg-slate-100 p-1.5 rounded-lg"><Package className="h-4 w-4" /></div>
-                      <span className="font-bold text-sm text-slate-700">Mis Pedidos</span>
                     </Link>
                     <div className="h-px bg-slate-100 my-2" />
                     <button

@@ -69,6 +69,7 @@ export default function TeacherProfilePage() {
   useEffect(() => {
     const loadStats = async () => {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const data = await getTeacherDashboardUseCase.execute()
         setDashboardData(data)
       } catch {

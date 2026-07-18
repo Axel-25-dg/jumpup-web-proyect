@@ -20,12 +20,12 @@ import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Lesson, Module } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
-  lesson: z.coerce.number().min(1, 'Selecciona una lección'),
+  lesson: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona una lección')),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
-  max_score: z.coerce.number().min(1, 'Mínimo 1 punto').max(1000),
+  max_score: z.preprocess((val) => Number(val), z.number().min(1, 'Mínimo 1 punto').max(1000)),
 })
 
-type FormData = z.infer<typeof formSchema>
+type ExerciseFormData = z.infer<typeof formSchema>
 
 interface Question {
   id: number
@@ -47,9 +47,10 @@ export default function CreateExercisePage() {
     { id: 1, text: '', options: ['', '', '', ''], correctOption: 0 }
   ])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<ExerciseFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      lesson: 0,
       title: '',
       max_score: 100,
     }
@@ -115,7 +116,7 @@ export default function CreateExercisePage() {
     setQuestions(prev => prev.map(q => q.id === qId ? { ...q, correctOption: optIndex } : q))
   }
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: ExerciseFormData) => {
     // Validate questions
     const hasEmptyQuestion = questions.some(q => !q.text.trim())
     if (hasEmptyQuestion) {

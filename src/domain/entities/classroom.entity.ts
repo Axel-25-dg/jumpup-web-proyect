@@ -3,6 +3,9 @@ export interface Classroom {
   name: string;
   description?: string;
   teacher_id: number;
+  course?: number;
+  teacher?: number;
+  access_code?: string;
   created_at: string;
 }
 

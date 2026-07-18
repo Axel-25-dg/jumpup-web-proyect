@@ -32,6 +32,10 @@ function toAuthSession(raw: any): AuthSession {
   // Si el backend envía los datos dentro de { user: { ... } }, extraemos eso.
   const userData = (rest.user && typeof rest.user === 'object') ? rest.user : rest;
   
+  if (userData.id && !userData.user_id) {
+    userData.user_id = userData.id;
+  }
+  
   userData.role = safeExtractRole(userData);
   return { user: userData as LoggedUser, tokens: { access, refresh } }
 }
@@ -85,6 +89,10 @@ export class AxiosAuthRepository implements AuthRepository {
       
       if (data.user && typeof data.user === 'object') {
         data = data.user;
+      }
+      
+      if (data.id && !data.user_id) {
+        data.user_id = data.id;
       }
       
       data.role = safeExtractRole(data);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FolderOpen,
   Plus,
@@ -10,8 +10,7 @@ import {
   Download,
   Trash2,
   AlertCircle,
-  Loader2,
-  Upload
+  Loader2
 } from 'lucide-react'
 import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
@@ -35,20 +34,25 @@ import {
   AlertDialogTitle,
 } from '@/presentation/components/ui/alert-dialog'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/presentation/components/ui/dialog'
+import {
   getTeacherResourcesUseCase,
   uploadResourceUseCase,
   deleteResourceUseCase,
   courseRepo
 } from '@/infrastructure/factories/teacher.factory'
 import { useAuthStore } from '@/presentation/store/auth.store'
-import { apiClient } from '@/infrastructure/http/axios-client'
 import type { Resource } from '@/domain/entities/resource.entity'
-import type { Module } from '@/domain/entities/course.entity'
+import type { Course, Module } from '@/domain/entities/course.entity'
 import { toast } from 'sonner'
 
 export default function ResourceLibraryPage() {
   const user = useAuthStore(s => s.user)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'doc' | 'media'>('all')
@@ -60,6 +64,14 @@ export default function ResourceLibraryPage() {
   
   const [courses, setCourses] = useState<Course[]>([])
   const [selectedCourse, setSelectedCourse] = useState<string>('')
+  const [modules, setModules] = useState<Module[]>([])
+  const [selectedModule, setSelectedModule] = useState<string>('')
+
+  // New Link states
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [newLinkTitle, setNewLinkTitle] = useState('')
+  const [newLinkUrl, setNewLinkUrl] = useState('')
+  const [newLinkType, setNewLinkType] = useState('pdf')
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -88,8 +100,16 @@ export default function ResourceLibraryPage() {
     loadCourses()
   }, [user?.user_id])
 
-  const getIcon = (type: string) => {
-    switch (type.toLowerCase()) {
+  useEffect(() => {
+    if (selectedCourse) {
+      courseRepo.getModulesByCourse(Number(selectedCourse)).then(setModules)
+    } else {
+      setModules([])
+    }
+  }, [selectedCourse])
+
+  const getIcon = (type?: string) => {
+    switch (type?.toLowerCase()) {
       case 'pdf':
       case 'doc':
       case 'txt':
@@ -102,66 +122,51 @@ export default function ResourceLibraryPage() {
   }
 
   const filteredResources = resources.filter(r => {
-    const matchesSearch = r.title.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (r.title || '').toLowerCase().includes(searchTerm.toLowerCase())
     if (!matchesSearch) return false
     if (filterType === 'all') return true
-    if (filterType === 'doc') return ['pdf', 'doc', 'txt', 'document'].includes(r.file_type.toLowerCase())
-    if (filterType === 'media') return ['video', 'image', 'audio'].includes(r.file_type.toLowerCase())
+    if (filterType === 'doc') return ['pdf', 'doc', 'txt', 'document'].includes((r.file_type || '').toLowerCase())
+    if (filterType === 'media') return ['video', 'image', 'audio'].includes((r.file_type || '').toLowerCase())
     return true
   })
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user?.user_id) return
+  const handleAddLink = async () => {
+    if (!user?.user_id) return
     
-    if (!selectedCourse) {
-      toast.error('Por favor, selecciona un curso antes de subir el archivo.')
-      if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!selectedCourse || !selectedModule) {
+      toast.error('Por favor, selecciona un curso y un módulo')
+      return
+    }
+
+    if (!newLinkTitle.trim() || !newLinkUrl.trim()) {
+      toast.error('Por favor, ingresa el título y el enlace')
       return
     }
 
     setIsUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('title', file.name.replace(/\.[^/.]+$/, ''))
-    formData.append('teacher', String(user.user_id))
-    formData.append('course', selectedCourse)
-
-    // Detect file type
-    const ext = file.name.split('.').pop()?.toLowerCase() || ''
-    let resourceType = 'pdf'
-    if (['doc', 'docx'].includes(ext)) resourceType = 'word'
-    else if (['txt', 'pdf'].includes(ext)) resourceType = 'pdf'
-    else if (['mp4', 'webm', 'avi', 'mov'].includes(ext)) resourceType = 'video'
-    else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) resourceType = 'image'
-    else if (['mp3', 'wav', 'ogg'].includes(ext)) resourceType = 'audio'
-    formData.append('resource_type', resourceType)
+    const resourcePayload = new FormData()
+    resourcePayload.append('title', newLinkTitle)
+    resourcePayload.append('teacher', String(user.user_id))
+    resourcePayload.append('course', selectedCourse)
+    resourcePayload.append('module', selectedModule)
+    resourcePayload.append('resource_type', newLinkType)
+    resourcePayload.append('file_url', newLinkUrl)
 
     try {
-      // Step 1: Upload to /api/media-files/
-      const mediaFormData = new FormData()
-      mediaFormData.append('file', file)
-      const { data: mediaData } = await apiClient.post('/media-files/', mediaFormData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
-
-      // Step 2: Create TeacherResource
-      const resourcePayload = new FormData()
-      resourcePayload.append('title', file.name.replace(/\.[^/.]+$/, ''))
-      resourcePayload.append('course', selectedCourse)
-      resourcePayload.append('resource_type', resourceType)
-      resourcePayload.append('media_file', String(mediaData.id))
-
       const created = await uploadResourceUseCase.execute(resourcePayload)
       setResources(prev => [created, ...prev])
-      toast.success(`"${file.name}" subido correctamente`)
+      toast.success(`Enlace "${newLinkTitle}" subido correctamente`)
+      setIsAddDialogOpen(false)
+      setNewLinkTitle('')
+      setNewLinkUrl('')
+      setSelectedCourse('')
+      setSelectedModule('')
     } catch (error: any) {
-      console.error('Error uploading resource:', error)
-      const errorMsg = error?.detail || error?.message || (typeof error === 'object' ? JSON.stringify(error) : 'Error al subir el archivo')
+      console.error('Error adding resource:', error)
+      const errorMsg = error?.detail || error?.message || (typeof error === 'object' ? JSON.stringify(error) : 'Error al añadir el recurso')
       toast.error(`Error: ${errorMsg}`)
     } finally {
       setIsUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -190,15 +195,6 @@ export default function ResourceLibraryPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Hidden file input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="hidden"
-        onChange={handleFileChange}
-        accept=".pdf,.doc,.docx,.txt,.mp4,.webm,.jpg,.jpeg,.png,.gif,.mp3,.wav"
-      />
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -206,34 +202,101 @@ export default function ResourceLibraryPage() {
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Sube y organiza tus materiales didácticos</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <select
-            value={selectedCourse}
-            onChange={(e) => setSelectedCourse(e.target.value)}
-            className="h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
-          >
-            <option value="">Selecciona un curso...</option>
-            {courses.map(c => (
-              <option key={c.id} value={c.id}>{c.title}</option>
-            ))}
-          </select>
           <Button
-            onClick={() => {
-              if (!selectedCourse) {
-                toast.error('Por favor, selecciona un curso primero')
-                return
-              }
-              fileInputRef.current?.click()
-            }}
+            onClick={() => setIsAddDialogOpen(true)}
             disabled={isUploading}
-            className="h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6"
+            className="h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6 shrink-0"
           >
-            {isUploading
-              ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Subiendo...</>
-              : <><Plus className="mr-2 h-5 w-5" /> Subir Archivo</>
-            }
+            <Plus className="mr-2 h-5 w-5" /> Añadir Enlace
           </Button>
         </div>
       </div>
+
+      {/* Add Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black">Añadir Nuevo Enlace</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-black text-slate-900 dark:text-white">Curso</label>
+              <select
+                value={selectedCourse}
+                onChange={(e) => {
+                  setSelectedCourse(e.target.value)
+                  setSelectedModule('')
+                }}
+                className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 font-medium"
+              >
+                <option value="">Selecciona un curso...</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-black text-slate-900 dark:text-white">Módulo</label>
+              <select
+                value={selectedModule}
+                onChange={(e) => setSelectedModule(e.target.value)}
+                disabled={!selectedCourse || modules.length === 0}
+                className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 font-medium disabled:opacity-50"
+              >
+                <option value="">Selecciona un módulo...</option>
+                {modules.map(m => (
+                  <option key={m.id} value={m.id}>{m.title}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-black text-slate-900 dark:text-white">Título del recurso</label>
+              <Input
+                value={newLinkTitle}
+                onChange={(e) => setNewLinkTitle(e.target.value)}
+                placeholder="Ej. Documento guía..."
+                className="h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-black text-slate-900 dark:text-white">Tipo de Recurso</label>
+              <select
+                value={newLinkType}
+                onChange={(e) => setNewLinkType(e.target.value)}
+                className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 font-medium"
+              >
+                <option value="pdf">PDF / Documento de texto</option>
+                <option value="word">Documento Word</option>
+                <option value="video">Video</option>
+                <option value="image">Imagen</option>
+                <option value="audio">Audio</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-black text-slate-900 dark:text-white">Enlace (URL)</label>
+              <Input
+                value={newLinkUrl}
+                onChange={(e) => setNewLinkUrl(e.target.value)}
+                placeholder="https://..."
+                className="h-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleAddLink}
+              disabled={isUploading || !selectedCourse || !selectedModule || !newLinkTitle || !newLinkUrl}
+              className="w-full h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700"
+            >
+              {isUploading ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Guardando...</> : 'Guardar Enlace'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
@@ -344,10 +407,10 @@ export default function ResourceLibraryPage() {
                 </p>
                 {!searchTerm && (
                   <Button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setIsAddDialogOpen(true)}
                     className="mt-4 bg-sky-600 hover:bg-sky-700 rounded-xl font-black"
                   >
-                    <Upload className="mr-2 h-4 w-4" /> Subir primer archivo
+                    <Plus className="mr-2 h-4 w-4" /> Añadir primer enlace
                   </Button>
                 )}
               </div>

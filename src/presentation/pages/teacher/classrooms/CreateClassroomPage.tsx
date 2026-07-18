@@ -55,14 +55,15 @@ export default function CreateClassroomPage() {
   }, [])
 
   const onSubmit = async (data: FormData) => {
-    if (!user?.user_id) return
+    const teacherId = user?.user_id || (user as any)?.id
+    if (!teacherId) return
     setIsSubmitting(true)
     try {
       await createClassroomUseCase.execute({
         name: data.name,
         course: Number(data.course),
         description: data.description || undefined,
-        teacher: user.user_id,
+        teacher: teacherId,
         access_code: data.access_code || undefined,
       })
       toast.success(`Aula "${data.name}" creada con éxito`)

@@ -348,8 +348,8 @@ export default function EditCoursePage() {
                           <Eye className="h-4 w-4 text-slate-500" />
                         </Link>
                       </Button>
-                      <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-                        <Link to={`/teacher/exercises/new?module=${module.id}`}>
+                      <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" title="Ver Ejercicios">
+                        <Link to={`/teacher/modules/${module.id}/exercises`}>
                           <BarChart className="h-4 w-4 text-slate-500" />
                         </Link>
                       </Button>

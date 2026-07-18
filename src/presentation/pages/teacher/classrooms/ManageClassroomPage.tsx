@@ -73,7 +73,7 @@ export default function ManageClassroomPage() {
     setActionLoading(student.id)
     try {
       const updated = await approveStudentUseCase.execute(classroomId, student.student_id)
-      setStudents(prev => prev.map(s => s.id === student.id ? { ...s, status: 'active', ...updated } : s))
+      setStudents(prev => prev.map(s => s.id === student.id ? { ...s, ...updated, status: 'active' } : s))
       toast.success(`${student.student_name || 'Alumno'} aprobado correctamente`)
     } catch (error) {
       console.error('Error approving student:', error)

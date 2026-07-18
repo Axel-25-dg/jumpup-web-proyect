@@ -182,8 +182,7 @@ export default function HomePage() {
               <div className="grid gap-4">
                 {[
                   { t: "Tutoría con IA", d: "Conversa 24/7 con nuestro tutor entrenado para corregirte.", i: BrainCircuit },
-                  { t: "Ranking Global", d: "Compite con estudiantes de todo el mundo y gana premios.", i: Trophy },
-                  { t: "Tienda de Recompensas", d: "Canjea tu XP por cursos reales y beneficios.", i: ShoppingBag }
+                  { t: "Ranking Global", d: "Compite con estudiantes de todo el mundo y gana premios.", i: Trophy }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4 p-6 rounded-3xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
                     <div className="bg-sky-500 p-3 rounded-2xl h-fit text-white">

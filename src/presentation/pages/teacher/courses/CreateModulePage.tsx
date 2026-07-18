@@ -18,13 +18,13 @@ import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Course } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
-  course: z.coerce.number().min(1, 'Selecciona un curso'),
+  course: z.preprocess((val) => Number(val), z.number().min(1, 'Selecciona un curso')),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
-  description: z.string().max(500, 'Máximo 500 caracteres').optional(),
-  order: z.coerce.number().min(1, 'El orden debe ser al menos 1').optional(),
+  description: z.string().optional(),
+  order: z.preprocess((val) => val ? Number(val) : 1, z.number().min(1, 'El orden debe ser al menos 1').optional()),
 })
 
-type FormData = z.infer<typeof formSchema>
+type ModuleFormData = z.infer<typeof formSchema>
 
 export default function CreateModulePage() {
   const navigate = useNavigate()
@@ -35,7 +35,7 @@ export default function CreateModulePage() {
   const [courses, setCourses] = useState<Course[]>([])
   const [isLoadingCourses, setIsLoadingCourses] = useState(true)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<ModuleFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       course: preselectedCourse ? Number(preselectedCourse) : undefined,
@@ -59,7 +59,7 @@ export default function CreateModulePage() {
     loadCourses()
   }, [])
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: ModuleFormData) => {
     setIsSubmitting(true)
     try {
       await courseRepo.createModule({

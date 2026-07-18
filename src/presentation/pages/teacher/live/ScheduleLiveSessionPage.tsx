@@ -25,12 +25,12 @@ const formSchema = z.object({
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   scheduled_date: z.string().min(1, 'La fecha es obligatoria'),
   scheduled_time: z.string().min(1, 'La hora es obligatoria'),
-  duration_minutes: z.coerce.number().min(15, 'Mínimo 15 minutos').max(480, 'Máximo 8 horas'),
-  classroom_id: z.coerce.number().optional(),
+  duration_minutes: z.preprocess((val) => Number(val), z.number().min(15, 'Mínimo 15 minutos').max(480, 'Máximo 8 horas')),
+  classroom_id: z.preprocess((val) => val ? Number(val) : undefined, z.number().optional()),
   join_url: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
 })
 
-type FormData = z.infer<typeof formSchema>
+type ScheduleFormData = z.infer<typeof formSchema>
 
 export default function ScheduleLiveSessionPage() {
   const navigate = useNavigate()
@@ -38,7 +38,7 @@ export default function ScheduleLiveSessionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<ScheduleFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
@@ -62,7 +62,7 @@ export default function ScheduleLiveSessionPage() {
     loadClassrooms()
   }, [user?.user_id])
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: ScheduleFormData) => {
     if (!user?.user_id) return
     setIsSubmitting(true)
     try {
