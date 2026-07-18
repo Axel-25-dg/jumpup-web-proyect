@@ -10,8 +10,13 @@ interface RawAuthResponse extends LoggedUser {
   refresh: string
 }
 
-function toAuthSession(raw: RawAuthResponse): AuthSession {
+function toAuthSession(raw: RawAuthResponse & { is_superuser?: boolean }): AuthSession {
   const { access, refresh, ...user } = raw
+  if (!user.role) {
+    if (raw.is_superuser) user.role = 'admin'
+    else if (user.is_staff) user.role = 'teacher'
+    else user.role = 'student'
+  }
   return { user, tokens: { access, refresh } }
 }
 
@@ -60,7 +65,12 @@ export class AxiosAuthRepository implements AuthRepository {
 
   async getCurrentUser(): Promise<LoggedUser> {
     try {
-      const { data } = await apiClient.get<LoggedUser>('/auth/me/')
+      const { data } = await apiClient.get<LoggedUser & { is_superuser?: boolean }>('/auth/me/')
+      if (!data.role) {
+        if (data.is_superuser) data.role = 'admin'
+        else if (data.is_staff) data.role = 'teacher'
+        else data.role = 'student'
+      }
       return data
     } catch (err) {
       throw parseApiError(err)
