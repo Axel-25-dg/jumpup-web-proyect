@@ -23,7 +23,8 @@ import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/presentation/utils/cn'
 
-function getInitials(username: string): string {
+function getInitials(username?: string): string {
+  if (!username) return 'U'
   return username.slice(0, 2).toUpperCase()
 }
 
@@ -37,7 +38,7 @@ export default function AppShell() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  const cartItemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0
+  const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0
 
   // Cerrar menú al hacer clic fuera
   useEffect(() => {
@@ -56,18 +57,53 @@ export default function AppShell() {
     navigate('/', { replace: true })
   }
 
-  const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, protected: true },
-    { to: '/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
-    { to: '/chat', label: 'Tutor IA', icon: Sparkles, protected: true },
-    { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
-    { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
-    { to: '/social', label: 'Social', icon: Users, protected: true },
-    { to: '/classrooms', label: 'Aulas Vivas', icon: Users, protected: true },
-    { to: '/certificates', label: 'Certificados', icon: Award, protected: true },
-  ]
+  const getNavItems = () => {
+    if (!user) {
+      return [{ to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false }]
+    }
+    
+    const role = user.role?.toLowerCase() || ''
+    
+    if (role === 'teacher' || role === 'profesor') {
+      return [
+        { to: '/teacher', label: 'Panel Profesor', icon: LayoutDashboard, protected: true },
+        { to: '/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
+        { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
+        { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
+      ]
+    }
+    if (role === 'admin' || role === 'administrador') {
+      return [
+        { to: '/admin', label: 'Panel Admin', icon: LayoutDashboard, protected: true },
+        { to: '/admin/users', label: 'Usuarios', icon: Users, protected: true },
+        { to: '/admin/categories', label: 'Categorías', icon: BookOpen, protected: true },
+      ]
+    }
+    return [
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, protected: true },
+      { to: '/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
+      { to: '/chat', label: 'Tutor IA', icon: Sparkles, protected: true },
+      { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
+      { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
+      { to: '/social', label: 'Social', icon: Users, protected: true },
+      { to: '/classrooms', label: 'Aulas Vivas', icon: Users, protected: true },
+      { to: '/certificates', label: 'Certificados', icon: Award, protected: true },
+    ]
+  }
+
+  const navItems = getNavItems()
 
   const filteredNavItems = navItems.filter(item => !item.protected || user)
+
+  const getDisplayRole = () => {
+    if (!user) return ''
+    const r = user.role?.toLowerCase() || ''
+    if (r === 'admin' || r === 'administrador') return 'Administrador'
+    if (r === 'teacher' || r === 'profesor') return 'Profesor'
+    return 'Estudiante Pro'
+  }
+  
+  const displayRole = getDisplayRole()
 
   return (
     <div className="flex min-h-screen bg-slate-50/50">
@@ -258,7 +294,7 @@ export default function AppShell() {
                   isSidebarExpanded ? "opacity-100 w-full" : "opacity-0 w-0"
                 )}>
                   <span className="text-xs font-black text-slate-900 truncate">{user.username}</span>
-                  <span className="text-[10px] font-bold text-sky-600 uppercase tracking-tighter">Estudiante Pro</span>
+                  <span className="text-[10px] font-bold text-sky-600 uppercase tracking-tighter">{displayRole}</span>
                 </div>
              </div>
           </div>
