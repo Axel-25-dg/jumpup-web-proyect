@@ -31,6 +31,8 @@ const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'
 const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
 const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
+const CourseListPage = lazy(() => import('../pages/courses/CourseListPage'))
+const CourseFormPage = lazy(() => import('../pages/courses/CourseFormPage'))
 
 function PageLoader() {
   return (
@@ -103,6 +105,13 @@ export default function AppRouter() {
             {/* Teacher Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
                <Route path="/teacher" element={<TeacherDashboardPage />} />
+            </Route>
+
+            {/* Gestión académica: en Django, admin y docente tienen is_staff=True. */}
+            <Route element={<ProtectedRoute requireStaff />}>
+               <Route path="/management/courses" element={<CourseListPage />} />
+               <Route path="/management/courses/new" element={<CourseFormPage />} />
+               <Route path="/management/courses/:id/edit" element={<CourseFormPage />} />
             </Route>
 
             {/* Shared Authenticated Routes (Students & Teachers) */}

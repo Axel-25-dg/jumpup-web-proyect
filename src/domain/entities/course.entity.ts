@@ -14,7 +14,7 @@ export interface Course {
   title: string;
   description: string;
   difficulty_level: DifficultyLevel;
-  image_url: string;
+  image_url: string | null;
 }
 
 export interface Module {
