@@ -3,7 +3,6 @@ import { Suspense, lazy, useEffect } from 'react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import ProtectedRoute from './ProtectedRoute'
 import AppShell from '@/presentation/components/AppShell'
-import PlaceholderPage from '../pages/PlaceholderPage'
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
@@ -51,6 +50,14 @@ const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminRes
 const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
 const AdminLiveSessionsPage = lazy(() => import('../pages/admin/management/AdminLiveSessionsPage'))
 const AdminLiveSessionFormPage = lazy(() => import('../pages/admin/management/AdminLiveSessionFormPage'))
+
+// E-Commerce - Catalogo
+const AdminCatalogoPage = lazy(() => import('../pages/admin/management/AdminCatalogoPage'))
+const AdminCatalogoFormPage = lazy(() => import('../pages/admin/management/AdminCatalogoFormPage'))
+
+// E-Commerce - Ordenes de Compra
+const AdminOrdenesCompraPage = lazy(() => import('../pages/admin/management/AdminOrdenesCompraPage'))
+const AdminOrdenCompraDetailPage = lazy(() => import('../pages/admin/management/AdminOrdenCompraDetailPage'))
 
 // Admin Management - Users, Classrooms, Certificates (NEW)
 const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
@@ -181,8 +188,8 @@ export default function AppRouter() {
                <Route path="/management/courses/:id/edit" element={<CourseFormPage />} />
             </Route>
 
-            {/* Shared Authenticated Routes (Students & Teachers) */}
-            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher']} />}>
+            {/* Shared Authenticated Routes (All roles) */}
+            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']} />}>
                <Route path="/forum" element={<ForumPage />} />
                <Route path="/classrooms" element={<ClassroomsPage />} />
                <Route path="/live/:id" element={<LiveSessionPage />} />
@@ -203,9 +210,14 @@ export default function AppRouter() {
                 <Route path="/admin/categories/new" element={<CategoryFormPage />} />
                 <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
                 
-                {/* Products / Orders */}
-                <Route path="/admin/products" element={<PlaceholderPage title="Inventario de Productos" />} />
-                <Route path="/admin/orders" element={<PlaceholderPage title="Registro de Ventas" />} />
+                {/* E-Commerce - Catalogo */}
+                <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
+                <Route path="/admin/catalogo/new" element={<AdminCatalogoFormPage />} />
+                <Route path="/admin/catalogo/:id/edit" element={<AdminCatalogoFormPage />} />
+
+                {/* E-Commerce - Ordenes de Compra */}
+                <Route path="/admin/ordenes-compra" element={<AdminOrdenesCompraPage />} />
+                <Route path="/admin/ordenes-compra/:id" element={<AdminOrdenCompraDetailPage />} />
                 
                 {/* Announcements */}
                 <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />

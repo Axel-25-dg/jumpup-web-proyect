@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { apiClient } from '@/infrastructure/http/axios-client'
-import { LogOut, Edit2, CheckCircle2, User, Mail, Award, Bolt, Flame, Camera, Share2 } from 'lucide-react'
+import { LogOut, Edit2, CheckCircle2, User, Mail, Camera, Share2, Award, Bolt, Flame } from 'lucide-react'
 import { Card, CardContent, CardFooter } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
@@ -11,31 +11,58 @@ export default function ProfilePage() {
   const { user, logout } = useAuthStore()
   const [stats, setStats] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [firstName, setFirstName] = useState(user?.username || '')
+  const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
+  // Cargar perfil completo al montar
   useEffect(() => {
-    async function fetchStats() {
-      if (user?.role === 'student') {
-        try {
-          const res = await apiClient.get('/dashboard/student/')
-          setStats(res.data.data) // dashboard returns { data: ..., achievements: ..., ranking: ... }
-        } catch (err) {
-          console.error('Error fetching student stats:', err)
+    async function loadProfile() {
+      try {
+        const res = await apiClient.get('/auth/me/')
+        const data = res.data
+        setFirstName(data.username || data.first_name || '')
+        setLastName(data.last_name || '')
+      } catch {
+        // Fallback a datos del store
+        setFirstName(user?.username || '')
+      }
+
+      // Cargar stats según el rol
+      try {
+        const role = user?.role?.toLowerCase() || ''
+        let res
+        if (role === 'student') {
+          res = await apiClient.get('/dashboard/student/')
+          setStats(res.data.data || res.data)
+        } else if (role === 'admin' || role === 'administrador') {
+          res = await apiClient.get('/dashboard/admin/')
+          setStats(res.data)
+        } else if (role === 'teacher' || role === 'profesor') {
+          res = await apiClient.get('/dashboard/teacher/')
+          setStats(res.data)
         }
+      } catch {
+        // stats no crítico
       }
     }
-    fetchStats()
+    loadProfile()
   }, [user])
 
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      // Mock save or real save if endpoint exists
-      // await apiClient.patch('/auth/me/', { first_name: firstName, last_name: lastName })
+      await apiClient.patch('/auth/me/', {
+        first_name: firstName,
+        last_name: lastName,
+      })
+      // Refrescar store con datos actualizados
+      const { data } = await apiClient.get('/auth/me/')
+      useAuthStore.setState((state) => ({
+        user: state.user ? { ...state.user, username: data.username } : null
+      }))
       setIsEditing(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving profile:', err)
     } finally {
       setIsSaving(false)
@@ -67,7 +94,7 @@ export default function ProfilePage() {
                 <p className="text-slate-500 font-bold mt-1">{user?.email}</p>
                 <div className="flex items-center justify-center sm:justify-start gap-2 mt-3">
                   <Badge className="bg-sky-100 text-sky-700 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
-                    {user?.role === 'student' ? 'Estudiante' : 'Profesor'}
+                    {user?.role === 'student' ? 'Estudiante' : user?.role === 'teacher' ? 'Profesor' : 'Administrador'}
                   </Badge>
                   {stats && (
                     <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
@@ -136,7 +163,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Estadísticas (Solo Estudiantes) */}
-            {stats && (
+            {stats && user?.role === 'student' && (
               <div className="space-y-6 bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-[2rem] text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-10">
                   <Award className="h-32 w-32" />
