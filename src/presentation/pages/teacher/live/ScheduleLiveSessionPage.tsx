@@ -67,12 +67,16 @@ export default function ScheduleLiveSessionPage() {
     setIsSubmitting(true)
     try {
       const scheduledDatetime = `${data.scheduled_date}T${data.scheduled_time}:00`
+      const selectedClassroom = classrooms.find(c => c.id === Number(data.classroom_id))
+      const courseId = selectedClassroom?.course
+
       await createLiveSessionUseCase.execute({
         title: data.title,
         scheduled_date: scheduledDatetime,
         duration_minutes: data.duration_minutes,
         teacher_id: user.user_id,
         classroom_id: data.classroom_id || undefined,
+        course_id: courseId || undefined,
         join_url: data.join_url || undefined,
         status: 'upcoming',
       })

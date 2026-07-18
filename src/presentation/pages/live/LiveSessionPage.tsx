@@ -37,9 +37,7 @@ interface Participant {
 interface LiveSessionDetails {
   id: number
   title: string
-  classroom_info?: {
-    name: string
-  }
+  course_title?: string
 }
 
 export default function LiveSessionPage() {
@@ -157,9 +155,9 @@ export default function LiveSessionPage() {
               Tutoría en Vivo: <span className="text-primary">{session.title}</span>
             </h1>
             <div className="flex items-center gap-3 mt-0.5">
-               <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider py-0 px-2 h-4 border-primary/30 text-primary">
-                 Aula: {session.classroom_info?.name || 'General'}
-               </Badge>
+                 <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider py-0 px-2 h-4 border-primary/30 text-primary">
+                   Aula: {session.course_title || 'General'}
+                 </Badge>
                <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
                   {isConnected ? <Wifi className="h-3 w-3 text-emerald-500" /> : <Signal className="h-3 w-3 text-amber-500 animate-pulse" />}
                   {isConnected ? 'Señal Estable' : 'Reconectando...'}

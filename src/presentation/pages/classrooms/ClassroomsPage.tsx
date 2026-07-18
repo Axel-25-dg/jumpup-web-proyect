@@ -25,7 +25,7 @@ interface LiveSession {
   id: number
   title: string
   status: 'scheduled' | 'live' | 'ended' | 'cancelled'
-  scheduled_time: string
+  scheduled_at: string
   meeting_url?: string
 }
 
@@ -176,7 +176,7 @@ export default function ClassroomsPage() {
                           )}
                         </CardTitle>
                         <CardDescription className="text-xs">
-                          Inicio programado: {new Date(session.scheduled_time).toLocaleString()}
+                          Inicio programado: {new Date(session.scheduled_at).toLocaleString()}
                         </CardDescription>
                       </div>
                       
