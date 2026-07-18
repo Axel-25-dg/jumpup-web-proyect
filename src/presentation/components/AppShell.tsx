@@ -338,21 +338,20 @@ export default function AppShell() {
     )}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className={cn(
-            'h-8 w-8 grid place-items-center border transition-colors',
-            theme === 'dark'
-              ? 'border-neutral-700 group-hover:border-sky-500/60'
-              : 'border-neutral-200 group-hover:border-sky-500/40',
-            'group-hover:bg-sky-500/10'
-          )}>
-            <Sparkles className="h-4 w-4 text-sky-500" />
-          </div>
-          <span className={cn(
-            'text-lg font-semibold tracking-tight',
-            theme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'
-          )}>
+          <img
+            src="/JumpUp_Logo.png"
+            alt="JumpUp"
+            className="h-9 w-9 object-contain transition-transform group-hover:scale-105"
+            style={{ filter: 'brightness(0) saturate(100%) invert(58%) sepia(85%) saturate(1450%) hue-rotate(170deg) brightness(100%) contrast(101%)' }}
+          />
+
+          <span
+            translate="no"
+            className={cn(
+              'text-lg font-semibold tracking-tight',
+              theme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'
+            )}>
             Jump<span className="text-sky-500">Up</span>
           </span>
         </Link>

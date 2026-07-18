@@ -22,7 +22,7 @@ export default function HomePage() {
   const dark = theme === 'dark'
 
   const heroImage =
-    'https://guaman-idiomas-ute.online/media/media/dad42e8c-7d5f-4f/3d7010514fef482584093c0c11404a66.webp'
+    'https://guaman-idiomas-ute.online/media/media/e01cf6e3-a049-41/fb3b7ea542224085a866f8bb6f601c62.jpg'
 
   // Rockstar parallax displacement based on scroll position
   const { scrollY } = useScroll()
