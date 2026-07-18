@@ -8,8 +8,7 @@ import {
   Trash2,
   ArrowLeft,
   AlertCircle,
-  Loader2,
-  CheckCircle2
+  Loader2
 } from 'lucide-react'
 import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
@@ -84,8 +83,6 @@ export default function AdminLanguagesPage() {
     setIsModalOpen(true)
   }
 
-  // Note: The current repository doesn't have create/update/delete language methods
-  // This UI is prepared for when those APIs are available
   const handleSaveLanguage = async () => {
     if (!langName.trim() || !langCode.trim()) {
       toast.error('Completa todos los campos requeridos')
@@ -93,13 +90,18 @@ export default function AdminLanguagesPage() {
     }
     setIsSaving(true)
     try {
-      // Simulate save - actual API integration needed
-      toast.success(editingLanguage ? 'Idioma actualizado (simulado)' : 'Idioma creado (simulado)')
+      if (editingLanguage) {
+        await courseRepo.updateLanguage!(editingLanguage.id, { name: langName, code: langCode })
+        toast.success('Idioma actualizado con éxito')
+      } else {
+        await courseRepo.createLanguage!({ name: langName, code: langCode })
+        toast.success('Idioma creado con éxito')
+      }
       setIsModalOpen(false)
       await loadLanguages()
     } catch (error: any) {
       console.error('Error saving language:', error)
-      toast.error('Error al guardar el idioma')
+      toast.error(error?.detail || 'Error al guardar el idioma')
     } finally {
       setIsSaving(false)
     }
@@ -109,9 +111,9 @@ export default function AdminLanguagesPage() {
     if (!langToDelete) return
     setIsDeleting(true)
     try {
-      // Simulate delete - actual API integration needed
+      await courseRepo.deleteLanguage!(langToDelete.id)
       setLanguages(languages.filter(l => l.id !== langToDelete.id))
-      toast.success('Idioma eliminado (simulado)')
+      toast.success('Idioma eliminado con éxito')
     } catch (error) {
       console.error('Error deleting language:', error)
       toast.error('Error al eliminar el idioma')
