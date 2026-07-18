@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -28,6 +28,8 @@ type FormData = z.infer<typeof formSchema>
 export default function CreateCoursePage() {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -115,14 +117,32 @@ export default function CreateCoursePage() {
             
             <div className="space-y-2 pt-2">
               <label className="text-sm font-black text-slate-900 dark:text-white">Imagen de Portada (Opcional)</label>
-              <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group">
+              
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/png, image/jpeg" 
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setSelectedFileName(e.target.files[0].name)
+                  }
+                }} 
+              />
+              
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
+              >
                 <div className="h-16 w-16 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                   <ImageIcon className="h-8 w-8" />
                 </div>
-                <h4 className="font-black text-slate-900 dark:text-white text-lg">Haz clic para subir una imagen</h4>
+                <h4 className="font-black text-slate-900 dark:text-white text-lg">
+                  {selectedFileName ? selectedFileName : 'Haz clic para subir una imagen'}
+                </h4>
                 <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">PNG, JPG hasta 5MB (Recomendado 1200x800px)</p>
-                <Button type="button" variant="outline" size="sm" className="mt-4 rounded-xl font-bold dark:border-slate-700">
-                  <Upload className="mr-2 h-4 w-4" /> Seleccionar Archivo
+                <Button type="button" variant="outline" size="sm" className="mt-4 rounded-xl font-bold dark:border-slate-700 pointer-events-none">
+                  <Upload className="mr-2 h-4 w-4" /> {selectedFileName ? 'Cambiar Imagen' : 'Seleccionar Archivo'}
                 </Button>
               </div>
             </div>

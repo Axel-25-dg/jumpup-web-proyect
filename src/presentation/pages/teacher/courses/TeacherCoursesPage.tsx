@@ -41,6 +41,7 @@ import type { Course } from '@/domain/entities/course.entity'
 export default function TeacherCoursesPage() {
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all')
   const [courses, setCourses] = useState<Course[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null)
@@ -77,7 +78,13 @@ export default function TeacherCoursesPage() {
     }
   }
 
-  const filteredCourses = courses.filter(c => c.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredCourses = courses.filter(c => {
+    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase())
+    if (!matchesSearch) return false
+    if (statusFilter === 'active') return c.is_active === true && c.status !== 'draft'
+    if (statusFilter === 'draft') return c.is_active === false || c.status === 'draft'
+    return true
+  })
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -147,8 +154,9 @@ export default function TeacherCoursesPage() {
              />
            </div>
            <div className="flex gap-2">
-             <Button variant="outline" className="h-12 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">Activos</Button>
-             <Button variant="outline" className="h-12 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">Borradores</Button>
+             <Button onClick={() => setStatusFilter('all')} variant={statusFilter === 'all' ? 'default' : 'outline'} className={`h-12 rounded-xl font-bold ${statusFilter === 'all' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Todos</Button>
+             <Button onClick={() => setStatusFilter('active')} variant={statusFilter === 'active' ? 'default' : 'outline'} className={`h-12 rounded-xl font-bold ${statusFilter === 'active' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Activos</Button>
+             <Button onClick={() => setStatusFilter('draft')} variant={statusFilter === 'draft' ? 'default' : 'outline'} className={`h-12 rounded-xl font-bold ${statusFilter === 'draft' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Borradores</Button>
            </div>
         </div>
         <CardContent className="p-0">
@@ -199,7 +207,7 @@ export default function TeacherCoursesPage() {
                       className="h-10 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
                       onClick={() => navigate(`/teacher/courses/${course.id}/edit`)}
                     >
-                      Ver Detalles
+                      <Edit2 className="mr-2 h-4 w-4" /> Editar
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -212,10 +220,10 @@ export default function TeacherCoursesPage() {
                           onSelect={() => navigate(`/teacher/courses/${course.id}/edit`)}
                           className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
                         >
-                          <Edit2 className="mr-2 h-4 w-4" /> Editar Curso
+                          <Edit2 className="mr-2 h-4 w-4" /> Editar / Ver Detalles
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onSelect={() => navigate(`/courses/${course.id}`)}
+                          onSelect={() => window.open(`/courses/${course.id}`, '_blank')}
                           className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
                         >
                           <Eye className="mr-2 h-4 w-4" /> Previsualizar

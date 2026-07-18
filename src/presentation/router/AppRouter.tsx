@@ -36,8 +36,11 @@ const CreateLessonPage = lazy(() => import('../pages/teacher/courses/CreateLesso
 const CreateExercisePage = lazy(() => import('../pages/teacher/courses/CreateExercisePage'))
 const CreateClassroomPage = lazy(() => import('../pages/teacher/classrooms/CreateClassroomPage'))
 const ManageClassroomPage = lazy(() => import('../pages/teacher/classrooms/ManageClassroomPage'))
+const TeacherClassroomsPage = lazy(() => import('../pages/teacher/classrooms/TeacherClassroomsPage'))
 const ResourceLibraryPage = lazy(() => import('../pages/teacher/resources/ResourceLibraryPage'))
 const ManageLiveSessionsPage = lazy(() => import('../pages/teacher/live/ManageLiveSessionsPage'))
+const ScheduleLiveSessionPage = lazy(() => import('../pages/teacher/live/ScheduleLiveSessionPage'))
+const EditCoursePage = lazy(() => import('../pages/teacher/courses/EditCoursePage'))
 const TeacherInboxPage = lazy(() => import('../pages/teacher/inbox/TeacherInboxPage'))
 const TeacherProfilePage = lazy(() => import('../pages/teacher/profile/TeacherProfilePage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
@@ -112,18 +115,20 @@ export default function AppRouter() {
                <Route path="/orders" element={<OrderHistoryPage />} />
             </Route>
 
-            {/* Teacher Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
                <Route path="/teacher" element={<TeacherDashboardPage />} />
                <Route path="/teacher/courses" element={<TeacherCoursesPage />} />
                <Route path="/teacher/courses/new" element={<CreateCoursePage />} />
+               <Route path="/teacher/courses/:id/edit" element={<EditCoursePage />} />
                <Route path="/teacher/modules/new" element={<CreateModulePage />} />
                <Route path="/teacher/lessons/new" element={<CreateLessonPage />} />
                <Route path="/teacher/exercises/new" element={<CreateExercisePage />} />
+               <Route path="/teacher/classrooms" element={<TeacherClassroomsPage />} />
                <Route path="/teacher/classrooms/new" element={<CreateClassroomPage />} />
                <Route path="/teacher/classrooms/:id/manage" element={<ManageClassroomPage />} />
                <Route path="/teacher/resources" element={<ResourceLibraryPage />} />
                <Route path="/teacher/live" element={<ManageLiveSessionsPage />} />
+               <Route path="/teacher/live/new" element={<ScheduleLiveSessionPage />} />
                <Route path="/teacher/inbox" element={<TeacherInboxPage />} />
                <Route path="/teacher/profile" element={<TeacherProfilePage />} />
             </Route>
