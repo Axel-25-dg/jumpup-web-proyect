@@ -3,7 +3,6 @@ import { Suspense, lazy, useEffect } from 'react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import ProtectedRoute from './ProtectedRoute'
 import AppShell from '@/presentation/components/AppShell'
-import PlaceholderPage from '../pages/PlaceholderPage'
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
@@ -51,6 +50,10 @@ const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminRes
 const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
 const AdminLiveSessionsPage = lazy(() => import('../pages/admin/management/AdminLiveSessionsPage'))
 const AdminLiveSessionFormPage = lazy(() => import('../pages/admin/management/AdminLiveSessionFormPage'))
+
+// E-Commerce - Catalogo
+const AdminCatalogoPage = lazy(() => import('../pages/admin/management/AdminCatalogoPage'))
+const AdminCatalogoFormPage = lazy(() => import('../pages/admin/management/AdminCatalogoFormPage'))
 
 // Admin Management - Users, Classrooms, Certificates (NEW)
 const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
@@ -203,9 +206,10 @@ export default function AppRouter() {
                 <Route path="/admin/categories/new" element={<CategoryFormPage />} />
                 <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
                 
-                {/* Products / Orders */}
-                <Route path="/admin/products" element={<PlaceholderPage title="Inventario de Productos" />} />
-                <Route path="/admin/orders" element={<PlaceholderPage title="Registro de Ventas" />} />
+                {/* E-Commerce - Catalogo */}
+                <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
+                <Route path="/admin/catalogo/new" element={<AdminCatalogoFormPage />} />
+                <Route path="/admin/catalogo/:id/edit" element={<AdminCatalogoFormPage />} />
                 
                 {/* Announcements */}
                 <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />

@@ -17,6 +17,7 @@ import {
   Award,
   MessageSquare,
   Video,
+  ShoppingBag,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
@@ -210,6 +211,7 @@ export default function AdminDashboardPage() {
                   { to: '/admin/announcements', label: 'Anuncios', icon: Bell, count: 'CRUD' },
                   { to: '/admin/forum-categories', label: 'Foro Categorías', icon: MessageSquare, count: 'CRUD' },
                   { to: '/admin/resources', label: 'Recursos', icon: BookOpen, count: 'CRUD' },
+                  { to: '/admin/catalogo', label: 'Catálogo', icon: ShoppingBag, count: 'CRUD' },
                   { to: '/admin/live-sessions', label: 'Sesiones en Vivo', icon: Video, count: 'CRUD' },
                   { to: '/admin/management/languages', label: 'Idiomas', icon: Tags, count: 'CRUD' },
                 ].map((item, i) => (
