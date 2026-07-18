@@ -18,6 +18,7 @@ interface Classroom {
     username: string
     email: string
   }
+  total_students?: number
 }
 
 interface LiveSession {
@@ -44,8 +45,13 @@ export default function ClassroomsPage() {
           apiClient.get<Classroom[]>('/classrooms/mine/'),
           apiClient.get<LiveSession[]>('/live-sessions/')
         ])
-        setClassrooms(classRes.data)
-        setLiveSessions(liveRes.data.filter(session => session.status === 'live' || session.status === 'scheduled'))
+        const classData = classRes.data as any
+        const liveData = liveRes.data as any
+        const classArray = Array.isArray(classData) ? classData : (classData?.data || classData?.results || [])
+        const liveArray = Array.isArray(liveData) ? liveData : (liveData?.data || liveData?.results || [])
+        
+        setClassrooms(classArray)
+        setLiveSessions(liveArray.filter((session: any) => session.status === 'live' || session.status === 'scheduled'))
       } catch (err) {
         console.error('Error fetching classrooms data:', err)
       } finally {
@@ -71,7 +77,9 @@ export default function ClassroomsPage() {
       setAccessCode('')
       // Volver a cargar la lista de aulas
       const classRes = await apiClient.get<Classroom[]>('/classrooms/mine/')
-      setClassrooms(classRes.data)
+      const classData = classRes.data as any
+      const classArray = Array.isArray(classData) ? classData : (classData?.data || classData?.results || [])
+      setClassrooms(classArray)
     } catch (err: any) {
       const detail = err.response?.data?.detail || err.response?.data?.error || 'No se pudo unir al aula. Verifica el código.'
       setErrorMsg(detail)
@@ -207,6 +215,7 @@ export default function ClassroomsPage() {
                       <div className="text-xs text-muted-foreground space-y-1 mt-2">
                         <p>Profesor: <span className="font-semibold text-foreground">{cls.teacher_info?.username || 'Asignado'}</span></p>
                         <p className="truncate">Email: {cls.teacher_info?.email || 'N/D'}</p>
+                        <p>Total de estudiantes: <span className="font-semibold text-foreground">{cls.total_students || 1}</span></p>
                       </div>
                     </CardContent>
                   </Card>

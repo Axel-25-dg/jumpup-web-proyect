@@ -29,7 +29,6 @@ import {
 } from '@/presentation/components/ui/alert-dialog'
 import {
   getClassroomByIdUseCase,
-  getClassroomStudentsUseCase,
   approveStudentUseCase,
   rejectStudentUseCase,
   removeStudentUseCase
@@ -53,12 +52,23 @@ export default function ManageClassroomPage() {
     const fetchData = async () => {
       if (!classroomId) return
       try {
-        const [classroomData, studentsData] = await Promise.all([
-          getClassroomByIdUseCase.execute(classroomId),
-          getClassroomStudentsUseCase.execute(classroomId),
-        ])
+        const classroomData = await getClassroomByIdUseCase.execute(classroomId)
         setClassroom(classroomData)
-        setStudents(studentsData.results || [])
+        
+        // El backend envía los estudiantes en `enrollments` al consultar el detalle de un aula
+        const enrollments = (classroomData as any).enrollments || []
+        // Mapear los campos del backend (student, student_username, student_email, is_active)
+        const mappedStudents: ClassroomStudent[] = enrollments.map((e: any) => ({
+          id: e.id,
+          classroom_id: classroomId,
+          student_id: e.student,
+          student_name: e.student_username,
+          student_email: e.student_email,
+          joined_at: e.enrolled_at,
+          status: e.is_active ? 'active' : 'pending',
+          progress: 0
+        }))
+        setStudents(mappedStudents)
       } catch (error) {
         console.error('Error fetching classroom data:', error)
         toast.error('Ocurrió un error al cargar los datos del aula')
@@ -133,6 +143,13 @@ export default function ManageClassroomPage() {
             <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">
               {isLoading ? '' : classroom?.description || 'Gestiona tus alumnos'}
             </p>
+            {!isLoading && classroom?.access_code && (
+              <div className="mt-2 flex items-center gap-2">
+                <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-200 border-none font-mono text-sm tracking-widest px-3 py-1">
+                  CÓDIGO: {classroom.access_code}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
         <Button variant="outline" className="h-12 rounded-xl font-bold dark:border-slate-700">

@@ -6,6 +6,7 @@ export interface Classroom {
   course?: number;
   teacher?: number;
   access_code?: string;
+  total_students?: number;
   created_at: string;
 }
 

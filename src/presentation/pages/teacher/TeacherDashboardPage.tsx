@@ -190,19 +190,12 @@ export default function TeacherDashboardPage() {
           </Card>
 
           {/* Quick Actions for Teachers */}
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-1 gap-4">
             <Link to="/teacher/classrooms" className="group">
               <div className="p-6 rounded-[2rem] bg-sky-600 text-white shadow-xl shadow-sky-500/20 hover:scale-[1.02] transition-all h-full">
                 <Users className="h-8 w-8 mb-4 opacity-50" />
                 <h4 className="text-xl font-black mb-1">Mis Aulas</h4>
                 <p className="text-sky-100/70 text-xs font-bold">Ver y gestionar alumnos</p>
-              </div>
-            </Link>
-            <Link to="/teacher/inbox" className="group">
-              <div className="p-6 rounded-[2rem] bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/30 hover:border-sky-500/50 transition-all h-full">
-                <MessageSquare className="h-8 w-8 mb-4 text-sky-600 group-hover:scale-110 transition-transform" />
-                <h4 className="text-xl font-black text-slate-900 dark:text-white mb-1">Mensajes</h4>
-                <p className="text-slate-400 text-xs font-bold">Responde a tus alumnos</p>
               </div>
             </Link>
           </div>

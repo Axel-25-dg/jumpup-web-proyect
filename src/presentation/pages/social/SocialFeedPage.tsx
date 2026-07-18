@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import {
-  MessageCircle,
+  MessageSquare,
   ThumbsUp,
   Heart,
   Star,
@@ -14,7 +14,6 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   MoreHorizontal,
-  Share2,
   TrendingUp,
   Search,
   Users,
@@ -28,11 +27,11 @@ import { cn } from '@/presentation/utils/cn'
 
 interface SocialPost {
   id: number
-  body: string
-  creator_username: string
+  content: string
+  author_username: string
   created_at: string
   post_type: 'general' | 'achievement' | 'certificate' | 'progress'
-  comments_count: number
+  comment_count: number
   reactions_summary?: {
     like?: number
     love?: number
@@ -45,7 +44,7 @@ interface SocialPost {
 interface SocialComment {
   id: number
   body: string
-  creator_username: string
+  author_username: string
   created_at: string
 }
 
@@ -64,7 +63,9 @@ export default function SocialFeedPage() {
     async function fetchPosts() {
       try {
         const res = await apiClient.get<SocialPost[]>('/social-posts/')
-        setPosts(res.data)
+        const postsData = res.data as any
+        const postsArray = Array.isArray(postsData) ? postsData : (postsData?.data || postsData?.results || [])
+        setPosts(postsArray)
       } catch (err) {
         console.error('Error fetching social feed posts:', err)
       } finally {
@@ -78,7 +79,7 @@ export default function SocialFeedPage() {
     if (!newPostBody.trim()) return
     try {
       const res = await apiClient.post<SocialPost>('/social-posts/', {
-        body: newPostBody,
+        content: newPostBody,
         post_type: 'general'
       })
       setPosts((prev) => [res.data, ...prev])
@@ -122,7 +123,7 @@ export default function SocialFeedPage() {
       setPosts((prev) =>
         prev.map((p) => {
           if (p.id !== postId) return p
-          return { ...p, comments_count: p.comments_count + 1 }
+          return { ...p, comment_count: p.comment_count + 1 }
         })
       )
       setNewCommentBody('')
@@ -157,8 +158,8 @@ export default function SocialFeedPage() {
   }
 
   const filteredPosts = posts.filter(p =>
-    p.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.creator_username.toLowerCase().includes(searchQuery.toLowerCase())
+    (p.content || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+    (p.author_username || '').toLowerCase().includes((searchQuery || '').toLowerCase())
   )
 
   if (isLoading) {
@@ -187,7 +188,7 @@ export default function SocialFeedPage() {
               <div className="absolute -top-12 left-1/2 -translate-x-1/2">
                 <Avatar className="h-24 w-24 border-4 border-background shadow-xl">
                   <AvatarFallback className="bg-primary text-white text-2xl font-black">
-                    {user?.username.slice(0, 2).toUpperCase()}
+                    {user?.username?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -234,7 +235,7 @@ export default function SocialFeedPage() {
               <div className="flex gap-4">
                 <Avatar className="h-12 w-12 border-2 border-primary/20 shadow-sm">
                   <AvatarFallback className="bg-primary/10 text-primary font-black">
-                    {user?.username.slice(0, 2).toUpperCase()}
+                    {user?.username?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-4">
@@ -290,7 +291,7 @@ export default function SocialFeedPage() {
                               "font-black",
                               post.post_type !== 'general' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'
                             )}>
-                              {post.creator_username.slice(0, 2).toUpperCase()}
+                              {post.author_username?.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           {post.post_type !== 'general' && (
@@ -299,9 +300,9 @@ export default function SocialFeedPage() {
                             </div>
                           )}
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-black text-sm text-foreground tracking-tight">{post.creator_username}</span>
+                            <span className="font-black text-sm text-foreground tracking-tight">{post.author_username}</span>
                             {post.post_type === 'achievement' && (
                               <Badge className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-none text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
                                 Logro Desbloqueado
@@ -327,9 +328,9 @@ export default function SocialFeedPage() {
                   <CardContent className="px-8 py-2">
                     <p className={cn(
                       "text-foreground leading-relaxed font-medium selection:bg-primary/20",
-                      post.body.length < 60 ? "text-xl font-black tracking-tight" : "text-sm"
+                      (post.content || '').length < 60 ? "text-xl font-bold" : "text-sm"
                     )}>
-                      {post.body}
+                      {post.content}
                     </p>
 
                     {post.post_type === 'achievement' && (
@@ -375,14 +376,11 @@ export default function SocialFeedPage() {
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-8 px-3 rounded-full text-slate-500 hover:text-indigo-600 hover:bg-primary/5 font-bold transition-colors"
                           onClick={() => handleToggleComments(post.id)}
-                          className="rounded-full h-9 px-4 text-xs font-black text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors gap-2"
                         >
-                          <MessageCircle className="h-4 w-4" />
-                          <span>{post.comments_count}</span>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 text-muted-foreground hover:text-primary transition-colors">
-                           <Share2 className="h-4 w-4" />
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          <span>{post.comment_count}</span>
                         </Button>
                       </div>
                     </div>
@@ -397,21 +395,21 @@ export default function SocialFeedPage() {
                           </div>
                         ) : (
                           <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                            {(comments[post.id] || []).map((comm) => (
-                              <div key={comm.id} className="flex gap-3 items-start group">
-                                <Avatar className="h-8 w-8 shrink-0 mt-0.5 border border-border/50">
-                                  <AvatarFallback className="text-[10px] bg-muted font-bold">
-                                    {comm.creator_username.slice(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 min-w-0 bg-white/50 dark:bg-muted/20 p-3 rounded-2xl border border-border/30 group-hover:shadow-sm transition-shadow">
-                                  <div className="flex justify-between items-center mb-1">
-                                    <span className="text-xs font-black text-foreground tracking-tight">{comm.creator_username}</span>
+                            {(comments[post.id] || []).map((comment) => (
+                              <div key={comment.id} className="flex gap-3 items-start group">
+                                <Avatar className="h-6 w-6">
+                            <AvatarFallback className="bg-indigo-100 text-indigo-700 text-[10px] font-bold">
+                              {comment.author_username?.charAt(0).toUpperCase() || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 bg-slate-100 rounded-2xl p-3">
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs font-bold text-slate-900">{comment.author_username}</span>
                                     <span className="text-[9px] font-bold text-muted-foreground uppercase">
-                                      {new Date(comm.created_at).toLocaleDateString()}
+                                      {new Date(comment.created_at).toLocaleDateString()}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">{comm.body}</p>
+                                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">{comment.body}</p>
                                 </div>
                               </div>
                             ))}
@@ -492,7 +490,7 @@ export default function SocialFeedPage() {
                     <div key={i} className="flex items-center justify-between group">
                        <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border border-border/50">
-                             <AvatarFallback className="bg-muted text-[10px] font-bold">{person.name.slice(0, 2)}</AvatarFallback>
+                             <AvatarFallback className="bg-muted text-[10px] font-bold">{person.name?.slice(0, 2)}</AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
                              <p className="text-sm font-black text-foreground truncate">{person.name}</p>

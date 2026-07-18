@@ -12,7 +12,6 @@ import {
   Search,
   PanelRight,
   FolderOpen,
-  Mail,
   Sun,
   Moon,
   X,
@@ -20,7 +19,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
-import { useCartStore } from '@/presentation/store/cart.store'
+
 import { Button } from '@/presentation/components/ui/button'
 import { Badge } from '@/presentation/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
@@ -37,7 +36,7 @@ export default function AppShell() {
   const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
-  const cart = useCartStore((s) => s.cart)
+  
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -108,7 +107,6 @@ export default function AppShell() {
         { to: '/teacher/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
         { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
-        { to: '/teacher/inbox', label: 'Mensajes', icon: Mail, protected: true },
         { to: '/teacher/profile', label: 'Mi Perfil', icon: User, protected: true }
       ]
     }
