@@ -55,6 +55,10 @@ const AdminLiveSessionFormPage = lazy(() => import('../pages/admin/management/Ad
 const AdminCatalogoPage = lazy(() => import('../pages/admin/management/AdminCatalogoPage'))
 const AdminCatalogoFormPage = lazy(() => import('../pages/admin/management/AdminCatalogoFormPage'))
 
+// E-Commerce - Ordenes de Compra
+const AdminOrdenesCompraPage = lazy(() => import('../pages/admin/management/AdminOrdenesCompraPage'))
+const AdminOrdenCompraDetailPage = lazy(() => import('../pages/admin/management/AdminOrdenCompraDetailPage'))
+
 // Admin Management - Users, Classrooms, Certificates (NEW)
 const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
 const AdminUserFormPage = lazy(() => import('../pages/admin/management/AdminUserFormPage'))
@@ -210,6 +214,10 @@ export default function AppRouter() {
                 <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
                 <Route path="/admin/catalogo/new" element={<AdminCatalogoFormPage />} />
                 <Route path="/admin/catalogo/:id/edit" element={<AdminCatalogoFormPage />} />
+
+                {/* E-Commerce - Ordenes de Compra */}
+                <Route path="/admin/ordenes-compra" element={<AdminOrdenesCompraPage />} />
+                <Route path="/admin/ordenes-compra/:id" element={<AdminOrdenCompraDetailPage />} />
                 
                 {/* Announcements */}
                 <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />
