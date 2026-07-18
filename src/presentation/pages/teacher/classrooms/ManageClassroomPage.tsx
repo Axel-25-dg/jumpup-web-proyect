@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -14,20 +14,34 @@ import { Input } from '@/presentation/components/ui/input'
 import { Search } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
 import { Badge } from '@/presentation/components/ui/badge'
-
-const MOCK_STUDENTS = [
-  { id: '1', name: 'Ana Silva', email: 'ana@example.com', status: 'active', progress: 85 },
-  { id: '2', name: 'Carlos Ruiz', email: 'carlos@example.com', status: 'active', progress: 60 },
-  { id: '3', name: 'Maria Jose', email: 'maria@example.com', status: 'pending', progress: 0 },
-]
+import { Skeleton } from '@/presentation/components/ui/skeleton'
+import { getClassroomStudentsUseCase } from '@/infrastructure/factories/teacher.factory'
+import type { ClassroomStudent } from '@/domain/entities/classroom.entity'
 
 export default function ManageClassroomPage() {
   const { id } = useParams()
   const [searchTerm, setSearchTerm] = useState('')
+  const [students, setStudents] = useState<ClassroomStudent[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const filteredStudents = MOCK_STUDENTS.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.email.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const fetchStudents = async () => {
+      if (!id) return
+      try {
+        const result = await getClassroomStudentsUseCase.execute(Number(id))
+        setStudents(result.results || [])
+      } catch (error) {
+        console.error('Error fetching students:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchStudents()
+  }, [id])
+
+  const filteredStudents = students.filter(s => 
+    s.student_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    s.student_email?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
@@ -59,7 +73,7 @@ export default function ManageClassroomPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Alumnos</p>
-              <h4 className="text-3xl font-black text-slate-900">24</h4>
+              <h4 className="text-3xl font-black text-slate-900">{students.length}</h4>
             </div>
           </CardContent>
         </Card>
@@ -71,7 +85,7 @@ export default function ManageClassroomPage() {
             </div>
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Activos</p>
-              <h4 className="text-3xl font-black text-slate-900">22</h4>
+              <h4 className="text-3xl font-black text-slate-900">{students.filter(s => s.status === 'active').length}</h4>
             </div>
           </CardContent>
         </Card>
@@ -82,8 +96,8 @@ export default function ManageClassroomPage() {
               <MessageSquare className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mensajes Nuevos</p>
-              <h4 className="text-3xl font-black text-slate-900">3</h4>
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pendientes</p>
+              <h4 className="text-3xl font-black text-slate-900">{students.filter(s => s.status === 'pending').length}</h4>
             </div>
           </CardContent>
         </Card>
@@ -104,23 +118,35 @@ export default function ManageClassroomPage() {
         </div>
         <CardContent className="p-0">
           <div className="divide-y divide-slate-100">
-            {filteredStudents.length > 0 ? (
+            {isLoading ? (
+               <div className="p-6 space-y-4">
+                 {[1,2,3].map(i => (
+                   <div key={i} className="flex gap-6 items-center">
+                     <Skeleton className="h-14 w-14 rounded-full" />
+                     <div className="space-y-2 flex-1">
+                       <Skeleton className="h-4 w-32" />
+                       <Skeleton className="h-3 w-48" />
+                     </div>
+                   </div>
+                 ))}
+               </div>
+            ) : filteredStudents.length > 0 ? (
               filteredStudents.map((student) => (
                 <div key={student.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 transition-colors group">
                   <Avatar className="h-14 w-14 border-2 border-white shadow-md">
                     <AvatarFallback className="bg-gradient-to-br from-sky-400 to-indigo-500 text-white font-black">
-                      {student.name.substring(0, 2).toUpperCase()}
+                      {(student.student_name || 'Al').substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-lg font-black text-slate-900">{student.name}</h3>
-                    <p className="text-sm font-bold text-slate-500">{student.email}</p>
+                    <h3 className="text-lg font-black text-slate-900">{student.student_name || 'Alumno sin nombre'}</h3>
+                    <p className="text-sm font-bold text-slate-500">{student.student_email}</p>
                   </div>
                   
                   <div className="flex flex-col items-center gap-1 min-w-[100px]">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progreso</span>
-                    <Badge variant="outline" className={`font-black ${student.progress > 70 ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
-                      {student.progress}%
+                    <Badge variant="outline" className={`font-black ${(student.progress || 0) > 70 ? 'bg-emerald-50 text-emerald-600 border-emerald-200' : 'bg-amber-50 text-amber-600 border-amber-200'}`}>
+                      {student.progress || 0}%
                     </Badge>
                   </div>
 

@@ -85,7 +85,7 @@ export default function TeacherProfilePage() {
                   </label>
                   <Input 
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setName(e.target.value)}
                     className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium"
                   />
                 </div>
@@ -95,7 +95,7 @@ export default function TeacherProfilePage() {
                   </label>
                   <Input 
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setEmail(e.target.value)}
                     className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium"
                   />
                 </div>
@@ -105,7 +105,7 @@ export default function TeacherProfilePage() {
                  <label className="text-sm font-black text-slate-900">Biografía Pública</label>
                  <Textarea 
                    value={bio}
-                   onChange={(e) => setBio(e.target.value)}
+                   onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setBio(e.target.value)}
                    className="min-h-[120px] rounded-xl border-slate-200 bg-slate-50 font-medium resize-none p-4"
                  />
                  <p className="text-xs font-bold text-slate-400 mt-1">Los estudiantes verán esto en tu perfil.</p>
@@ -117,7 +117,7 @@ export default function TeacherProfilePage() {
                   </label>
                   <Input 
                     value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setLanguage(e.target.value)}
                     className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium md:max-w-xs"
                   />
               </div>

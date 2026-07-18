@@ -5,7 +5,6 @@ import {
   BookOpen,
   MessageSquare,
   Plus,
-  Clock,
   Sparkles,
   Trophy
 } from 'lucide-react'

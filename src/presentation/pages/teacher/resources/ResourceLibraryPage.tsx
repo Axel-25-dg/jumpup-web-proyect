@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FolderOpen,
   Plus,
@@ -14,22 +14,37 @@ import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
 import { Badge } from '@/presentation/components/ui/badge'
+import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/presentation/components/ui/dropdown-menu'
-
-const MOCK_RESOURCES = [
-  { id: '1', title: 'Guía de Verbos PDF', type: 'pdf', size: '2.4 MB', date: '12 Oct 2026' },
-  { id: '2', title: 'Audio Pronunciación', type: 'audio', size: '5.1 MB', date: '10 Oct 2026' },
-  { id: '3', title: 'Presentación Clase 1', type: 'video', size: '15.2 MB', date: '08 Oct 2026' },
-  { id: '4', title: 'Infografía Tiempos Verbales', type: 'image', size: '1.2 MB', date: '05 Oct 2026' },
-]
+import { getTeacherResourcesUseCase } from '@/infrastructure/factories/teacher.factory'
+import { useAuthStore } from '@/presentation/store/auth.store'
+import type { Resource } from '@/domain/entities/resource.entity'
 
 export default function ResourceLibraryPage() {
   const [searchTerm, setSearchTerm] = useState('')
+  const [resources, setResources] = useState<Resource[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const user = useAuthStore(s => s.user)
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      if (!user?.user_id) return
+      try {
+        const result = await getTeacherResourcesUseCase.execute(user.user_id)
+        setResources(result.results || [])
+      } catch (error) {
+        console.error('Error fetching resources:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchResources()
+  }, [user?.user_id])
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -40,7 +55,7 @@ export default function ResourceLibraryPage() {
     }
   }
 
-  const filteredResources = MOCK_RESOURCES.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredResources = resources.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -76,20 +91,32 @@ export default function ResourceLibraryPage() {
         </div>
         <CardContent className="p-0">
           <div className="divide-y divide-slate-100">
-            {filteredResources.length > 0 ? (
+            {isLoading ? (
+               <div className="p-6 space-y-4">
+                 {[1,2,3].map(i => (
+                   <div key={i} className="flex gap-6 items-center">
+                     <Skeleton className="h-16 w-16 rounded-2xl" />
+                     <div className="space-y-2 flex-1">
+                       <Skeleton className="h-5 w-48" />
+                       <Skeleton className="h-3 w-32" />
+                     </div>
+                   </div>
+                 ))}
+               </div>
+            ) : filteredResources.length > 0 ? (
               filteredResources.map((resource) => (
                 <div key={resource.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 transition-colors group">
                   <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    {getIcon(resource.type)}
+                    {getIcon(resource.file_type)}
                   </div>
                   <div className="flex-1 min-w-0 text-center md:text-left">
                     <h3 className="text-lg font-black text-slate-900 truncate">{resource.title}</h3>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-1">
                       <Badge variant="outline" className="bg-white font-bold uppercase tracking-wider text-[10px] text-slate-500">
-                        {resource.type}
+                        {resource.file_type}
                       </Badge>
-                      <span className="text-xs font-bold text-slate-400">{resource.size}</span>
-                      <span className="text-xs font-bold text-slate-400">&bull; {resource.date}</span>
+                      <span className="text-xs font-bold text-slate-400">{resource.file_size || 'N/A'}</span>
+                      <span className="text-xs font-bold text-slate-400">&bull; {resource.created_at ? new Date(resource.created_at).toLocaleDateString() : 'N/A'}</span>
                     </div>
                   </div>
                   
@@ -103,7 +130,7 @@ export default function ResourceLibraryPage() {
                           <MoreVertical className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 rounded-2xl">
+                      <DropdownMenuContent  className="w-48 rounded-2xl">
                         <DropdownMenuItem className="font-bold py-3 text-red-600 cursor-pointer focus:bg-red-50 focus:text-red-700">
                           <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                         </DropdownMenuItem>

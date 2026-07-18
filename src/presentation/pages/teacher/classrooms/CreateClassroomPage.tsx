@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
   Save,
-  Users,
-  Image as ImageIcon,
-  CheckCircle2
+  Users
 } from 'lucide-react'
 import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
@@ -44,7 +42,7 @@ export default function CreateClassroomPage() {
               <label className="text-sm font-black text-slate-900">Nombre del Aula</label>
               <Input 
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setName(e.target.value)}
                 placeholder="Ej. Nivel B2 - Grupo Mañana" 
                 className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg"
               />
@@ -54,7 +52,7 @@ export default function CreateClassroomPage() {
               <label className="text-sm font-black text-slate-900">Descripción (Opcional)</label>
               <Textarea 
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDescription(e.target.value)}
                 placeholder="Describe el propósito o el enfoque de este grupo..." 
                 className="min-h-[120px] rounded-xl border-slate-200 bg-slate-50 font-medium resize-none p-4"
               />

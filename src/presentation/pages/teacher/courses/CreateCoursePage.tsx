@@ -44,7 +44,7 @@ export default function CreateCoursePage() {
               <label className="text-sm font-black text-slate-900">Título del Curso</label>
               <Input 
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setTitle(e.target.value)}
                 placeholder="Ej. Inglés Nivel B2 - Avanzado" 
                 className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg"
               />
@@ -54,7 +54,7 @@ export default function CreateCoursePage() {
               <label className="text-sm font-black text-slate-900">Descripción General</label>
               <Textarea 
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDescription(e.target.value)}
                 placeholder="Describe qué aprenderán los estudiantes en este curso..." 
                 className="min-h-[120px] rounded-xl border-slate-200 bg-slate-50 font-medium resize-none p-4"
               />

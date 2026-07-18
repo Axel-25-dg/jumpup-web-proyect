@@ -10,14 +10,30 @@ interface RawAuthResponse extends LoggedUser {
   refresh: string
 }
 
-function toAuthSession(raw: RawAuthResponse & { is_superuser?: boolean }): AuthSession {
-  const { access, refresh, ...user } = raw
-  if (!user.role) {
-    if (raw.is_superuser) user.role = 'admin'
-    else if (user.is_staff) user.role = 'teacher'
-    else user.role = 'student'
+function safeExtractRole(rawUser: any): string {
+  let r = rawUser.role;
+  if (r) {
+    if (typeof r === 'string') return r.toLowerCase();
+    if (Array.isArray(r) && r.length > 0) r = r[0];
+    if (typeof r === 'object') {
+      if (r.name) return String(r.name).toLowerCase();
+      if (r.role) return String(r.role).toLowerCase();
+    }
+    return String(r).toLowerCase();
   }
-  return { user, tokens: { access, refresh } }
+  if (rawUser.is_superuser) return 'admin';
+  if (rawUser.is_staff) return 'teacher';
+  return 'student';
+}
+
+function toAuthSession(raw: any): AuthSession {
+  const { access, refresh, ...rest } = raw;
+  
+  // Si el backend envía los datos dentro de { user: { ... } }, extraemos eso.
+  const userData = (rest.user && typeof rest.user === 'object') ? rest.user : rest;
+  
+  userData.role = safeExtractRole(userData);
+  return { user: userData as LoggedUser, tokens: { access, refresh } }
 }
 
 export class AxiosAuthRepository implements AuthRepository {
@@ -65,13 +81,14 @@ export class AxiosAuthRepository implements AuthRepository {
 
   async getCurrentUser(): Promise<LoggedUser> {
     try {
-      const { data } = await apiClient.get<LoggedUser & { is_superuser?: boolean }>('/auth/me/')
-      if (!data.role) {
-        if (data.is_superuser) data.role = 'admin'
-        else if (data.is_staff) data.role = 'teacher'
-        else data.role = 'student'
+      let { data } = await apiClient.get<any>('/auth/me/')
+      
+      if (data.user && typeof data.user === 'object') {
+        data = data.user;
       }
-      return data
+      
+      data.role = safeExtractRole(data);
+      return data as LoggedUser;
     } catch (err) {
       throw parseApiError(err)
     }

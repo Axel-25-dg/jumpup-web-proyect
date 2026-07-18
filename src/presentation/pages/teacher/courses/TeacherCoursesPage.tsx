@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BookOpen,
@@ -16,24 +16,36 @@ import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
 import { Badge } from '@/presentation/components/ui/badge'
+import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/presentation/components/ui/dropdown-menu'
-
-// MOCK DATA (Simulando getCourses desde backend)
-const MOCK_COURSES = [
-  { id: '1', title: 'Inglés Nivel A1 - Básico', status: 'published', students: 124, rating: 4.8, image: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=400&q=80' },
-  { id: '2', title: 'Gramática B2 - Intermedio Alto', status: 'draft', students: 0, rating: 0, image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=400&q=80' },
-  { id: '3', title: 'Inglés de Negocios C1', status: 'published', students: 45, rating: 4.9, image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=400&q=80' },
-]
+import { courseRepo } from '@/infrastructure/factories/teacher.factory'
+import type { Course } from '@/domain/entities/course.entity'
 
 export default function TeacherCoursesPage() {
   const [searchTerm, setSearchTerm] = useState('')
+  const [courses, setCourses] = useState<Course[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const filteredCourses = MOCK_COURSES.filter(c => c.title.toLowerCase().includes(searchTerm.toLowerCase()))
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const result = await courseRepo.getAll()
+        setCourses(result.results || [])
+      } catch (error) {
+        console.error('Error fetching courses:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchCourses()
+  }, [])
+
+  const filteredCourses = courses.filter(c => c.title.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -109,12 +121,29 @@ export default function TeacherCoursesPage() {
         </div>
         <CardContent className="p-0">
           <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {filteredCourses.length > 0 ? (
+            {isLoading ? (
+              <div className="p-6 space-y-4">
+                {[1,2,3].map(i => (
+                  <div key={i} className="flex gap-6 items-center">
+                    <Skeleton className="h-24 w-40 rounded-2xl" />
+                    <div className="space-y-2 flex-1">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-64" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <div key={course.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="h-24 w-40 rounded-2xl overflow-hidden shrink-0 relative bg-slate-100">
-                    <img src={course.image} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    {course.status === 'draft' && (
+                  <div className="h-24 w-40 rounded-2xl overflow-hidden shrink-0 relative bg-slate-100 flex items-center justify-center">
+                    {course.image_url ? (
+                      <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <BookOpen className="h-8 w-8 text-slate-300" />
+                    )}
+                    {/* El backend no suele mandar 'status' en la entidad básica, lo simulamos para UI si no existe */}
+                    {(course as any).status === 'draft' && (
                        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center">
                          <Badge className="bg-slate-900 text-white font-black uppercase text-[10px]">Borrador</Badge>
                        </div>
@@ -122,11 +151,11 @@ export default function TeacherCoursesPage() {
                   </div>
                   <div className="flex-1 min-w-0 text-center md:text-left">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                      <Badge className={course.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-                        {course.status === 'published' ? 'Publicado' : 'En Edición'}
+                      <Badge className={(course as any).is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+                        {(course as any).is_active ? 'Publicado' : 'Inactivo'}
                       </Badge>
                       <span className="flex items-center text-xs font-bold text-slate-500">
-                        <Users className="h-3.5 w-3.5 mr-1" /> {course.students} estudiantes
+                        <Users className="h-3.5 w-3.5 mr-1" /> {(course as any).students || 0} estudiantes
                       </span>
                     </div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{course.title}</h3>
@@ -140,7 +169,7 @@ export default function TeacherCoursesPage() {
                           <MoreVertical className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 rounded-2xl">
+                      <DropdownMenuContent className="w-48 rounded-2xl">
                         <DropdownMenuItem className="font-bold py-3 cursor-pointer">
                           <Edit2 className="mr-2 h-4 w-4" /> Editar Curso
                         </DropdownMenuItem>

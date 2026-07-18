@@ -61,7 +61,7 @@ export default function CreateLessonPage() {
               <label className="text-sm font-black text-slate-900">Título de la Lección</label>
               <Input 
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setTitle(e.target.value)}
                 placeholder="Ej. Saludos y despedidas" 
                 className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg"
               />
@@ -87,7 +87,7 @@ export default function CreateLessonPage() {
                 <FileText className="absolute left-4 top-4 h-5 w-5 text-slate-400" />
                 <Textarea 
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setContent(e.target.value)}
                   placeholder="Escribe el contenido detallado de tu lección aquí..." 
                   className="min-h-[200px] rounded-2xl border-slate-200 bg-slate-50 font-medium p-4 pl-12 resize-none"
                 />

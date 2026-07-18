@@ -50,7 +50,7 @@ export default function CreateModulePage() {
               <label className="text-sm font-black text-slate-900">Título del Módulo</label>
               <Input 
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setTitle(e.target.value)}
                 placeholder="Ej. Unidad 1: Fundamentos del idioma" 
                 className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg"
               />
@@ -60,7 +60,7 @@ export default function CreateModulePage() {
               <label className="text-sm font-black text-slate-900">Descripción del Módulo</label>
               <Textarea 
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setDescription(e.target.value)}
                 placeholder="Describe los objetivos específicos de este módulo..." 
                 className="min-h-[120px] rounded-xl border-slate-200 bg-slate-50 font-medium resize-none p-4"
               />
