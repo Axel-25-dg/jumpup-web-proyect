@@ -76,7 +76,7 @@ export default function RegisterPage() {
         {/* Background */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1400"
+            src="https://guaman-idiomas-ute.online/media/media/adfac6b1-38f8-4e/3930d9f4fe544aa0bb1e22a8ee0c851e.png"
             alt="Código y aprendizaje"
             className="w-full h-full object-cover grayscale"
           />

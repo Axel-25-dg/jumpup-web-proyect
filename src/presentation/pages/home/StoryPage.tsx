@@ -111,14 +111,14 @@ export default function StoryPage() {
       <div className="relative min-h-[92vh] flex items-end overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=2000"
+            src="https://guaman-idiomas-ute.online/media/media/9ead07c7-1f71-4e/7af66d79fabf4d0b9f2edad7725a8229.jpg"
             alt="Equipo JumpUp"
             className="w-full h-full object-cover grayscale"
           />
           <div
             className={`absolute inset-0 ${isDark
-                ? 'bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/70 to-[#0a0a0b]/30'
-                : 'bg-gradient-to-t from-[#f7f6f3] via-[#f7f6f3]/70 to-[#f7f6f3]/20'
+              ? 'bg-gradient-to-t from-[#0a0a0b] via-[#0a0a0b]/70 to-[#0a0a0b]/30'
+              : 'bg-gradient-to-t from-[#f7f6f3] via-[#f7f6f3]/70 to-[#f7f6f3]/20'
               }`}
           />
         </div>
@@ -189,7 +189,7 @@ export default function StoryPage() {
           <div className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center py-20 md:py-28 border-b ${t.line}`}>
             <div className="order-2 md:order-1 overflow-hidden group">
               <img
-                src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800"
+                src="https://guaman-idiomas-ute.online/media/media/adfac6b1-38f8-4e/3930d9f4fe544aa0bb1e22a8ee0c851e.png"
                 alt="Código en pantalla"
                 className="object-cover w-full h-80 md:h-[28rem] grayscale group-hover:grayscale-0 transition-all duration-700"
               />
@@ -231,7 +231,7 @@ export default function StoryPage() {
             </div>
             <div className="overflow-hidden group">
               <img
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800"
+                src="https://guaman-idiomas-ute.online/media/media/46b487f9-ca0a-43/2108f1cc3a76477297e17bc1fb4c08fd.jpg"
                 alt="Comunidad global"
                 className="object-cover w-full h-80 md:h-[28rem] grayscale group-hover:grayscale-0 transition-all duration-700"
               />

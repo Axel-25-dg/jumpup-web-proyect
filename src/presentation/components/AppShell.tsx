@@ -368,21 +368,20 @@ export default function AppShell() {
     )}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+        <Link to="/" className="flex items-center gap-2 group shrink-0 transition-opacity hover:opacity-90">
           <img
             src="/JumpUp_Logo.png"
             alt="JumpUp"
-            className="h-9 w-9 object-contain transition-transform group-hover:scale-105"
-            style={{ filter: 'brightness(0) saturate(100%) invert(58%) sepia(85%) saturate(1450%) hue-rotate(170deg) brightness(100%) contrast(101%)' }}
+            className="h-8 w-8 object-contain"
           />
-
           <span
             translate="no"
             className={cn(
-              'text-lg font-semibold tracking-tight',
-              theme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'
-            )}>
-            Jump<span className="text-sky-500">Up</span>
+              'text-xl font-bold tracking-tight',
+              theme === 'dark' ? 'text-white' : 'text-neutral-900'
+            )}
+          >
+            <span className="text-sky-500">ump</span>Up
           </span>
         </Link>
 
