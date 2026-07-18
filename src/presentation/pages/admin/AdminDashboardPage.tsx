@@ -14,7 +14,8 @@ import {
   Activity,
   Zap,
   LayoutGrid,
-  Bell
+  Bell,
+  BarChart3
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
