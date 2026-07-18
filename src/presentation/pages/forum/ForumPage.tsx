@@ -77,11 +77,11 @@ export default function ForumPage() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await apiClient.get<ForumCategory[]>('/forum-categories/')
-        setCategories(res.data)
-        // Auto-select first category if available
-        if (res.data.length > 0) {
-          handleSelectCategory(res.data[0])
+        const res = await apiClient.get<any>('/forum-categories/')
+        const cats = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+        setCategories(cats)
+        if (cats.length > 0) {
+          handleSelectCategory(cats[0])
         }
       } catch (err) {
         console.error('Error fetching categories:', err)
@@ -98,8 +98,9 @@ export default function ForumPage() {
     setShowCreateThread(false)
     setIsLoadingThreads(true)
     try {
-      const res = await apiClient.get<ForumThread[]>(`/forum-threads/?category=${cat.id}`)
-      setThreads(res.data)
+      const res = await apiClient.get<any>(`/forum-threads/?category=${cat.id}`)
+      const threadList = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+      setThreads(threadList)
     } catch (err) {
       console.error('Error loading threads:', err)
     } finally {
@@ -111,8 +112,9 @@ export default function ForumPage() {
     setSelectedThread(thread)
     setIsLoadingPosts(true)
     try {
-      const res = await apiClient.get<ForumPost[]>(`/forum-posts/?thread=${thread.id}`)
-      setPosts(res.data)
+      const res = await apiClient.get<any>(`/forum-posts/?thread=${thread.id}`)
+      const postList = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+      setPosts(postList)
     } catch (err) {
       console.error('Error loading posts:', err)
     } finally {
@@ -254,7 +256,7 @@ export default function ForumPage() {
                   </span>
                   <div className="text-left overflow-hidden">
                     <p className="text-sm font-semibold truncate">{cat.name}</p>
-                    <p className="text-[10px] opacity-70 truncate">{cat.description}</p>
+                    <p className="text-xs text-muted-foreground font-medium truncate">{cat.description}</p>
                   </div>
                 </button>
               ))}
@@ -322,7 +324,7 @@ export default function ForumPage() {
                   <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border/50">
                     <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
                       <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold uppercase">
-                        {selectedThread.creator_username.slice(0, 2)}
+                        {(selectedThread.creator_username || 'U').slice(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -378,7 +380,7 @@ export default function ForumPage() {
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-7 w-7">
                                   <AvatarFallback className="text-[10px] bg-muted font-bold">
-                                    {post.creator_username.slice(0, 2).toUpperCase()}
+                                    {(post.creator_username || 'U').slice(0, 2).toUpperCase()}
                                   </AvatarFallback>
                                 </Avatar>
                                 <span className="text-xs font-bold text-foreground">{post.creator_username}</span>
@@ -552,14 +554,14 @@ export default function ForumPage() {
                             <CardTitle className="text-lg font-bold group-hover:text-primary transition-colors leading-tight">
                               {thread.title}
                             </CardTitle>
-                            <CardDescription className="line-clamp-2 text-sm text-muted-foreground/80">
+                            <CardDescription className="line-clamp-2 text-sm text-slate-600 dark:text-slate-300 font-medium">
                               {thread.body}
                             </CardDescription>
                           </div>
                           <div className="flex flex-col items-end gap-2 shrink-0">
                             <div className="flex -space-x-1.5">
                                <Avatar className="w-6 h-6 border-2 border-background shadow-sm">
-                                 <AvatarFallback className="text-[8px] bg-indigo-50 text-indigo-500">{thread.creator_username.slice(0, 1)}</AvatarFallback>
+                                 <AvatarFallback className="text-[8px] bg-indigo-50 text-indigo-500">{(thread.creator_username || 'U').slice(0, 1)}</AvatarFallback>
                                </Avatar>
                             </div>
                             <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">{thread.creator_username}</span>
@@ -567,11 +569,11 @@ export default function ForumPage() {
                         </div>
                       </CardHeader>
                       <CardFooter className="p-6 pt-0 flex items-center gap-6 border-t border-border/10 mt-2 bg-muted/5">
-                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                            <Eye className="h-4 w-4" />
                            <span>{thread.views}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground/60">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                            <MessageSquare className="h-4 w-4" />
                            <span>{Math.floor(Math.random() * 10)}</span> {/* Simulated count if not provided */}
                         </div>
