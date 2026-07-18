@@ -70,7 +70,7 @@ export default function AppShell() {
       return [
         { to: '/teacher', label: 'Panel Profesor', icon: LayoutDashboard, protected: true },
         { to: '/teacher/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
-        { to: '/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
+        { to: '/teacher/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
         { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
         { to: '/teacher/inbox', label: 'Mensajes', icon: Mail, protected: true },
@@ -112,10 +112,10 @@ export default function AppShell() {
   const displayRole = getDisplayRole()
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* --- TOP BAR --- */}
       <header className={cn(
-        "fixed top-0 z-[70] w-full border-b bg-white/80 backdrop-blur-md transition-all duration-300",
+        "fixed top-0 z-[70] w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300",
         user ? (isSidebarExpanded ? "pr-64" : "pr-16") : "pr-0"
       )}>
         <div className="flex h-16 items-center justify-between px-6">
@@ -124,18 +124,18 @@ export default function AppShell() {
               <div className="bg-sky-500 p-1.5 rounded-xl shadow-lg shadow-sky-200 group-hover:scale-110 transition-all duration-300">
                 <Sparkles className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-black tracking-tight text-slate-900">
+              <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
                 JumpUp
               </span>
             </Link>
 
             {user && (
               <div className="hidden md:flex relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 group-focus-within:text-sky-500 transition-colors" />
                 <input
                   type="text"
                   placeholder="Buscar recursos..."
-                  className="h-10 w-64 pl-10 pr-4 rounded-xl bg-slate-100 border-none text-sm font-medium focus:ring-2 focus:ring-sky-500/20 transition-all"
+                  className="h-10 w-64 pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-slate-900 border-none text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 transition-all"
                 />
               </div>
             )}
@@ -170,7 +170,7 @@ export default function AppShell() {
                     e.stopPropagation()
                     setIsUserMenuOpen(!isUserMenuOpen)
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-transparent hover:border-sky-200 transition-all p-0 shadow-sm bg-slate-100 overflow-hidden cursor-pointer active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-transparent hover:border-sky-200 dark:hover:border-sky-800 transition-all p-0 shadow-sm bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer active:scale-95"
                 >
                   <Avatar className="h-full w-full rounded-none">
                     <AvatarFallback className="bg-gradient-to-br from-sky-500 to-blue-600 text-white font-black text-xs">
@@ -181,12 +181,12 @@ export default function AppShell() {
 
                 {/* Perfil Dropdown Manual */}
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 p-2 z-[110]">
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 dark:border-slate-800 p-2 z-[110]">
                     <div className="p-3">
-                      <p className="text-sm font-black text-slate-900">{user.username}</p>
-                      <p className="truncate text-xs text-slate-500 font-bold">{user.email}</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white">{user.username}</p>
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400 font-bold">{user.email}</p>
                     </div>
-                    <div className="h-px bg-slate-100 my-2" />
+                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
                     <Link
                       to="/profile"
                       onClick={() => setIsUserMenuOpen(false)}
@@ -232,7 +232,7 @@ export default function AppShell() {
       {user && (
         <aside
           className={cn(
-            "fixed right-0 top-0 h-screen bg-white border-l border-slate-200 z-[60] transition-all duration-300 ease-in-out shadow-2xl flex flex-col pt-4",
+            "fixed right-0 top-0 h-screen bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 z-[60] transition-all duration-300 ease-in-out shadow-2xl flex flex-col pt-4",
             isSidebarExpanded ? "w-64" : "w-16"
           )}
         >
@@ -240,7 +240,7 @@ export default function AppShell() {
           <div className="flex items-center justify-end px-4 mb-6 mt-16">
             <button
               onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-              className="p-2 hover:bg-slate-100 rounded-xl text-slate-500 transition-colors"
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-500 dark:text-slate-400 transition-colors"
             >
               <PanelRight size={20} className={cn("transition-transform", isSidebarExpanded && "rotate-180")} />
             </button>
@@ -254,8 +254,8 @@ export default function AppShell() {
                 className={({ isActive }) => cn(
                   "flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group relative",
                   isActive
-                    ? "bg-sky-50 text-sky-600 shadow-sm"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
                 )}
               >
                 {({ isActive }) => (
@@ -287,7 +287,7 @@ export default function AppShell() {
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+          <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
              <div className={cn(
                "flex items-center gap-3 transition-all duration-300",
                !isSidebarExpanded && "justify-center"
@@ -299,8 +299,8 @@ export default function AppShell() {
                   "flex flex-col transition-opacity duration-300 overflow-hidden",
                   isSidebarExpanded ? "opacity-100 w-full" : "opacity-0 w-0"
                 )}>
-                  <span className="text-xs font-black text-slate-900 truncate">{user.username}</span>
-                  <span className="text-[10px] font-bold text-sky-600 uppercase tracking-tighter">{displayRole}</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white truncate">{user.username}</span>
+                  <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-tighter">{displayRole}</span>
                 </div>
              </div>
           </div>

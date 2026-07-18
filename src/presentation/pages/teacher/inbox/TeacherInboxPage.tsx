@@ -13,7 +13,7 @@ import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
 import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
 import { Skeleton } from '@/presentation/components/ui/skeleton'
-import { getContactsUseCase, getMessagesUseCase } from '@/infrastructure/factories/teacher.factory'
+import { getContactsUseCase, getMessagesUseCase, sendMessageUseCase } from '@/infrastructure/factories/teacher.factory'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import type { Contact, Message } from '@/domain/entities/message.entity'
 import { toast } from 'sonner'
@@ -88,9 +88,13 @@ export default function TeacherInboxPage() {
     setMessages(prev => [...prev, optimisticMessage])
 
     try {
-      // simulate backend call if there is no endpoint
-      // await sendMessageUseCase.execute(user.user_id, activeContact.id, newMessageText)
-      await new Promise(resolve => setTimeout(resolve, 500))
+      const sent = await sendMessageUseCase.execute({
+        sender_id: user.user_id,
+        receiver_id: activeContact.id,
+        content: newMessageText,
+      })
+      // Replace optimistic with real message
+      setMessages(prev => prev.map(m => m.id === optimisticMessage.id ? sent : m))
     } catch (error) {
       console.error('Error sending message:', error)
       toast.error('Error al enviar el mensaje')
