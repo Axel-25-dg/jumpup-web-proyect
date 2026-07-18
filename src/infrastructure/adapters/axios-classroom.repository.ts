@@ -5,6 +5,15 @@ import type { PaginatedResult } from '@/domain/entities/paginated-result.entity'
 import { parseApiError } from '../http/parse-api-error';
 
 export class AxiosClassroomRepository implements ClassroomRepository {
+  async getAll(params?: Record<string, any>): Promise<PaginatedResult<Classroom>> {
+    try {
+      const { data } = await apiClient.get<PaginatedResult<Classroom>>('/classrooms/', { params });
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
   async getAllByTeacher(teacherId: number, params?: Record<string, any>): Promise<PaginatedResult<Classroom>> {
     try {
       const { data } = await apiClient.get<PaginatedResult<Classroom>>('/classrooms/', {
