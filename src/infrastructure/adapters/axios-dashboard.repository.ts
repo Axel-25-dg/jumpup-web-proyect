@@ -1,5 +1,5 @@
 import { apiClient } from '../http/axios-client';
-import type { DashboardRepository, StudentDashboardData, RankingUser } from '@/domain/ports/dashboard.repository';
+import type { DashboardRepository, StudentDashboardData, TeacherDashboardData, AdminDashboardData, RankingUser } from '@/domain/ports/dashboard.repository';
 import type { Achievement } from '@/domain/entities/stats.entity';
 import { parseApiError } from '../http/parse-api-error';
 
@@ -7,6 +7,24 @@ export class AxiosDashboardRepository implements DashboardRepository {
   async getStudentData(): Promise<StudentDashboardData> {
     try {
       const { data } = await apiClient.get<StudentDashboardData>('/dashboard/student/');
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async getTeacherData(): Promise<TeacherDashboardData> {
+    try {
+      const { data } = await apiClient.get<TeacherDashboardData>('/dashboard/teacher/');
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async getAdminData(): Promise<AdminDashboardData> {
+    try {
+      const { data } = await apiClient.get<AdminDashboardData>('/dashboard/admin/');
       return data;
     } catch (err) {
       throw parseApiError(err);
