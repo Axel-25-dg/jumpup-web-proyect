@@ -29,6 +29,11 @@ const CertificatesPage = lazy(() => import('../pages/certificates/CertificatesPa
 // Admin & Teacher
 const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'))
 const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
+const TeacherCoursesPage = lazy(() => import('../pages/teacher/courses/TeacherCoursesPage'))
+const CreateCoursePage = lazy(() => import('../pages/teacher/courses/CreateCoursePage'))
+const CreateModulePage = lazy(() => import('../pages/teacher/courses/CreateModulePage'))
+const CreateLessonPage = lazy(() => import('../pages/teacher/courses/CreateLessonPage'))
+const CreateExercisePage = lazy(() => import('../pages/teacher/courses/CreateExercisePage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
 const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
 
@@ -104,6 +109,11 @@ export default function AppRouter() {
             {/* Teacher Protected Routes */}
             <Route element={<ProtectedRoute allowedRoles={['teacher']} />}>
                <Route path="/teacher" element={<TeacherDashboardPage />} />
+               <Route path="/teacher/courses" element={<TeacherCoursesPage />} />
+               <Route path="/teacher/courses/new" element={<CreateCoursePage />} />
+               <Route path="/teacher/modules/new" element={<CreateModulePage />} />
+               <Route path="/teacher/lessons/new" element={<CreateLessonPage />} />
+               <Route path="/teacher/exercises/new" element={<CreateExercisePage />} />
             </Route>
 
             {/* Shared Authenticated Routes (Students & Teachers) */}

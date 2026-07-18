@@ -67,6 +67,7 @@ export default function AppShell() {
     if (role === 'teacher' || role === 'profesor') {
       return [
         { to: '/teacher', label: 'Panel Profesor', icon: LayoutDashboard, protected: true },
+        { to: '/teacher/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
         { to: '/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
         { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
