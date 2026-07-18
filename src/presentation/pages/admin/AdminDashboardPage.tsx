@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import {
   Users,
   BookOpen,
-  ShoppingBag,
   Package,
   Tags,
   ArrowUpRight,

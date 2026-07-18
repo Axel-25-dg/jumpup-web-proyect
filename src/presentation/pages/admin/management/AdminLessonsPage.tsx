@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   BookOpen,
   Plus,
@@ -56,7 +56,6 @@ const contentTypeColors: Record<string, string> = {
 }
 
 export default function AdminLessonsPage() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedModule = searchParams.get('module')
 
@@ -291,7 +290,7 @@ export default function AdminLessonsPage() {
               </div>
             ) : filteredLessons.length > 0 ? (
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredLessons.map((lesson, index) => {
+                {filteredLessons.map((lesson) => {
                   const Icon = contentTypeIcons[lesson.content_type] || FileText
                   const colorClass = contentTypeColors[lesson.content_type] || 'text-slate-600 bg-slate-50'
                   return (

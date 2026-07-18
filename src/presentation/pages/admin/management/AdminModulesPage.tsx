@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   BookOpen,
   Plus,
@@ -7,12 +7,11 @@ import {
   Edit2,
   Trash2,
   ArrowLeft,
-  ArrowRight,
   Layers,
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/presentation/components/ui/card'
+import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
 import { Badge } from '@/presentation/components/ui/badge'
@@ -39,7 +38,6 @@ import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Course, Module } from '@/domain/entities/course.entity'
 
 export default function AdminModulesPage() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedCourse = searchParams.get('course')
 

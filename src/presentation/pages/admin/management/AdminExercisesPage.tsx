@@ -21,7 +21,6 @@ import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
 import { Textarea } from '@/presentation/components/ui/textarea'
 import { Badge } from '@/presentation/components/ui/badge'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,7 +66,6 @@ export default function AdminExercisesPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null)
   const [selectedLessonId, setSelectedLessonId] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
 
   const [exercises, setExercises] = useState<any[]>([])
@@ -120,15 +118,12 @@ export default function AdminExercisesPage() {
   useEffect(() => {
     if (!selectedLessonId) { setExercises([]); return }
     const loadExercises = async () => {
-      setIsLoading(true)
       try {
         const result = await courseRepo.getExercisesByLesson(selectedLessonId)
         setExercises(result || [])
       } catch {
         toast.error('Error al cargar ejercicios')
         setExercises([])
-      } finally {
-        setIsLoading(false)
       }
     }
     loadExercises()
