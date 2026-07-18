@@ -14,7 +14,9 @@ import {
   Sparkles,
   Search,
   PanelRight,
-  FolderOpen
+  FolderOpen,
+  Mail,
+  User
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { useCartStore } from '@/presentation/store/cart.store'
@@ -72,6 +74,8 @@ export default function AppShell() {
         { to: '/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
         { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
+        { to: '/teacher/inbox', label: 'Mensajes', icon: Mail, protected: true },
+        { to: '/teacher/profile', label: 'Mi Perfil', icon: User, protected: true },
         { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
       ]
     }
