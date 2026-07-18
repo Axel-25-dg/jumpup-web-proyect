@@ -188,8 +188,8 @@ export default function AppRouter() {
                <Route path="/management/courses/:id/edit" element={<CourseFormPage />} />
             </Route>
 
-            {/* Shared Authenticated Routes (Students & Teachers) */}
-            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher']} />}>
+            {/* Shared Authenticated Routes (All roles) */}
+            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']} />}>
                <Route path="/forum" element={<ForumPage />} />
                <Route path="/classrooms" element={<ClassroomsPage />} />
                <Route path="/live/:id" element={<LiveSessionPage />} />
