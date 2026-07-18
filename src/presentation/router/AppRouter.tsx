@@ -8,6 +8,10 @@ import PlaceholderPage from '../pages/PlaceholderPage'
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
 const HomePage = lazy(() => import('../pages/home/HomePage'))
+const StoryPage = lazy(() => import('../pages/home/StoryPage'))
+const TechPage = lazy(() => import('../pages/home/TechPage'))
+const TeamPage = lazy(() => import('../pages/home/TeamPage'))
+const FeaturesPage = lazy(() => import('../pages/home/FeaturesPage'))
 const CatalogPage = lazy(() => import('../pages/catalog/CatalogPage'))
 const ProductDetailPage = lazy(() => import('../pages/catalog/ProductDetailPage'))
 const CartPage = lazy(() => import('../pages/cart/CartPage'))
@@ -46,6 +50,8 @@ const TeacherInboxPage = lazy(() => import('../pages/teacher/inbox/TeacherInboxP
 const TeacherProfilePage = lazy(() => import('../pages/teacher/profile/TeacherProfilePage'))
 const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
 const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
+const CourseListPage = lazy(() => import('../pages/courses/CourseListPage'))
+const CourseFormPage = lazy(() => import('../pages/courses/CourseFormPage'))
 
 function PageLoader() {
   return (
@@ -99,6 +105,10 @@ export default function AppRouter() {
 
           <Route element={<AppShell />}>
             <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
+            <Route path="/story" element={<PublicRoute><StoryPage /></PublicRoute>} />
+            <Route path="/tech" element={<PublicRoute><TechPage /></PublicRoute>} />
+            <Route path="/team" element={<PublicRoute><TeamPage /></PublicRoute>} />
+            <Route path="/features" element={<PublicRoute><FeaturesPage /></PublicRoute>} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/products/:id" element={<ProductDetailPage />} />
 
@@ -133,6 +143,13 @@ export default function AppRouter() {
                <Route path="/teacher/live/new" element={<ScheduleLiveSessionPage />} />
                <Route path="/teacher/inbox" element={<TeacherInboxPage />} />
                <Route path="/teacher/profile" element={<TeacherProfilePage />} />
+            </Route>
+
+            {/* Gestión académica: en Django, admin y docente tienen is_staff=True. */}
+            <Route element={<ProtectedRoute requireStaff />}>
+               <Route path="/management/courses" element={<CourseListPage />} />
+               <Route path="/management/courses/new" element={<CourseFormPage />} />
+               <Route path="/management/courses/:id/edit" element={<CourseFormPage />} />
             </Route>
 
             {/* Shared Authenticated Routes (Students & Teachers) */}

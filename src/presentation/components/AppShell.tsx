@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   LogOut,
@@ -15,7 +15,12 @@ import {
   Search,
   PanelRight,
   FolderOpen,
-  Mail
+  Mail,
+  Sun,
+  Moon,
+  X,
+  Menu,
+  ArrowRight,
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { useCartStore } from '@/presentation/store/cart.store'
@@ -32,31 +37,66 @@ function getInitials(username?: string): string {
 
 export default function AppShell() {
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const cart = useCartStore((s) => s.cart)
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   const menuRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const cartItemCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0
 
-  // Cerrar menú al hacer clic fuera
+  // Close profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false)
       }
     }
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  async function handleLogout() {
-    await logout()
-    setIsUserMenuOpen(false)
-    navigate('/', { replace: true })
+  // Focus search input when modal opens
+  useEffect(() => {
+    if (isSearchOpen && searchInputRef.current) {
+      searchInputRef.current.focus()
+    }
+  }, [isSearchOpen])
+
+  // Close search on Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false)
+        setIsMobileMenuOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  // Prevent body scroll when modals open
+  useEffect(() => {
+    if (isSearchOpen || isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isSearchOpen, isMobileMenuOpen])
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
   }
 
   const getNavItems = () => {
@@ -109,9 +149,371 @@ export default function AppShell() {
   
   const displayRole = getDisplayRole()
 
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light')
+  }
+
+  const isPublicLanding = ['/', '/story', '/tech', '/team', '/features'].includes(location.pathname)
+
+  const publicNavLinks = [
+    { label: 'Inicio', to: '/' },
+    { label: 'Historia', to: '/story' },
+    { label: 'Tecnología', to: '/tech' },
+    { label: 'Equipo', to: '/team' },
+    { label: 'Móvil', to: '/features' },
+  ]
+
+  const quickSearchLinks = [
+    { label: 'Cursos de Inglés', to: '/catalog' },
+    { label: 'Comunidad', to: '/forum' },
+    { label: 'Nuestra Historia', to: '/story' },
+    { label: 'Equipo', to: '/team' },
+  ]
+
+  // ─── Search Overlay Modal ──────────────────────────────────────────────────
+  const SearchModal = () => (
+    <div
+      className={cn(
+        'fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4',
+        'transition-all duration-300',
+        isSearchOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      )}
+      onClick={() => setIsSearchOpen(false)}
+    >
+      {/* Backdrop */}
+      <div className={cn(
+        'absolute inset-0 backdrop-blur-sm transition-colors duration-300',
+        theme === 'dark' ? 'bg-black/70' : 'bg-neutral-900/40'
+      )} />
+
+      {/* Search Box */}
+      <div
+        className={cn(
+          'relative w-full max-w-2xl rounded-none shadow-2xl transition-all duration-300',
+          isSearchOpen ? 'translate-y-0' : '-translate-y-4',
+          theme === 'dark'
+            ? 'bg-neutral-900 border border-neutral-800'
+            : 'bg-white border border-neutral-200'
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Input row */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800/50">
+          <Search className="h-5 w-5 text-sky-500 shrink-0" />
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar cursos, lecciones, páginas..."
+            className={cn(
+              'flex-1 bg-transparent text-base font-medium outline-none placeholder:font-normal',
+              theme === 'dark'
+                ? 'text-neutral-100 placeholder:text-neutral-600'
+                : 'text-neutral-900 placeholder:text-neutral-400'
+            )}
+          />
+          <button
+            onClick={() => setIsSearchOpen(false)}
+            className={cn(
+              'p-1 transition-colors cursor-pointer',
+              theme === 'dark'
+                ? 'text-neutral-500 hover:text-neutral-200'
+                : 'text-neutral-400 hover:text-neutral-700'
+            )}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Quick links */}
+        <div className="p-5">
+          <p className={cn(
+            'text-[10px] font-semibold uppercase tracking-[0.2em] mb-3',
+            theme === 'dark' ? 'text-neutral-600' : 'text-neutral-400'
+          )}>
+            Accesos rápidos
+          </p>
+          <div className="space-y-1">
+            {quickSearchLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setIsSearchOpen(false)}
+                className={cn(
+                  'flex items-center justify-between px-3 py-2.5 group transition-colors',
+                  theme === 'dark'
+                    ? 'hover:bg-neutral-800 text-neutral-300 hover:text-white'
+                    : 'hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900'
+                )}
+              >
+                <span className="text-sm font-medium">{link.label}</span>
+                <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-sky-500" />
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom hint */}
+        <div className={cn(
+          'px-5 py-3 border-t flex items-center gap-4',
+          theme === 'dark' ? 'border-neutral-800' : 'border-neutral-100'
+        )}>
+          <span className={cn(
+            'text-[10px] font-semibold uppercase tracking-widest',
+            theme === 'dark' ? 'text-neutral-700' : 'text-neutral-400'
+          )}>
+            Esc para cerrar
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ─── Mobile Menu Overlay ───────────────────────────────────────────────────
+  const MobileMenu = () => (
+    <div
+      className={cn(
+        'fixed inset-0 z-[150] transition-all duration-300',
+        isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      )}
+    >
+      <div
+        className={cn(
+          'absolute inset-0',
+          theme === 'dark' ? 'bg-black/60' : 'bg-neutral-900/30'
+        )}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+      <div className={cn(
+        'absolute top-0 left-0 h-full w-[280px] flex flex-col transition-transform duration-300',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
+        theme === 'dark'
+          ? 'bg-[#0a0a0b] border-r border-neutral-800'
+          : 'bg-white border-r border-neutral-200'
+      )}>
+        {/* Header */}
+        <div className={cn(
+          'flex items-center justify-between px-6 h-16 border-b',
+          theme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'
+        )}>
+          <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
+            <div className="bg-sky-500 p-1.5 rounded-none">
+              <Sparkles className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-lg font-semibold tracking-tight">JumpUp</span>
+          </Link>
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={cn(
+              'p-2 cursor-pointer transition-colors',
+              theme === 'dark' ? 'text-neutral-400 hover:text-white' : 'text-neutral-500 hover:text-neutral-900'
+            )}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Nav links */}
+        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          {publicNavLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => cn(
+                'flex items-center px-3 py-3 text-sm font-semibold transition-colors',
+                isActive
+                  ? 'text-sky-500'
+                  : theme === 'dark'
+                    ? 'text-neutral-400 hover:text-white'
+                    : 'text-neutral-500 hover:text-neutral-900'
+              )}
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Auth buttons */}
+        <div className={cn(
+          'p-4 border-t space-y-3',
+          theme === 'dark' ? 'border-neutral-800' : 'border-neutral-200'
+        )}>
+          <Link
+            to="/login"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={cn(
+              'flex items-center justify-center w-full py-3 text-sm font-semibold border transition-colors',
+              theme === 'dark'
+                ? 'border-neutral-800 text-neutral-300 hover:text-white hover:border-neutral-600'
+                : 'border-neutral-200 text-neutral-600 hover:text-neutral-900'
+            )}
+          >
+            Entrar
+          </Link>
+          <Link
+            to="/register"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center justify-center w-full py-3 text-sm font-semibold bg-sky-500 hover:bg-sky-600 text-white transition-colors"
+          >
+            Empezar gratis
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
+
+  // ─── Public Header ─────────────────────────────────────────────────────────
+  const renderPublicHeader = () => (
+    <header className={cn(
+      'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+      theme === 'dark'
+        ? 'bg-[#0a0a0b]/80 border-b border-neutral-800/60 text-neutral-100'
+        : 'bg-white/80 border-b border-neutral-200/60 text-neutral-900',
+      'backdrop-blur-md'
+    )}>
+      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+          <div className={cn(
+            'h-8 w-8 grid place-items-center border transition-colors',
+            theme === 'dark'
+              ? 'border-neutral-700 group-hover:border-sky-500/60'
+              : 'border-neutral-200 group-hover:border-sky-500/40',
+            'group-hover:bg-sky-500/10'
+          )}>
+            <Sparkles className="h-4 w-4 text-sky-500" />
+          </div>
+          <span className={cn(
+            'text-lg font-semibold tracking-tight',
+            theme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'
+          )}>
+            Jump<span className="text-sky-500">Up</span>
+          </span>
+        </Link>
+
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+          {publicNavLinks.map((link) => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) => cn(
+                'relative py-1 transition-colors cursor-pointer group',
+                isActive
+                  ? 'text-sky-500'
+                  : theme === 'dark'
+                    ? 'text-neutral-400 hover:text-neutral-100'
+                    : 'text-neutral-500 hover:text-neutral-900'
+              )}
+            >
+              {link.label}
+              <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-sky-500 transition-all duration-300 group-hover:w-full" />
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-2">
+          {/* Search button */}
+          <button
+            id="public-search-btn"
+            onClick={() => setIsSearchOpen(true)}
+            aria-label="Abrir buscador"
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-sm font-medium border transition-all duration-200 cursor-pointer group',
+              theme === 'dark'
+                ? 'border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-neutral-200 bg-neutral-900/50'
+                : 'border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 bg-neutral-50'
+            )}
+          >
+            <Search className="h-4 w-4 group-hover:text-sky-500 transition-colors" />
+            <span className="hidden sm:inline tracking-wide text-xs">Buscar</span>
+            <span className={cn(
+              'hidden sm:inline text-[10px] font-semibold px-1.5 py-0.5 tracking-widest border',
+              theme === 'dark'
+                ? 'border-neutral-700 text-neutral-600'
+                : 'border-neutral-200 text-neutral-400'
+            )}>⌘K</span>
+          </button>
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Cambiar tema"
+            className={cn(
+              'p-2.5 border transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95',
+              theme === 'dark'
+                ? 'border-neutral-800 text-sky-400 hover:border-neutral-600 bg-neutral-900/50'
+                : 'border-neutral-200 text-amber-500 hover:border-neutral-300 bg-neutral-50'
+            )}
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+
+          {/* Auth — desktop */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link
+              to="/login"
+              className={cn(
+                'px-4 py-2 text-sm font-semibold transition-colors',
+                theme === 'dark'
+                  ? 'text-neutral-400 hover:text-neutral-100'
+                  : 'text-neutral-500 hover:text-neutral-900'
+              )}
+            >
+              Entrar
+            </Link>
+            <Link
+              to="/register"
+              className="px-5 py-2 text-sm font-semibold bg-sky-500 hover:bg-sky-600 text-white transition-colors"
+            >
+              Empezar
+            </Link>
+          </div>
+
+          {/* Hamburger — mobile */}
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Abrir menú"
+            className={cn(
+              'md:hidden p-2.5 border transition-colors cursor-pointer',
+              theme === 'dark'
+                ? 'border-neutral-800 text-neutral-400 hover:text-neutral-100'
+                : 'border-neutral-200 text-neutral-500 hover:text-neutral-900'
+            )}
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </header>
+  )
+
+  // ─── Public Landing Layout ─────────────────────────────────────────────────
+  if (isPublicLanding) {
+    return (
+      <div className={cn(
+        'w-full min-h-screen transition-colors duration-300 font-sans overflow-x-hidden',
+        'selection:bg-sky-500/20 selection:text-sky-400',
+        theme === 'dark' ? 'bg-[#0a0a0b] text-neutral-100' : 'bg-[#f7f6f3] text-neutral-900'
+      )}>
+        {renderPublicHeader()}
+        <SearchModal />
+        <MobileMenu />
+        <main className="w-full min-h-screen pt-16 flex flex-col">
+          <Outlet context={{ theme }} />
+        </main>
+      </div>
+    )
+  }
+
+  // ─── Protected Sidebar/Topbar Layout ──────────────────────────────────────
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* --- TOP BAR --- */}
+    <div className={cn("flex min-h-screen", theme === 'dark' ? "bg-slate-950" : "bg-slate-50")}>
+      {/* TOP BAR */}
       <header className={cn(
         "fixed top-0 z-[70] w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300",
         user ? (isSidebarExpanded ? "pr-64" : "pr-16") : "pr-0"
@@ -133,7 +535,7 @@ export default function AppShell() {
                 <input
                   type="text"
                   placeholder="Buscar recursos..."
-                  className="h-10 w-64 pl-10 pr-4 rounded-xl bg-slate-100 dark:bg-slate-900 border-none text-sm font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-sky-500/20 transition-all"
+                  className={cn("h-10 w-64 pl-10 pr-4 rounded-xl border-none text-sm font-medium focus:ring-2 focus:ring-sky-500/20 transition-all outline-none", theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900')}
                 />
               </div>
             )}
@@ -166,7 +568,6 @@ export default function AppShell() {
                   </Avatar>
                 </button>
 
-                {/* Perfil Dropdown Manual */}
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 dark:border-slate-800 p-2 z-[110]">
                     <div className="p-3">
@@ -207,7 +608,7 @@ export default function AppShell() {
         </div>
       </header>
 
-      {/* --- SIDEBAR (RIGHT - GEMINI STYLE) --- */}
+      {/* SIDEBAR */}
       {user && (
         <aside
           className={cn(
@@ -215,7 +616,6 @@ export default function AppShell() {
             isSidebarExpanded ? "w-64" : "w-16"
           )}
         >
-          {/* Header del Sidebar con Toggle */}
           <div className="flex items-center justify-end px-4 mb-6 mt-16">
             <button
               onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
@@ -253,7 +653,6 @@ export default function AppShell() {
                       {item.label}
                     </span>
 
-                    {/* Tooltip for collapsed state */}
                     {!isSidebarExpanded && (
                       <div className="absolute right-full mr-4 px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase tracking-widest whitespace-nowrap z-[70]">
                         {item.label}
@@ -286,7 +685,7 @@ export default function AppShell() {
         </aside>
       )}
 
-      {/* --- MAIN CONTENT --- */}
+      {/* MAIN CONTENT */}
       <main className={cn(
         "flex-1 pt-16 transition-all duration-300",
         user ? (isSidebarExpanded ? "pr-64" : "pr-16") : "pr-0"

@@ -1,223 +1,467 @@
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import {
-  Sparkles,
   ArrowRight,
-  History,
-  BrainCircuit,
-  ShoppingBag,
-  Code2,
-  Database,
-  Terminal,
-  Trophy
+  ArrowUpRight,
+  Sparkles,
+  MapPin,
+  Info,
+  GraduationCap,
+  School,
+  Brain,
+  Trophy,
+  Globe,
+  Mic,
+  Star,
+  Quote,
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
-import { Badge } from '@/presentation/components/ui/badge'
 
 export default function HomePage() {
+  const { theme } = useOutletContext<{ theme: 'light' | 'dark' }>()
+  const dark = theme === 'dark'
+
+  const heroImage =
+    'https://guaman-idiomas-ute.online/media/media/dad42e8c-7d5f-4f/3d7010514fef482584093c0c11404a66.webp'
+
+  // Rockstar parallax displacement based on scroll position
+  const { scrollY } = useScroll()
+  const y = useTransform(scrollY, [0, 800], [0, 200])
+
+  // Centralized theme tokens for easy palette tuning
+  const t = {
+    page: dark ? 'bg-[#0a0e14] text-slate-100' : 'bg-[#f7f6f3] text-slate-900',
+    sectionAlt: dark ? 'bg-[#0c1119]' : 'bg-white',
+    hairline: dark ? 'border-white/10' : 'border-slate-900/10',
+    muted: dark ? 'text-slate-400' : 'text-slate-500',
+    body: dark ? 'text-slate-300' : 'text-slate-600',
+    heading: dark ? 'text-white' : 'text-slate-900',
+    chip: dark
+      ? 'bg-white/[0.03] border-white/10 text-slate-300'
+      : 'bg-white border-slate-900/10 text-slate-700',
+    cardBg: dark ? 'bg-white/[0.02]' : 'bg-white',
+    accent: 'text-sky-500',
+  }
+
+  const stats = [
+    { value: '120K+', label: 'Estudiantes activos' },
+    { value: '38', label: 'Idiomas disponibles' },
+    { value: '4.9', label: 'Valoración media' },
+    { value: '24/7', label: 'Tutoría con IA' },
+  ]
+
+  const features = [
+    {
+      icon: Brain,
+      title: 'IA Adaptativa',
+      desc: 'Un tutor que ajusta cada lección a tu ritmo, tus errores y tus objetivos en tiempo real.',
+    },
+    {
+      icon: Trophy,
+      title: 'Gamificación',
+      desc: 'Ligas, rachas y recompensas que convierten la práctica diaria en un hábito adictivo.',
+    },
+    {
+      icon: Globe,
+      title: 'Comunidad Global',
+      desc: 'Conversa con hablantes nativos y compañeros de todo el mundo en retos reales.',
+    },
+    {
+      icon: Mic,
+      title: 'Corrección por Voz',
+      desc: 'Pronuncia y recibe feedback fonético instantáneo para sonar natural desde el día uno.',
+    },
+  ]
+
+  const steps = [
+    {
+      k: '01',
+      title: 'Define tu meta',
+      desc: 'Cuéntanos tu nivel y para qué quieres el idioma. La IA diseña tu ruta personalizada.',
+    },
+    {
+      k: '02',
+      title: 'Practica a diario',
+      desc: 'Micro-lecciones inmersivas de pocos minutos, con conversación real y feedback inmediato.',
+    },
+    {
+      k: '03',
+      title: 'Alcanza la fluidez',
+      desc: 'Mide tu progreso con métricas claras y salta de nivel con certificaciones reconocidas.',
+    },
+  ]
+
+  const testimonials = [
+    {
+      quote:
+        'En tres meses pasé de no poder pedir un café a mantener reuniones de trabajo en inglés. La tutoría de IA es de otro nivel.',
+      name: 'Camila R.',
+      role: 'Diseñadora UX',
+    },
+    {
+      quote:
+        'La gamificación me enganchó. Llevo 214 días de racha y por primera vez disfruto estudiar un idioma.',
+      name: 'Andrés M.',
+      role: 'Estudiante UTE',
+    },
+    {
+      quote:
+        'Hablar con la comunidad global me dio la confianza que ningún libro me dio en años.',
+      name: 'Sofía L.',
+      role: 'Ingeniera de datos',
+    },
+  ]
+
   return (
-    <div className="bg-white text-slate-900 font-sans selection:bg-sky-100 selection:text-sky-600">
-      {/* --- HERO SECTION --- */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-sky-400/10 blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[500px] h-[500px] bg-blue-400/10 blur-[100px] rounded-full" />
+    <div className={`w-full relative flex flex-col transition-colors duration-300 ${t.page}`}>
+      {/* --- HERO WITH ROCKSTAR PARALLAX --- */}
+      <section className="relative h-screen w-full overflow-hidden flex flex-col justify-center items-center">
+        <motion.div style={{ y }} className="absolute inset-0 z-0 h-[120vh] w-full">
+          <motion.img
+            src={heroImage || '/placeholder.svg'}
+            alt="Estudiantes dando el salto hacia la fluidez"
+            className="w-full h-full object-cover object-center grayscale-[35%]"
+            initial={{ scale: 1 }}
+            animate={{ scale: 1.15 }}
+            transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+          />
+        </motion.div>
 
-        <div className="container mx-auto px-6 relative z-10 text-center space-y-10">
-          <Badge className="bg-sky-50 text-sky-600 border-sky-100 px-5 py-2 font-black text-xs uppercase tracking-[0.2em] rounded-full shadow-sm">
-            <Sparkles className="h-4 w-4 mr-2" />
-            La revolución del aprendizaje de idiomas
-          </Badge>
+        {/* Cinematic overlay */}
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/70 via-black/45 to-black/80" />
 
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.85] text-slate-900">
-            Salta al siguiente <br />
-            <span className="text-sky-500">nivel de fluidez.</span>
-          </h1>
+        {/* Frame hairlines */}
+        <div className="absolute inset-4 sm:inset-6 z-20 border border-white/15 pointer-events-none" />
 
-          <p className="text-xl md:text-2xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
-            Domina un nuevo idioma con la plataforma que combina <span className="text-sky-600 font-bold">Inteligencia Artificial</span>, gamificación y una comunidad global.
-          </p>
+        {/* Hero content */}
+        <div className="relative z-30 flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 text-center max-w-6xl mx-auto w-full">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-white/25 bg-white/5 backdrop-blur-md"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-sky-400" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-100">
+              La revolución del aprendizaje de idiomas
+            </span>
+          </motion.div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
-            <Button asChild size="lg" className="h-16 px-12 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-black text-xl shadow-xl shadow-sky-200 border-none transition-all hover:scale-105 active:scale-95 group">
-              <Link to="/register">
-                Empezar Gratis
-                <ArrowRight className="ml-2 h-6 w-6 group-hover:translate-x-2 transition-transform" />
+          <motion.h1
+            initial={{ opacity: 0, y: 35 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-8 text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[0.92] text-white text-balance"
+          >
+            Salta al siguiente
+            <br />
+            <span className="italic font-light text-sky-400">nivel de fluidez.</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 35 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-8 text-base sm:text-xl text-slate-200 font-medium max-w-2xl mx-auto leading-relaxed text-pretty"
+          >
+            Domina un nuevo idioma con la plataforma que combina inteligencia artificial,
+            gamificación y una comunidad global.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 35 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.42, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto"
+          >
+            <Button
+              asChild
+              size="lg"
+              className="w-full sm:w-auto h-14 px-10 rounded-none bg-sky-500 hover:bg-sky-400 text-white font-bold text-base tracking-wide transition-all group cursor-pointer"
+            >
+              <Link to="/register" className="flex items-center justify-center gap-2">
+                Empezar gratis
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" className="h-16 px-12 rounded-2xl border-2 border-sky-100 text-sky-600 font-black text-xl hover:bg-sky-50 transition-all group">
-              <Link to="/login" className="flex items-center">
-                Iniciar Sesión
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto h-14 px-10 rounded-none border border-white/30 bg-transparent text-white font-bold text-base tracking-wide hover:bg-white/10 transition-all cursor-pointer"
+            >
+              <Link to="/login" className="flex items-center justify-center">
+                Iniciar sesión
               </Link>
             </Button>
-          </div>
+          </motion.div>
+        </div>
+
+        {/* Scroll hint */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2">
+          <span className="text-[10px] uppercase tracking-[0.3em] text-white/60">Desliza</span>
+          <div className="h-10 w-px bg-white/30" />
         </div>
       </section>
 
-      {/* --- NUESTRA HISTORIA --- */}
-      <section id="story" className="py-24 bg-slate-50 border-y border-slate-100">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-sm border border-sky-100">
-                <History className="h-5 w-5 text-sky-500" />
-                <span className="text-xs font-black uppercase tracking-widest text-sky-600">Nuestra Trayectoria</span>
+      {/* --- STATS STRIP --- */}
+      <section className={`w-full border-y ${t.hairline} ${t.sectionAlt}`}>
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4">
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              className={`px-6 py-10 md:py-14 border-b md:border-b-0 ${t.hairline} ${i !== 0 ? `md:border-l ${t.hairline}` : ''
+                } ${i % 2 !== 0 ? `border-l ${t.hairline} md:border-l` : ''}`}
+            >
+              <div className={`text-4xl md:text-5xl font-black tracking-tight ${t.heading}`}>
+                {s.value}
               </div>
-              <h2 className="text-5xl font-black text-slate-900 leading-tight">
-                JumpUp: Una visión <span className="text-sky-500 italic">sin fronteras.</span>
+              <div className={`mt-2 text-xs uppercase tracking-[0.2em] ${t.muted}`}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* --- SECCIÓN 1: INFORMACIÓN GENERAL --- */}
+      <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.sectionAlt}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-16 items-center">
+            <div className="lg:w-1/2 space-y-8">
+              <div className={`inline-flex items-center gap-2 px-4 py-2 border ${t.chip}`}>
+                <Info className="h-4 w-4 text-sky-500" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em]">
+                  Información general
+                </span>
+              </div>
+              <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
+                Un salto estratégico hacia tu{' '}
+                <span className="italic font-light text-sky-500">futuro bilingüe.</span>
               </h2>
-              <div className="space-y-6 text-lg text-slate-600 font-medium leading-relaxed">
-                <p>
-                  Todo comenzó en las aulas universitarias, donde el equipo fundador identificó un problema crítico: el aprendizaje de idiomas era estático, aburrido y desconectado de la tecnología moderna.
-                </p>
-                <p>
-                  Nuestra misión es democratizar el acceso a una educación de calidad, utilizando algoritmos de aprendizaje adaptativo y entornos sociales que obligan al estudiante a usar el idioma desde el primer día.
-                </p>
+              <p className={`text-base sm:text-lg leading-relaxed text-pretty ${t.body}`}>
+                JumpUp es un ecosistema interactivo de vanguardia diseñado para acelerar tu
+                aprendizaje mediante inteligencia artificial adaptativa y dinámicas de gamificación
+                inmersivas. Olvídate de memorizar gramática aburrida: interactúa con nuestro tutor de
+                IA 24/7 y compite en retos reales mientras acumulas recompensas.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-transparent">
+                <div className={`flex items-start gap-3 py-4 pr-6 border-t ${t.hairline}`}>
+                  <GraduationCap className="h-6 w-6 text-sky-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className={`font-bold ${t.heading}`}>Metodología activa</h4>
+                    <p className={`text-sm ${t.muted}`}>Aprende haciendo con simulaciones reales.</p>
+                  </div>
+                </div>
+                <div className={`flex items-start gap-3 py-4 pr-6 border-t ${t.hairline}`}>
+                  <Sparkles className="h-6 w-6 text-sky-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className={`font-bold ${t.heading}`}>Tutoría IA inteligente</h4>
+                    <p className={`text-sm ${t.muted}`}>Corrección gramatical inmediata por voz.</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-sky-50 text-center space-y-2">
-                <p className="text-5xl font-black text-sky-500">2024</p>
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">Fundación</p>
-              </div>
-              <div className="bg-sky-500 p-8 rounded-[2rem] shadow-xl text-center space-y-2 text-white">
-                <p className="text-5xl font-black">15+</p>
-                <p className="text-sm font-bold text-sky-100 uppercase tracking-tighter">Idiomas</p>
-              </div>
-              <div className="bg-slate-900 p-8 rounded-[2rem] shadow-xl text-center space-y-2 text-white col-span-2">
-                <p className="text-3xl font-black">Aprendizaje Activo</p>
-                <p className="text-sm font-bold text-slate-400 uppercase tracking-tighter">Basado en el Marco Común Europeo (MCER)</p>
+
+            {/* Rockstar zoom image */}
+            <div className="lg:w-1/2 w-full">
+              <div className={`relative overflow-hidden border ${t.hairline}`}>
+                <div className="overflow-hidden aspect-[4/3] relative group">
+                  <motion.img
+                    src="https://guaman-idiomas-ute.online/media/media/1bd96a4a-5826-42/62bec80165d448f991d501745c5b0c3c.jpg"
+                    alt="Estudiantes en el campus"
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-[filter] duration-700"
+                    initial={{ scale: 1 }}
+                    animate={{ scale: 1.12 }}
+                    transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+                  />
+                </div>
+                <div className={`flex items-center justify-between px-5 py-4 border-t ${t.hairline} ${t.cardBg}`}>
+                  <span className={`text-xs uppercase tracking-[0.2em] ${t.muted}`}>
+                    Experiencia inmersiva
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 text-sky-500" />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- TECH STACK (DOCUMENTACIÓN) --- */}
-      <section className="py-24 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-4xl font-black text-slate-900 mb-4">Arquitectura y Tecnología</h2>
-            <p className="text-slate-500 font-medium">JumpUp está construido sobre un stack moderno de alto rendimiento para garantizar estabilidad y velocidad.</p>
+      {/* --- FEATURES GRID --- */}
+      <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.page}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 border ${t.chip}`}>
+              <Star className="h-4 w-4 text-sky-500" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em]">
+                Por qué JumpUp
+              </span>
+            </div>
+            <h2 className={`mt-6 text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
+              Todo lo que necesitas para{' '}
+              <span className="italic font-light text-sky-500">hablar de verdad.</span>
+            </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-sky-200 transition-all">
-              <div className="bg-sky-100 p-4 rounded-2xl w-fit mb-6">
-                <Code2 className="h-8 w-8 text-sky-600" />
-              </div>
-              <h3 className="text-xl font-black mb-3">Frontend Moderno</h3>
-              <ul className="space-y-2 text-sm font-bold text-slate-500">
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-sky-500"/> React 18 + Vite</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-sky-500"/> TypeScript para robustez</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-sky-500"/> Tailwind CSS 4.0</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-sky-500"/> Zustand (Estado Global)</li>
-              </ul>
-            </div>
-
-            <div className="p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-sky-200 transition-all">
-              <div className="bg-blue-100 p-4 rounded-2xl w-fit mb-6">
-                <Database className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-black mb-3">Backend Robusto</h3>
-              <ul className="space-y-2 text-sm font-bold text-slate-500">
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-blue-500"/> Django Rest Framework</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-blue-500"/> PostgreSQL Database</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-blue-500"/> Redis para Caching</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-blue-500"/> JWT Authentication</li>
-              </ul>
-            </div>
-
-            <div className="p-8 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-sky-200 transition-all">
-              <div className="bg-indigo-100 p-4 rounded-2xl w-fit mb-6">
-                <Terminal className="h-8 w-8 text-indigo-600" />
-              </div>
-              <h3 className="text-xl font-black mb-3">Infraestructura</h3>
-              <ul className="space-y-2 text-sm font-bold text-slate-500">
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-indigo-500"/> Docker Containers</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-indigo-500"/> Nginx Web Server</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-indigo-500"/> WebSockets (Django Channels)</li>
-                <li className="flex items-center gap-2"><div className="h-1.5 w-1.5 rounded-full bg-indigo-500"/> GitHub Actions CI/CD</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- COLABORADORES --- */}
-      <section className="py-24 bg-slate-900 text-white rounded-[4rem] mx-6 overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-sky-500/20 blur-[150px] rounded-full" />
-
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-5xl font-black">Equipo de Desarrollo</h2>
-            <p className="text-sky-300 font-bold uppercase tracking-widest text-sm">Los arquitectos detrás de JumpUp</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-12">
-            {[
-              { name: "Henry Macías", role: "Fullstack Developer", desc: "Especialista en arquitecturas escalables y seguridad de datos.", initials: "HM" },
-              { name: "Kevin Guamán", role: "Frontend Lead", desc: "Experto en UI/UX y optimización de interfaces reactivas.", initials: "KG" },
-              { name: "Andrés Paucar", role: "Backend Engineer", desc: "Responsable de la lógica de negocio y sistemas de IA.", initials: "AP" }
-            ].map((member, i) => (
-              <div key={i} className="group text-center space-y-6">
-                <div className="mx-auto w-32 h-32 rounded-full bg-white/10 flex items-center justify-center text-3xl font-black border-4 border-white/5 group-hover:border-sky-500 transition-all duration-500 group-hover:scale-110">
-                  {member.initials}
+          <div className={`mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-l ${t.hairline}`}>
+            {features.map((f) => (
+              <div
+                key={f.title}
+                className={`group p-8 border-b border-r ${t.hairline} ${t.cardBg} transition-colors hover:bg-sky-500/[0.04]`}
+              >
+                <div className={`flex h-12 w-12 items-center justify-center border ${t.hairline}`}>
+                  <f.icon className="h-6 w-6 text-sky-500" />
                 </div>
-                <div className="space-y-2">
-                  <h4 className="text-2xl font-black">{member.name}</h4>
-                  <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30 uppercase text-[10px] font-black">{member.role}</Badge>
-                  <p className="text-slate-400 text-sm font-medium px-4">{member.desc}</p>
-                </div>
+                <h3 className={`mt-6 text-xl font-bold ${t.heading}`}>{f.title}</h3>
+                <p className={`mt-3 text-sm leading-relaxed ${t.body}`}>{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- SECCIÓN DE CAPACIDADES --- */}
-      <section className="py-32 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-16 items-center">
+      {/* --- METHODOLOGY STEPS --- */}
+      <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.sectionAlt}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
+              Fluidez en{' '}
+              <span className="italic font-light text-sky-500">tres pasos.</span>
+            </h2>
+            <p className={`max-w-md text-base ${t.body}`}>
+              Un método probado que convierte minutos diarios en resultados reales, medibles y
+              duraderos.
+            </p>
+          </div>
+
+          <div className={`mt-16 grid grid-cols-1 md:grid-cols-3 border-t border-l ${t.hairline}`}>
+            {steps.map((s) => (
+              <div key={s.k} className={`p-8 md:p-10 border-b border-r ${t.hairline}`}>
+                <span className="text-5xl font-black text-sky-500/80">{s.k}</span>
+                <h3 className={`mt-6 text-2xl font-bold ${t.heading}`}>{s.title}</h3>
+                <p className={`mt-3 text-base leading-relaxed ${t.body}`}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- SECCIÓN 2: UBICACIÓN UTE --- */}
+      <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.page}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row-reverse gap-16 items-center">
             <div className="lg:w-1/2 space-y-8">
-              <h2 className="text-5xl font-black text-slate-900 leading-tight">Más que una app, un <span className="text-sky-500">ecosistema completo.</span></h2>
-              <div className="grid gap-4">
-                {[
-                  { t: "Tutoría con IA", d: "Conversa 24/7 con nuestro tutor entrenado para corregirte.", i: BrainCircuit },
-                  { t: "Ranking Global", d: "Compite con estudiantes de todo el mundo y gana premios.", i: Trophy }
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 p-6 rounded-3xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                    <div className="bg-sky-500 p-3 rounded-2xl h-fit text-white">
-                      <item.i className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-xl font-black">{item.t}</h4>
-                      <p className="text-slate-500 font-medium">{item.d}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className={`inline-flex items-center gap-2 px-4 py-2 border ${t.chip}`}>
+                <MapPin className="h-4 w-4 text-sky-500" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.22em]">
+                  Ubicación de excelencia
+                </span>
+              </div>
+              <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
+                Estamos situados en la{' '}
+                <span className="italic font-light text-sky-500">Universidad UTE.</span>
+              </h2>
+              <p className={`text-base sm:text-lg leading-relaxed text-pretty ${t.body}`}>
+                Nuestras operaciones académicas y de desarrollo tecnológico tienen su sede principal
+                en los modernos laboratorios de la Universidad UTE en Quito, Ecuador. Aprovechamos su
+                infraestructura de vanguardia y talento de primer nivel para impulsar la
+                investigación aplicada en inteligencia artificial y tecnologías educativas.
+              </p>
+
+              <div className={`flex items-center gap-4 text-sm font-bold py-4 border-t ${t.hairline} ${t.muted}`}>
+                <School className="h-6 w-6 text-sky-500" />
+                <span>Campus Matriz UTE — Quito, Ecuador</span>
               </div>
             </div>
-            <div className="lg:w-1/2 bg-sky-100 rounded-[3rem] p-4 rotate-2 shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop"
-                alt="Colaboración en equipo"
-                className="rounded-[2.5rem] object-cover aspect-video"
-              />
+
+            <div className="lg:w-1/2 w-full">
+              <div className={`relative overflow-hidden border ${t.hairline} group`}>
+                <img
+                  src="https://guaman-idiomas-ute.online/media/media/b380d01b-3573-41/e081bd96730d4cc3a8c1159eae4a8a41.png"
+                  alt="Campus de la Universidad UTE"
+                  className="w-full h-auto block grayscale group-hover:grayscale-0 transition-[filter] duration-700"
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- FOOTER CTA --- */}
-      <section className="py-32 text-center bg-sky-50 border-t border-sky-100">
-        <div className="container mx-auto px-6 max-w-4xl space-y-10">
-          <h2 className="text-6xl font-black text-slate-900">¿Damos el salto?</h2>
-          <p className="text-2xl text-slate-500 font-medium italic">
-            "El único límite para aprender un idioma es el primer paso."
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Button asChild size="lg" className="h-20 px-16 rounded-3xl bg-slate-900 hover:bg-black text-white font-black text-2xl shadow-2xl transition-all hover:scale-105 active:scale-95">
-              <Link to="/register">Crear Cuenta Gratis</Link>
-            </Button>
+      {/* --- TESTIMONIALS --- */}
+      <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.sectionAlt}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl">
+            <div className={`inline-flex items-center gap-2 px-4 py-2 border ${t.chip}`}>
+              <Quote className="h-4 w-4 text-sky-500" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em]">
+                Lo que dicen
+              </span>
+            </div>
+            <h2 className={`mt-6 text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
+              Miles de saltos{' '}
+              <span className="italic font-light text-sky-500">ya cumplidos.</span>
+            </h2>
+          </div>
+
+          <div className={`mt-16 grid grid-cols-1 md:grid-cols-3 border-t border-l ${t.hairline}`}>
+            {testimonials.map((tm) => (
+              <figure key={tm.name} className={`p-8 md:p-10 border-b border-r ${t.hairline} ${t.cardBg}`}>
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-sky-500 text-sky-500" />
+                  ))}
+                </div>
+                <blockquote className={`mt-6 text-base leading-relaxed ${t.body}`}>
+                  {'"'}
+                  {tm.quote}
+                  {'"'}
+                </blockquote>
+                <figcaption className="mt-6">
+                  <div className={`font-bold ${t.heading}`}>{tm.name}</div>
+                  <div className={`text-sm ${t.muted}`}>{tm.role}</div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- FINAL CTA --- */}
+      <section className={`py-24 md:py-32 w-full ${t.page}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className={`relative overflow-hidden border ${t.hairline} bg-sky-500`}>
+            <div className="relative z-10 px-8 py-16 md:px-16 md:py-24 text-center">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[0.95] text-white text-balance">
+                Da el salto.
+                <br />
+                <span className="italic font-light text-sky-950">Empieza hoy, gratis.</span>
+              </h2>
+              <p className="mt-6 text-lg text-sky-50/90 max-w-xl mx-auto text-pretty">
+                Únete a más de 120.000 estudiantes que ya están alcanzando la fluidez con JumpUp.
+              </p>
+              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button
+                  asChild
+                  size="lg"
+                  className="w-full sm:w-auto h-14 px-10 rounded-none bg-white text-sky-600 hover:bg-slate-100 font-bold text-base tracking-wide transition-all group cursor-pointer"
+                >
+                  <Link to="/register" className="flex items-center justify-center gap-2">
+                    Crear mi cuenta
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto h-14 px-10 rounded-none border border-white/60 bg-transparent text-white font-bold text-base tracking-wide hover:bg-white/10 transition-all cursor-pointer"
+                >
+                  <Link to="/login" className="flex items-center justify-center">
+                    Ya tengo cuenta
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
