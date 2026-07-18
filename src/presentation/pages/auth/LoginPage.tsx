@@ -3,7 +3,16 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, GraduationCap, ArrowRight, Sparkles, ShieldCheck, Mail, Lock } from 'lucide-react'
+import {
+  Loader2,
+  ArrowRight,
+  Sparkles,
+  Mail,
+  Lock,
+  Globe,
+  Users,
+  Zap,
+} from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
@@ -15,6 +24,12 @@ const loginSchema = z.object({
 })
 
 type LoginFormData = z.infer<typeof loginSchema>
+
+const stats = [
+  { icon: Users, value: '20K+', label: 'Estudiantes' },
+  { icon: Globe, value: '50+', label: 'Países' },
+  { icon: Zap, value: '5M+', label: 'XP Generados' },
+]
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -39,147 +54,241 @@ export default function LoginPage() {
     clearError()
     try {
       await login(data.username, data.password)
-      // Navigation is handled by useEffect when user changes
     } catch {
       // handled by store
     }
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-background overflow-hidden">
-      {/* Left Column: Form */}
-      <div className="flex items-center justify-center p-8 sm:p-12 lg:p-20 relative">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full -z-10" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/5 blur-[120px] rounded-full -z-10" />
+    <div className="min-h-screen grid lg:grid-cols-2 bg-[#0a0a0b] overflow-hidden">
 
-        <div className="w-full max-w-md space-y-10 animate-in fade-in slide-in-from-left-4 duration-700">
-          <div className="space-y-4">
-             <Link to="/" className="inline-flex items-center gap-2 group">
-                <div className="bg-primary p-2.5 rounded-2xl shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-                   <GraduationCap className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-2xl font-black tracking-tighter">JumpUp</span>
-             </Link>
-             <h1 className="text-4xl font-black tracking-tight text-foreground leading-tight">
-                ¡Bienvenido de <br />
-                <span className="text-primary">Nuevo!</span>
-             </h1>
-             <p className="text-muted-foreground font-medium">Ingresa tus credenciales para continuar tu aprendizaje.</p>
+      {/* ── Left column: Form ── */}
+      <div className="relative flex items-center justify-center p-8 sm:p-12 lg:p-20">
+        {/* Subtle grid texture */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+        {/* Glow blobs */}
+        <div className="absolute top-0 left-0 w-72 h-72 bg-sky-500/5 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-600/5 blur-[140px] rounded-full pointer-events-none" />
+
+        <div className="relative w-full max-w-md space-y-10">
+          {/* Logo */}
+          <Link to="/" className="inline-flex items-center gap-2.5 group">
+            <div className="h-9 w-9 grid place-items-center border border-neutral-800 group-hover:border-sky-500/50 group-hover:bg-sky-500/10 transition-colors">
+              <Sparkles className="h-4 w-4 text-sky-500" />
+            </div>
+            <span className="text-xl font-semibold tracking-tight text-neutral-100">
+              Jump<span className="text-sky-500">Up</span>
+            </span>
+          </Link>
+
+          {/* Heading */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="h-px flex-1 bg-neutral-800" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-neutral-600">
+                Acceso seguro
+              </span>
+              <span className="h-px flex-1 bg-neutral-800" />
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-neutral-100 leading-[1.05]">
+              Bienvenido<br />
+              <span className="text-sky-500 italic font-light">de nuevo.</span>
+            </h1>
+            <p className="text-neutral-500 text-base font-medium leading-relaxed">
+              Continúa tu viaje de aprendizaje donde lo dejaste.
+            </p>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {error && (
-              <div className="rounded-2xl bg-destructive/10 px-5 py-4 text-sm font-bold text-destructive border border-destructive/20 animate-in shake-2 duration-500 flex items-center gap-3">
-                <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
+              <div className="flex items-center gap-3 px-4 py-3 border border-rose-500/20 bg-rose-500/5 text-rose-400 text-sm font-medium">
+                <div className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
                 {error}
               </div>
             )}
 
-            <div className="space-y-5">
-               <div className="space-y-2">
-                 <Label htmlFor="username" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Nombre de Usuario</Label>
-                 <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-                    <Input
-                      id="username"
-                      type="text"
-                      placeholder="tu_usuario"
-                      className="h-14 pl-12 rounded-2xl border-border/50 bg-muted/30 font-bold focus:ring-primary/20 focus:border-primary transition-all"
-                      {...register('username')}
-                    />
-                 </div>
-                 {errors.username && <p className="text-[10px] font-black text-destructive uppercase tracking-wide ml-1">{errors.username.message}</p>}
-               </div>
+            <div className="space-y-4">
+              {/* Username */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="login-username"
+                  className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-600"
+                >
+                  Usuario
+                </Label>
+                <div className="relative group">
+                  <Mail
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-700 group-focus-within:text-sky-500 transition-colors"
+                    size={16}
+                  />
+                  <Input
+                    id="login-username"
+                    type="text"
+                    placeholder="tu_usuario"
+                    className="h-12 pl-11 rounded-none border-neutral-800 bg-neutral-900/60 text-neutral-100 font-medium placeholder:text-neutral-700 focus-visible:ring-0 focus-visible:border-sky-500/60 transition-colors"
+                    {...register('username')}
+                  />
+                </div>
+                {errors.username && (
+                  <p className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">
+                    {errors.username.message}
+                  </p>
+                )}
+              </div>
 
-               <div className="space-y-2">
-                 <div className="flex items-center justify-between px-1">
-                   <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground">Contraseña</Label>
-                   <Link to="/forgot-password" className="text-[10px] font-black text-primary uppercase tracking-widest hover:underline">
-                     ¿Olvidaste tu contraseña?
-                   </Link>
-                 </div>
-                 <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      className="h-14 pl-12 rounded-2xl border-border/50 bg-muted/30 font-bold focus:ring-primary/20 focus:border-primary transition-all"
-                      {...register('password')}
-                    />
-                 </div>
-                 {errors.password && <p className="text-[10px] font-black text-destructive uppercase tracking-wide ml-1">{errors.password.message}</p>}
-               </div>
+              {/* Password */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="login-password"
+                    className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-600"
+                  >
+                    Contraseña
+                  </Label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-[10px] font-semibold text-sky-500 hover:text-sky-400 uppercase tracking-[0.15em] transition-colors"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
+                <div className="relative group">
+                  <Lock
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-700 group-focus-within:text-sky-500 transition-colors"
+                    size={16}
+                  />
+                  <Input
+                    id="login-password"
+                    type="password"
+                    placeholder="••••••••"
+                    className="h-12 pl-11 rounded-none border-neutral-800 bg-neutral-900/60 text-neutral-100 font-medium placeholder:text-neutral-700 focus-visible:ring-0 focus-visible:border-sky-500/60 transition-colors"
+                    {...register('password')}
+                  />
+                </div>
+                {errors.password && (
+                  <p className="text-[10px] font-semibold text-rose-500 uppercase tracking-wide">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
             </div>
 
-            <Button type="submit" className="w-full h-16 rounded-2xl text-lg font-black shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 group" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 rounded-none text-sm font-semibold bg-sky-500 hover:bg-sky-600 text-white shadow-lg shadow-sky-500/20 transition-all active:scale-[0.98] group"
+            >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Conectando...
                 </>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                   Iniciar Sesión <ArrowRight className="group-hover:translate-x-1 transition-transform" />
-                </div>
+                <span className="flex items-center gap-2">
+                  Iniciar Sesión
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                </span>
               )}
             </Button>
           </form>
 
-          <div className="space-y-6 pt-4">
-             <div className="relative">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50"></span></div>
-                <div className="relative flex justify-center text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground">
-                   <span className="bg-background px-4">O únete con</span>
-                </div>
-             </div>
-
-             <p className="text-center font-bold text-muted-foreground">
-                ¿No tienes una cuenta?{' '}
-                <Link to="/register" className="text-primary hover:underline transition-colors font-black">
-                   Regístrate Ahora
-                </Link>
-             </p>
+          {/* Footer */}
+          <div className="border-t border-neutral-800/60 pt-6">
+            <p className="text-center text-sm font-medium text-neutral-600">
+              ¿No tienes una cuenta?{' '}
+              <Link
+                to="/register"
+                className="text-sky-500 hover:text-sky-400 font-semibold transition-colors"
+              >
+                Regístrate gratis
+              </Link>
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Right Column: Visual Branding */}
-      <div className="hidden lg:block relative overflow-hidden bg-slate-900 m-6 rounded-[3rem] shadow-2xl">
-         {/* Abstract background elements */}
-         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/20 blur-[150px] rounded-full" />
-         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/10 blur-[100px] rounded-full" />
+      {/* ── Right column: Visual Branding ── */}
+      <div className="hidden lg:flex relative overflow-hidden flex-col">
+        {/* Background image with overlay */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1400"
+            alt="Estudiantes aprendiendo"
+            className="w-full h-full object-cover grayscale"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0a0a0b]/95 via-[#0a0a0b]/70 to-sky-950/60" />
+          {/* Grid texture */}
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              backgroundSize: '40px 40px',
+            }}
+          />
+        </div>
 
-         <div className="relative h-full flex flex-col justify-center p-20 text-white space-y-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.2em] w-fit">
-               <Sparkles className="h-4 w-4 text-amber-400" /> Tecnología de Vanguardia
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between h-full p-16">
+          {/* Top badge */}
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 grid place-items-center border border-neutral-700">
+              <Sparkles className="h-4 w-4 text-sky-500" />
             </div>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-neutral-500">
+              JumpUp · UTE 2026
+            </span>
+          </div>
 
-            <h2 className="text-6xl font-black tracking-tighter leading-[1.05]">
-               Aprende <br />
-               Sin <span className="text-primary italic">Límites.</span>
+          {/* Center text */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="h-px w-8 bg-sky-500" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-sky-500">
+                Plataforma educativa
+              </span>
+            </div>
+            <h2 className="text-5xl xl:text-6xl font-semibold tracking-tight text-neutral-100 leading-[1.0]">
+              Aprende sin<br />
+              <span className="text-sky-500 italic font-light">límites.</span>
             </h2>
-
-            <p className="text-xl text-slate-300 font-medium max-w-lg leading-relaxed">
-               Únete a la plataforma que está revolucionando el aprendizaje de idiomas con IA y gamificación.
+            <p className="text-base text-neutral-400 leading-relaxed max-w-xs font-medium">
+              Gamificación, IA adaptativa y comunidad global.
+              El aprendizaje que siempre quisiste.
             </p>
 
-            <div className="grid grid-cols-2 gap-8 pt-10">
-               {[
-                  { label: 'Estudiantes', value: '50k+', icon: ShieldCheck },
-                  { label: 'Cursos Pro', value: '120+', icon: GraduationCap }
-               ].map((stat, i) => (
-                  <div key={i} className="space-y-2">
-                     <p className="text-4xl font-black text-white tracking-tighter">{stat.value}</p>
-                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</p>
+            {/* Stats */}
+            <div className={`grid grid-cols-3 border border-neutral-800 mt-8`}>
+              {stats.map((stat, i) => (
+                <div
+                  key={i}
+                  className={`py-6 text-center ${i < stats.length - 1 ? 'border-r border-neutral-800' : ''}`}
+                >
+                  <stat.icon className="mx-auto h-4 w-4 text-sky-500 mb-3" />
+                  <div className="text-2xl font-semibold text-neutral-100 tracking-tight tabular-nums">
+                    {stat.value}
                   </div>
-               ))}
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-600 mt-1">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
             </div>
-         </div>
+          </div>
 
-         {/* Decorative Circles */}
-         <div className="absolute bottom-20 right-20 w-32 h-32 border border-white/10 rounded-full animate-pulse" />
-         <div className="absolute bottom-40 right-40 w-16 h-16 border border-white/5 rounded-full" />
+          {/* Footer */}
+          <p className="text-xs text-neutral-700 font-medium">
+            © 2027 JumpUp · Hecho en la UTE
+          </p>
+        </div>
       </div>
     </div>
   )
