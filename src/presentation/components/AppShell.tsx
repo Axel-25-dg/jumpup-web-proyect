@@ -105,6 +105,9 @@ export default function AppShell() {
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, protected: true },
     { to: '/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
+    ...(user?.is_staff
+      ? [{ to: '/management/courses', label: 'Gestionar Cursos', icon: BookOpen, protected: true }]
+      : []),
     { to: '/chat', label: 'Tutor IA', icon: Sparkles, protected: true },
     { to: '/catalog', label: 'Tienda', icon: ShoppingBag, protected: false },
     { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
