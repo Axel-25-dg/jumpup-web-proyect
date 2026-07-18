@@ -205,6 +205,7 @@ export default function AdminDashboardPage() {
                   { to: '/admin/management/modules', label: 'Módulos', icon: BookOpen, count: 'CRUD' },
                   { to: '/admin/management/lessons', label: 'Lecciones', icon: BookOpen, count: 'CRUD' },
                   { to: '/admin/management/exercises', label: 'Ejercicios', icon: BookOpen, count: 'CRUD' },
+                  { to: '/admin/announcements', label: 'Anuncios', icon: Bell, count: 'CRUD' },
                   { to: '/admin/management/languages', label: 'Idiomas', icon: Tags, count: 'CRUD' },
                 ].map((item, i) => (
                  <Link key={i} to={item.to} className="flex items-center justify-between p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group">
