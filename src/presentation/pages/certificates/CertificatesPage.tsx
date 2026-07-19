@@ -124,7 +124,7 @@ export default function CertificatesPage() {
                 </div>
 
                 <div className="mt-10 space-y-2">
-                  {cert.certificate_file && (
+                  {cert.certificate_file ? (
                     <Button
                       variant="default"
                       className="w-full rounded-none font-black uppercase text-[10px] tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white h-12 gap-3"
@@ -135,6 +135,20 @@ export default function CertificatesPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         download={`Certificado_${cert.level}.pdf`}
+                      >
+                        <Download className="h-3.5 w-3.5" /> DESCARGAR PDF
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      className="w-full rounded-none font-black uppercase text-[10px] tracking-widest bg-sky-600 hover:bg-sky-700 text-white h-12 gap-3"
+                      asChild
+                    >
+                      <a
+                        href={`/verify/${cert.certificate_code}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
                         <Download className="h-3.5 w-3.5" /> DESCARGAR PDF
                       </a>
