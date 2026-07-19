@@ -189,7 +189,11 @@ export default function ClassroomsPage() {
                       </p>
                     </div>
                     <Button size="sm" className="rounded-none bg-rose-500 hover:bg-rose-600 font-bold uppercase text-[10px] tracking-widest px-6" asChild>
-                      <Link to={`/live/${session.id}`}>ACCEDER</Link>
+                      {session.meeting_url ? (
+                        <a href={session.meeting_url} target="_blank" rel="noopener noreferrer">ACCEDER</a>
+                      ) : (
+                        <Link to={`/live/${session.id}`}>ACCEDER</Link>
+                      )}
                     </Button>
                   </div>
                 ))}
