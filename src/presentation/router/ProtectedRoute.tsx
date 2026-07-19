@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { Navigate, useLocation, Outlet } from 'react-router-dom'
+import { Navigate, useLocation, Outlet, useOutletContext } from 'react-router-dom'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import type { UserRole } from '@/domain/entities/logged-user.entity'
 
@@ -18,6 +18,7 @@ export default function ProtectedRoute({
   const user = useAuthStore((state) => state.user)
   const isLoading = useAuthStore((state) => state.isLoading)
   const isInitialized = useAuthStore((state) => state.isInitialized)
+  const context = useOutletContext()
 
   if (!isInitialized || isLoading) {
     return (
@@ -57,5 +58,5 @@ export default function ProtectedRoute({
     }
   }
 
-  return children ? <>{children}</> : <Outlet />
+  return children ? <>{children}</> : <Outlet context={context} />
 }

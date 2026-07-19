@@ -4,10 +4,14 @@ import {
   ArrowLeft,
   Save,
   Loader2,
+  Users,
+  Shield,
+  Fingerprint,
+  Mail,
+  User,
+  Key
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -58,7 +62,7 @@ export default function AdminUserFormPage() {
       try {
         const rolesData = await getRolesUseCase.execute()
         setRoles(rolesData)
-        
+
         if (isEdit && id) {
           const user = await getAdminUserByIdUseCase.execute(Number(id))
           reset({
@@ -121,148 +125,195 @@ export default function AdminUserFormPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <p className="label-caps text-slate-400">Sincronizando Expediente...</p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/admin/users"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
+    <form onSubmit={handleSubmit(onSubmit)} className="animate-in fade-in duration-500 pb-20">
+      {/* HERO SECTION */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin/users"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <Users className="h-3.5 w-3.5 text-sky-500" />
+                Expediente de Usuario
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isEdit ? 'Editar' : 'Nuevo'} <span className="text-sky-500">Registro</span>.
             </h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">
-              {isEdit ? 'Actualiza los datos del usuario' : 'Crea un nuevo usuario en la plataforma'}
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Configuración de credenciales, privilegios de acceso y datos de identidad.
             </p>
           </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/admin/users')}
+              className="rounded-none border-slate-900/10 dark:border-white/10 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all shadow-none"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isEdit ? 'Actualizar Registro' : 'Crear Usuario'}
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-12 rounded-xl font-bold dark:border-slate-700"
-            onClick={() => navigate('/admin/users')}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6"
-          >
-            {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-            {isEdit ? 'Actualizar' : 'Crear Usuario'}
-          </Button>
+      </section>
+
+      {/* FORM BODY */}
+      <div className="max-w-6xl mx-auto px-8 md:px-12 py-12">
+        <div className="grid lg:grid-cols-[1fr_350px] gap-12">
+          {/* Main Fields */}
+          <div className="space-y-12">
+            {/* Identity Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Fingerprint className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Información de Identidad</h2>
+              </div>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Nombre(s)</label>
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('first_name')}
+                      placeholder="JUAN CARLOS"
+                      className={`w-full border ${errors.first_name ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                    />
+                  </div>
+                  {errors.first_name && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.first_name.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Apellidos</label>
+                  <input
+                    {...register('last_name')}
+                    placeholder="PÉREZ RODRÍGUEZ"
+                    className={`w-full border ${errors.last_name ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                  />
+                  {errors.last_name && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.last_name.message}</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Credentials Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Shield className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Credenciales de Acceso</h2>
+              </div>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Nombre de Usuario <span className="text-sky-500">*</span></label>
+                  <input
+                    {...register('username')}
+                    placeholder="USERNAME_JUMPUP"
+                    className={`w-full border ${errors.username ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors font-mono`}
+                  />
+                  {errors.username && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.username.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Correo Electrónico <span className="text-sky-500">*</span></label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('email')}
+                      type="email"
+                      placeholder="USUARIO@JUMPUP.COM"
+                      className={`w-full border ${errors.email ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors font-mono`}
+                    />
+                  </div>
+                  {errors.email && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.email.message}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">
+                  Contraseña {isEdit ? '(OPCIONAL)' : '<span className="text-sky-500">*</span>'}
+                </label>
+                <div className="relative">
+                  <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                  <input
+                    {...register('password')}
+                    type="password"
+                    placeholder={isEdit ? "DEJAR VACÍO PARA MANTENER ACTUAL" : "MÍNIMO 8 CARACTERES TÉCNICOS"}
+                    className={`w-full border ${errors.password ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-bold tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                  />
+                </div>
+                {errors.password && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.password.message}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar / Settings */}
+          <div className="space-y-8">
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <h3 className="label-caps text-slate-900 dark:text-white font-black mb-6">Configuración de Rol</h3>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Privilegios del Sistema</label>
+                  <div className="relative">
+                    <select
+                      {...register('role_id')}
+                      className={`w-full appearance-none border ${errors.role_id ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                    >
+                      <option value="">SELECCIONAR ROL...</option>
+                      {roles.map(r => (
+                        <option key={r.id} value={r.id}>{r.name.toUpperCase()}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-l border-slate-900/10 pl-3">
+                      <Shield className="h-4 w-4 text-slate-300" />
+                    </div>
+                  </div>
+                  {errors.role_id && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.role_id.message}</p>}
+                </div>
+
+                {isEdit && (
+                  <div className="pt-4 border-t border-slate-900/10 dark:border-white/10">
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="label-caps text-slate-600 dark:text-slate-400 text-[10px] font-bold">Estado de Acceso</span>
+                      <div className="relative inline-flex items-center">
+                        <input
+                          type="checkbox"
+                          {...register('is_active')}
+                          className="sr-only peer"
+                        />
+                        <div className="w-12 h-6 bg-slate-200 dark:bg-white/5 rounded-none border border-slate-900/10 dark:border-white/10 peer-checked:bg-sky-500 peer-checked:border-sky-500 transition-all after:content-[''] after:absolute after:top-1 after:left-1 after:bg-slate-400 dark:after:bg-slate-600 peer-checked:after:bg-white after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-6"></div>
+                      </div>
+                    </label>
+                    <p className="label-micro text-slate-400 mt-3 font-mono">
+                      EL BLOQUEO IMPIDE EL LOGIN PERO CONSERVA EL HISTORIAL.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 border-dashed">
+              <p className="label-micro text-slate-400 leading-relaxed font-mono">
+                LOS CAMPOS MARCADOS CON <span className="text-sky-500">*</span> SON OBLIGATORIOS PARA LA INTEGRIDAD DEL SISTEMA.
+                LAS CREDENCIALES SON SENSIBLES A MAYÚSCULAS/MINÚSCULAS.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">
-                Nombre de Usuario <span className="text-red-500">*</span>
-              </label>
-              <Input
-                {...register('username')}
-                placeholder="ej: juan.perez"
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.username ? 'border-red-500' : ''}`}
-              />
-              {errors.username && <span className="text-red-500 text-xs font-bold">{errors.username.message}</span>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <Input
-                {...register('email')}
-                placeholder="ej: juan@ejemplo.com"
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.email ? 'border-red-500' : ''}`}
-              />
-              {errors.email && <span className="text-red-500 text-xs font-bold">{errors.email.message}</span>}
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">
-                Contraseña {!isEdit && <span className="text-red-500">*</span>}
-              </label>
-              <Input
-                {...register('password')}
-                type="password"
-                placeholder={isEdit ? 'Dejar vacío para no cambiar' : 'Mínimo 8 caracteres'}
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.password ? 'border-red-500' : ''}`}
-              />
-              {errors.password && <span className="text-red-500 text-xs font-bold">{errors.password.message}</span>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">
-                Rol <span className="text-red-500">*</span>
-              </label>
-              <select
-                {...register('role_id')}
-                className={`w-full h-14 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 ${errors.role_id ? 'border-red-500' : ''}`}
-              >
-                <option value="">Selecciona un rol...</option>
-                {roles.map(r => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
-              {errors.role_id && <span className="text-red-500 text-xs font-bold">{errors.role_id.message}</span>}
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Nombres</label>
-              <Input
-                {...register('first_name')}
-                placeholder="ej: Juan"
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.first_name ? 'border-red-500' : ''}`}
-              />
-              {errors.first_name && <span className="text-red-500 text-xs font-bold">{errors.first_name.message}</span>}
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Apellidos</label>
-              <Input
-                {...register('last_name')}
-                placeholder="ej: Pérez"
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.last_name ? 'border-red-500' : ''}`}
-              />
-              {errors.last_name && <span className="text-red-500 text-xs font-bold">{errors.last_name.message}</span>}
-            </div>
-          </div>
-
-          {isEdit && (
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  {...register('is_active')}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-300 dark:peer-focus:ring-sky-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-sky-600"></div>
-              </label>
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                Usuario activo
-              </span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </form>
   )
 }

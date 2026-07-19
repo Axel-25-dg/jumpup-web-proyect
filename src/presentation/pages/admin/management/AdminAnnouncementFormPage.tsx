@@ -5,10 +5,11 @@ import {
   Save,
   Loader2,
   Bell,
+  Calendar,
+  Layers,
+  FileText
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -57,7 +58,6 @@ export default function AdminAnnouncementFormPage() {
       if (isEdit && id) {
         try {
           const announcement = await announcementUseCase.getById(Number(id))
-          // Format dates to YYYY-MM-DDTHH:mm for datetime-local input
           const startDate = announcement.start_date.slice(0, 16)
           const endDate = announcement.end_date.slice(0, 16)
           reset({
@@ -99,8 +99,7 @@ export default function AdminAnnouncementFormPage() {
       navigate('/admin/announcements')
     } catch (error: any) {
       console.error('Error saving announcement:', error)
-      const errorMsg = error?.detail || error?.message || 'Error al guardar el anuncio'
-      toast.error(errorMsg)
+      toast.error(error?.message || 'Error al guardar el anuncio')
     } finally {
       setIsSubmitting(false)
     }
@@ -108,124 +107,151 @@ export default function AdminAnnouncementFormPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <p className="label-caps text-slate-400">Sincronizando Comunicado Institucional...</p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="p-6 max-w-3xl mx-auto w-full">
-      <div className="flex items-center gap-4 mb-8">
-        <Link
-          to="/admin/announcements"
-          className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-            {isEdit ? 'Editar Anuncio' : 'Nuevo Anuncio'}
-          </h1>
-          <p className="text-slate-500 mt-1">
-            {isEdit ? 'Modifica los datos del anuncio' : 'Crea un anuncio para todos los usuarios del sistema'}
-          </p>
+    <form onSubmit={handleSubmit(onSubmit)} className="animate-in fade-in duration-500 pb-20">
+      {/* HERO SECTION */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin/announcements"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <Bell className="h-3.5 w-3.5 text-sky-500" />
+                Difusión Institucional
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isEdit ? 'Editar' : 'Nuevo'} <span className="text-sky-500">Comunicado</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Gestión de avisos, alertas de sistema y notificaciones globales para la comunidad académica.
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/admin/announcements')}
+              className="rounded-none border-slate-900/10 dark:border-white/10 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all shadow-none"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isEdit ? 'Actualizar Registro' : 'Publicar Anuncio'}
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <Card className="border-none shadow-2xl shadow-slate-200/50 bg-white rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <Bell className="h-4 w-4 text-slate-400" /> Título del Anuncio
-            </label>
-            <Input
-              {...register('title')}
-              placeholder="Ej. Mantenimiento programado del sistema"
-              className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
-            />
-            {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
-          </div>
+      {/* FORM BODY */}
+      <div className="max-w-6xl mx-auto px-8 md:px-12 py-12">
+        <div className="grid lg:grid-cols-[1fr_350px] gap-12">
+          {/* Main Fields */}
+          <div className="space-y-12">
+            {/* Identity Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Layers className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Encabezado y Cuerpo</h2>
+              </div>
 
-          {/* Content */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              Contenido
-            </label>
-            <textarea
-              {...register('content')}
-              rows={6}
-              placeholder="Describe el anuncio en detalle..."
-              className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-colors focus:border-sky-500 focus:outline-none focus:ring-4 focus:ring-sky-500/10 placeholder:text-slate-400 resize-none ${errors.content ? 'border-red-500' : ''}`}
-            />
-            {errors.content && <span className="text-red-500 text-xs font-bold">{errors.content.message}</span>}
-          </div>
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Título del Comunicado <span className="text-sky-500">*</span></label>
+                <input
+                  {...register('title')}
+                  placeholder="EJ. ACTUALIZACIÓN DE POLÍTICAS DE PRIVACIDAD"
+                  className={`w-full border ${errors.title ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                />
+                {errors.title && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.title.message}</p>}
+              </div>
 
-          {/* Start & End Date */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                Fecha de Inicio
-              </label>
-              <Input
-                {...register('start_date')}
-                type="datetime-local"
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.start_date ? 'border-red-500' : ''}`}
-              />
-              {errors.start_date && <span className="text-red-500 text-xs font-bold">{errors.start_date.message}</span>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                Fecha de Fin
-              </label>
-              <Input
-                {...register('end_date')}
-                type="datetime-local"
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.end_date ? 'border-red-500' : ''}`}
-              />
-              {errors.end_date && <span className="text-red-500 text-xs font-bold">{errors.end_date.message}</span>}
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Contenido Detallado <span className="text-sky-500">*</span></label>
+                <div className="relative">
+                   <FileText className="absolute left-4 top-4 h-4 w-4 text-slate-300" />
+                   <textarea
+                    {...register('content')}
+                    placeholder="REDACCIÓN FORMAL DEL ANUNCIO..."
+                    className={`w-full min-h-64 border ${errors.content ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-medium uppercase tracking-wider outline-none focus:border-sky-500 transition-colors resize-none`}
+                  />
+                </div>
+                {errors.content && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.content.message}</p>}
+              </div>
             </div>
           </div>
 
-          {/* Active toggle */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                {...register('is_active')}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-sky-500/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
-            </label>
-            <div>
-              <span className="text-sm font-bold text-slate-900">Activo</span>
-              <p className="text-xs text-slate-500 font-medium">Los usuarios podrán ver este anuncio</p>
+          {/* Sidebar / Settings */}
+          <div className="space-y-8">
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <h3 className="label-caps text-slate-900 dark:text-white font-black mb-6">Ventana de Exposición</h3>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Fecha de Activación</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('start_date')}
+                      type="datetime-local"
+                      className={`w-full border ${errors.start_date ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors`}
+                    />
+                  </div>
+                  {errors.start_date && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.start_date.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Fecha de Caducidad</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('end_date')}
+                      type="datetime-local"
+                      className={`w-full border ${errors.end_date ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors`}
+                    />
+                  </div>
+                  {errors.end_date && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.end_date.message}</p>}
+                </div>
+
+                <div className="pt-4 border-t border-slate-900/10 dark:border-white/10">
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="label-caps text-slate-600 dark:text-slate-400 text-[10px] font-bold">Estado de Difusión</span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        {...register('is_active')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-12 h-6 bg-slate-200 dark:bg-white/5 rounded-none border border-slate-900/10 dark:border-white/10 peer-checked:bg-sky-500 peer-checked:border-sky-500 transition-all after:content-[''] after:absolute after:top-1 after:left-1 after:bg-slate-400 dark:after:bg-slate-600 peer-checked:after:bg-white after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-6"></div>
+                    </div>
+                  </label>
+                  <p className="label-micro text-slate-400 mt-3 font-mono">
+                    LOS COMUNICADOS INACTIVOS NO SE DESPLEGARÁN EN EL DASHBOARD.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 border-dashed">
+              <p className="label-micro text-slate-400 leading-relaxed font-mono uppercase">
+                LOS ANUNCIOS TIENEN UN ALCANCE GLOBAL. ASEGÚRESE DE QUE EL CONTENIDO HA SIDO REVISADO POR EL DEPARTAMENTO DE COMUNICACIONES.
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Action buttons */}
-      <div className="mt-8 flex justify-end gap-3">
-        <Link
-          to="/admin/announcements"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
-        >
-          Cancelar
-        </Link>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition-all hover:-translate-y-0.5 hover:bg-sky-400 focus:outline-none focus:ring-4 focus:ring-sky-500/20 active:translate-y-0 disabled:opacity-70 disabled:pointer-events-none"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          {isSubmitting ? 'Guardando...' : (isEdit ? 'Actualizar Anuncio' : 'Publicar Anuncio')}
-        </Button>
+        </div>
       </div>
     </form>
   )

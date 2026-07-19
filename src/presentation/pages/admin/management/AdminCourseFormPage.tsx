@@ -1,22 +1,55 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { ArrowLeft, Save } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import type { CreateCourseDto } from '@/application/dtos/course.dto'
-import type { DifficultyLevel, Language } from '@/domain/entities/course.entity'
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  BookOpen,
+  Layers,
+  Globe,
+  FileText,
+  ImageIcon
+} from 'lucide-react'
+import { Button } from '@/presentation/components/ui/button'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
 import { manageCoursesUseCase } from '@/infrastructure/factories/course.factory'
+import type { DifficultyLevel, Language } from '@/domain/entities/course.entity'
 
 const difficultyLevels: DifficultyLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-const fieldClassName = 'w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none transition-colors focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10'
+
+const formSchema = z.object({
+  title: z.string().min(3, 'Mínimo 3 caracteres').max(200, 'Máximo 200 caracteres'),
+  description: z.string().optional(),
+  language: z.coerce.number().min(1, 'Selecciona un idioma'),
+  difficulty_level: z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
+  image: z.any().optional(),
+})
+
+type FormData = z.infer<typeof formSchema>
 
 export default function AdminCourseFormPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const isEditing = Boolean(id)
-  const [languages, setLanguages] = useState<Language[]>([])
-  const [formData, setFormData] = useState<CreateCourseDto>({ language: 0, title: '', description: '', difficulty_level: 'A1', image: null })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [languages, setLanguages] = useState<Language[]>([])
+
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
+    resolver: zodResolver(formSchema) as any,
+    defaultValues: {
+      title: '',
+      description: '',
+      language: 0 as any,
+      difficulty_level: 'A1',
+    }
+  })
+
+  const selectedDifficulty = watch('difficulty_level')
+  const selectedImage = watch('image')
 
   useEffect(() => {
     const loadData = async () => {
@@ -27,62 +60,220 @@ export default function AdminCourseFormPage() {
 
         if (id) {
           const course = await manageCoursesUseCase.getById(Number(id))
-          setFormData({
-            language: course.language,
+          reset({
             title: course.title,
-            description: course.description,
+            description: course.description || '',
+            language: course.language,
             difficulty_level: course.difficulty_level,
-            image: null,
           })
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'No se pudo cargar el formulario.')
+        console.error(err)
+        toast.error('Error al cargar datos del curso')
       } finally {
         setLoading(false)
       }
     }
     void loadData()
-  }, [id])
+  }, [id, reset])
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    if (!formData.language) {
-      setError('Selecciona un idioma.')
-      return
-    }
+  const onSubmit = async (data: FormData) => {
     try {
       setSaving(true)
-      setError(null)
-      if (id) await manageCoursesUseCase.update(Number(id), formData)
-      else await manageCoursesUseCase.create(formData)
+      const payload = {
+        ...data,
+        description: data.description || '',
+        image: data.image instanceof FileList ? data.image[0] : data.image
+      } as any
+
+      if (id) {
+        await manageCoursesUseCase.update(Number(id), payload)
+        toast.success('Curso actualizado con éxito')
+      } else {
+        await manageCoursesUseCase.create(payload)
+        toast.success('Curso creado con éxito')
+      }
       navigate('/admin/management/courses')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el curso.')
+      console.error(err)
+      toast.error('Error al guardar el curso')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" /></div>
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <p className="label-caps text-slate-400">Sincronizando Malla Curricular...</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="mx-auto w-full max-w-3xl p-6">
-      <div className="mb-8 flex items-center gap-4"><Link to="/admin/management/courses" className="rounded-full p-2 text-slate-400 hover:bg-slate-100"><ArrowLeft className="h-5 w-5" /></Link><div><h1 className="text-3xl font-black text-slate-800">{isEditing ? 'Editar curso' : 'Nuevo curso'}</h1><p className="mt-1 text-slate-500">Configura la información académica del curso.</p></div></div>
-      {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">{error}</div>}
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="Idioma"><select required value={formData.language || ''} onChange={(event) => setFormData((current) => ({ ...current, language: Number(event.target.value) }))} className={fieldClassName}><option value="" disabled>Selecciona un idioma</option>{languages.map((language) => <option key={language.id} value={language.id}>{language.name} ({language.code})</option>)}</select></Field>
-          <Field label="Nivel"><select value={formData.difficulty_level} onChange={(event) => setFormData((current) => ({ ...current, difficulty_level: event.target.value as DifficultyLevel }))} className={fieldClassName}>{difficultyLevels.map((level) => <option key={level} value={level}>{level}</option>)}</select></Field>
+    <form onSubmit={handleSubmit(onSubmit as any)} className="animate-in fade-in duration-500 pb-20">
+      {/* HERO SECTION */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin/management/courses"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <BookOpen className="h-3.5 w-3.5 text-sky-500" />
+                Catálogo Académico
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isEditing ? 'Editar' : 'Nuevo'} <span className="text-sky-500">Curso</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Configuración de la información académica, niveles MCER y recursos del programa.
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/admin/management/courses')}
+              className="rounded-none border-slate-900/10 dark:border-white/10 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={saving}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all shadow-none"
+            >
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isEditing ? 'Actualizar Programa' : 'Crear Curso'}
+            </Button>
+          </div>
         </div>
-        <Field label="Título"><input required maxLength={200} value={formData.title} onChange={(event) => setFormData((current) => ({ ...current, title: event.target.value }))} className={fieldClassName} placeholder="Ej. Inglés para viajeros" /></Field>
-        <Field label="Descripción"><textarea value={formData.description} onChange={(event) => setFormData((current) => ({ ...current, description: event.target.value }))} className={`${fieldClassName} min-h-28 resize-y`} placeholder="Describe el contenido y objetivos del curso." /></Field>
-        <Field label="Imagen (JPEG, PNG o WebP; máximo 2 MB)"><input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFormData((current) => ({ ...current, image: event.target.files?.[0] ?? null }))} className="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2 file:font-bold file:text-sky-700 hover:file:bg-sky-100" /></Field>
-        <div className="flex justify-end gap-3"><Link to="/admin/management/courses" className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50">Cancelar</Link><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 hover:bg-sky-400 disabled:opacity-70"><Save className="h-4 w-4" />{saving ? 'Guardando...' : 'Guardar curso'}</button></div>
-      </form>
-    </div>
-  )
-}
+      </section>
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return <label className="block space-y-1.5"><span className="text-sm font-bold text-slate-700">{label}</span>{children}</label>
+      {/* FORM BODY */}
+      <div className="max-w-6xl mx-auto px-8 md:px-12 py-12">
+        <div className="grid lg:grid-cols-[1fr_350px] gap-12">
+          {/* Main Fields */}
+          <div className="space-y-12">
+            {/* General Info Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Layers className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Estructura del Curso</h2>
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Título del Programa <span className="text-sky-500">*</span></label>
+                <input
+                  {...register('title')}
+                  placeholder="EJ. INGLÉS TÉCNICO PARA INGENIERÍA"
+                  className={`w-full border ${errors.title ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                />
+                {errors.title && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.title.message}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Descripción Detallada</label>
+                <div className="relative">
+                   <FileText className="absolute left-4 top-4 h-4 w-4 text-slate-300" />
+                   <textarea
+                    {...register('description')}
+                    placeholder="DESCRIBE LOS OBJETIVOS Y COMPETENCIAS A DESARROLLAR..."
+                    className={`w-full min-h-32 border ${errors.description ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-medium uppercase tracking-wider outline-none focus:border-sky-500 transition-colors resize-none`}
+                  />
+                </div>
+                {errors.description && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.description.message}</p>}
+              </div>
+            </div>
+
+            {/* Assets Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <ImageIcon className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Recursos Visuales</h2>
+              </div>
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Imagen de Portada (JPEG, PNG, WEBP)</label>
+                <div className="relative group">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => setValue('image', e.target.files)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="border border-dashed border-slate-900/20 dark:border-white/10 py-10 px-4 text-center group-hover:border-sky-500 transition-colors">
+                    <p className="label-caps text-slate-400 text-[10px]">
+                      {selectedImage && selectedImage.length > 0 ? selectedImage[0].name.toUpperCase() : 'SELECCIONAR ARCHIVO O ARRASTRAR AQUÍ'}
+                    </p>
+                    <p className="label-micro text-slate-300 mt-2 font-mono">MÁXIMO 2.0 MB POR ARCHIVO</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar / Settings */}
+          <div className="space-y-8">
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <h3 className="label-caps text-slate-900 dark:text-white font-black mb-6">Parámetros Técnicos</h3>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Idioma de Instrucción</label>
+                  <div className="relative">
+                    <select
+                      {...register('language')}
+                      className={`w-full appearance-none border ${errors.language ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                    >
+                      <option value="0" disabled>SELECCIONAR IDIOMA...</option>
+                      {languages.map(l => (
+                        <option key={l.id} value={l.id}>{l.name.toUpperCase()} ({l.code.toUpperCase()})</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none border-l border-slate-900/10 dark:border-white/10 pl-3">
+                      <Globe className="h-4 w-4 text-slate-300" />
+                    </div>
+                  </div>
+                  {errors.language && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.language.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Nivel de Dificultad (MCER)</label>
+                  <div className="grid grid-cols-3 gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
+                    {difficultyLevels.map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => setValue('difficulty_level', level)}
+                        className={`py-3 text-[11px] font-mono transition-colors ${
+                          selectedDifficulty === level
+                            ? 'bg-sky-500 text-white'
+                            : 'bg-white dark:bg-[#0a0a0b] text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                  <input type="hidden" {...register('difficulty_level')} />
+                  {errors.difficulty_level && <p className="text-[10px] text-rose-500 font-mono mt-1">{errors.difficulty_level.message}</p>}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 border-dashed">
+              <p className="label-micro text-slate-400 leading-relaxed font-mono">
+                LOS CAMBIOS EN LA MALLA CURRICULAR AFECTAN A TODAS LAS AULAS VINCULADAS.
+                ASEGÚRESE DE QUE EL CONTENIDO CUMPLE CON LOS ESTÁNDARES MCER.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  )
 }

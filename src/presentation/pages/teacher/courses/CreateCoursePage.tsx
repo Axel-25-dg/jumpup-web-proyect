@@ -3,15 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   Save,
-  Upload,
+  Loader2,
   Image as ImageIcon,
-  CheckCircle2,
-  Loader2
+  BookOpen
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Textarea } from '@/presentation/components/ui/textarea'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -63,107 +59,127 @@ export default function CreateCoursePage() {
   }
   
   return (
-    <form onSubmit={handleSubmit((data) => onSubmit(data, 'published'))} className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
+    <form onSubmit={handleSubmit((data) => onSubmit(data, 'published'))} className="animate-in fade-in duration-700">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/teacher/courses"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Nuevo Curso</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Configura los detalles principales</p>
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4">
+             <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" asChild className="h-10 w-10 rounded-none border border-slate-900/10 dark:border-white/10">
+                  <Link to="/teacher/courses"><ArrowLeft className="h-4 w-4" /></Link>
+                </Button>
+                <div className="chip">
+                  <BookOpen className="h-3.5 w-3.5 text-sky-500" />
+                  Nuevo Curso
+                </div>
+             </div>
+             <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+               Diseñar <span className="text-sky-500">Programa</span>
+             </h1>
+          </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-none font-bold uppercase text-[11px] tracking-widest px-8 h-12"
+              onClick={handleSubmit((data) => onSubmit(data, 'draft'))}
+              disabled={isSubmitting}
+            >
+              Guardar Borrador
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[11px] tracking-widest px-8 h-12 hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Publicar Curso
+            </Button>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button 
-            type="button"
-            variant="outline" 
-            className="h-12 rounded-xl font-bold"
-            disabled={isSubmitting}
-            onClick={handleSubmit((data) => onSubmit(data, 'draft'))}
-          >
-            Guardar Borrador
-          </Button>
-          <Button type="submit" disabled={isSubmitting} className="h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6">
-            {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-            Publicar Curso
-          </Button>
-        </div>
-      </div>
+      </section>
 
-      <div className="grid gap-8">
-        <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-          <CardContent className="p-8 space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Título del Curso</label>
-              <Input 
+      <div className="px-8 md:px-12 py-12 max-w-5xl">
+        <div className="grid gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
+          <div className="bg-white dark:bg-[#0a0a0b] p-8 md:p-12 space-y-12">
+            <div className="space-y-4">
+              <label className="label-caps text-slate-900 dark:text-white">
+                Título del Curso <span className="text-rose-500">*</span>
+              </label>
+              <input
                 {...register('title')}
-                placeholder="Ej. Inglés Nivel B2 - Avanzado" 
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
+                placeholder="EJ. INGLÉS NIVEL B2 - AVANZADO"
+                className={`w-full border-b-2 bg-transparent py-4 text-3xl font-black uppercase tracking-tight outline-none transition-colors ${
+                  errors.title ? 'border-rose-500 text-rose-500' : 'border-slate-900/10 dark:border-white/10 focus:border-sky-500'
+                }`}
               />
-              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
+              {errors.title && <p className="label-micro text-rose-500 font-bold">{String(errors.title.message)}</p>}
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Descripción General</label>
-              <Textarea 
+
+            <div className="space-y-4">
+              <label className="label-caps text-slate-900 dark:text-white">
+                Descripción del Programa <span className="text-rose-500">*</span>
+              </label>
+              <textarea
                 {...register('description')}
-                placeholder="Describe qué aprenderán los estudiantes en este curso..." 
-                className={`min-h-[120px] rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium resize-none p-4 ${errors.description ? 'border-red-500' : ''}`}
+                rows={4}
+                placeholder="DESCRIBE QUÉ APRENDERÁN LOS ESTUDIANTES EN ESTE CURSO..."
+                className={`w-full border rounded-none bg-transparent p-6 text-[11px] font-bold uppercase tracking-widest outline-none transition-colors resize-none ${
+                  errors.description ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10 focus:border-sky-500'
+                }`}
               />
-              {errors.description && <span className="text-red-500 text-xs font-bold">{errors.description.message}</span>}
+              {errors.description && <p className="label-micro text-rose-500 font-bold">{String(errors.description.message)}</p>}
             </div>
-            
-            <div className="space-y-2 pt-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Imagen de Portada (Opcional)</label>
-              
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/png, image/jpeg" 
+
+            <div className="space-y-6 pt-4">
+              <label className="label-caps text-slate-900 dark:text-white flex items-center gap-2">
+                 Imagen de Portada <span className="text-slate-400 font-medium lowercase">(opcional)</span>
+              </label>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/png, image/jpeg"
                 onChange={(e) => {
                   if (e.target.files && e.target.files[0]) {
                     setSelectedFileName(e.target.files[0].name)
                   }
-                }} 
+                }}
               />
-              
-              <div 
+
+              <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
+                className="border-2 border-dashed border-slate-900/10 dark:border-white/10 p-12 text-center hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer group"
               >
-                <div className="h-16 w-16 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <ImageIcon className="h-8 w-8" />
+                <div className="h-16 w-16 border border-slate-900/10 dark:border-white/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-sky-500 group-hover:text-white transition-all">
+                  <ImageIcon className="h-6 w-6" />
                 </div>
-                <h4 className="font-black text-slate-900 dark:text-white text-lg">
+                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
                   {selectedFileName ? selectedFileName : 'Haz clic para subir una imagen'}
                 </h4>
-                <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">PNG, JPG hasta 5MB (Recomendado 1200x800px)</p>
-                <Button type="button" variant="outline" size="sm" className="mt-4 rounded-xl font-bold dark:border-slate-700 pointer-events-none">
-                  <Upload className="mr-2 h-4 w-4" /> {selectedFileName ? 'Cambiar Imagen' : 'Seleccionar Archivo'}
-                </Button>
+                <p className="label-micro text-slate-400 mt-2">PNG, JPG HASTA 5MB — RECOMENDADO 1200X800PX</p>
+                <div className="mt-8">
+                   <span className="label-caps px-6 py-2 border border-slate-900 dark:border-white text-slate-900 dark:text-white text-[10px] group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all">
+                     {selectedFileName ? 'CAMBIAR ARCHIVO' : 'SELECCIONAR PORTADA'}
+                   </span>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-indigo-50/50 dark:bg-indigo-900/10 rounded-[2.5rem] overflow-hidden border border-indigo-100 dark:border-indigo-900/30">
-          <CardContent className="p-8">
-            <div className="flex gap-4">
-              <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-indigo-900 dark:text-indigo-400">Siguiente Paso: Crear Módulos</h3>
-                <p className="text-indigo-700/70 dark:text-indigo-300/70 font-medium text-sm mt-1 leading-relaxed">
-                  Una vez guardes la información básica del curso, podrás comenzar a añadir Módulos, Lecciones y Ejercicios estructurados.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="mt-12 p-8 border border-sky-500/20 bg-sky-500/[0.02] flex gap-6 items-start">
+           <div className="h-12 w-12 border border-sky-500/30 flex items-center justify-center text-sky-500 shrink-0">
+              <BookOpen className="h-6 w-6" />
+           </div>
+           <div>
+              <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight mb-1">Siguiente Paso: Estructura del Curso</h3>
+              <p className="label-micro text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
+                AL GUARDAR LA INFORMACIÓN BÁSICA, PODRÁS COMENZAR A AÑADIR MÓDULOS, LECCIONES Y EJERCICIOS PARA COMPLETAR EL CURRÍCULO EDUCATIVO.
+              </p>
+           </div>
+        </div>
       </div>
     </form>
   )

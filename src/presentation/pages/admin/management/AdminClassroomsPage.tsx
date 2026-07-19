@@ -8,16 +8,11 @@ import {
   Edit2,
   Trash2,
   BookOpen,
-  ArrowRight,
   AlertCircle,
   School,
   ArrowLeft,
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Badge } from '@/presentation/components/ui/badge'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,157 +77,180 @@ export default function AdminClassroomsPage() {
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/admin"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Aulas Virtuales</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Gestiona todas las aulas de la plataforma</p>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <School className="h-3.5 w-3.5 text-sky-500" />
+                Gestión
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              Control de <span className="text-sky-500">Aulas</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-xl font-medium">
+              Administración de espacios virtuales, asignación de instructores y monitoreo de participación estudiantil.
+            </p>
           </div>
+          <Button
+            onClick={() => navigate('/admin/classrooms/new')}
+            className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all group"
+          >
+            <Plus className="h-4 w-4 mr-2 group-hover:rotate-90 transition-transform" /> Crear Nueva Aula
+          </Button>
         </div>
-        <Button asChild className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6 group">
-          <Link to="/admin/classrooms/new">
-            <Plus className="mr-2 h-5 w-5" /> Crear Aula
-            <ArrowRight className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-          </Link>
-        </Button>
+      </section>
+
+      {/* TOOLBAR */}
+      <div className="flex flex-col md:flex-row gap-6 justify-between items-center px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10 bg-white dark:bg-transparent">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            placeholder="BUSCAR POR NOMBRE DE AULA..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3.5 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+          />
+        </div>
+        <div className="label-caps px-6 py-3 border border-slate-900/10 dark:border-white/10 text-slate-500 font-black tracking-widest bg-slate-50 dark:bg-white/5">
+          {classrooms.length} REGISTROS ACTIVOS
+        </div>
       </div>
 
-      {/* List */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-            <Input
-              placeholder="Buscar aula por nombre..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-            />
-          </div>
-          <Badge variant="outline" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold px-4 py-2">
-            {classrooms.length} aula{classrooms.length !== 1 ? 's' : ''}
-          </Badge>
-        </div>
-
-        <CardContent className="p-0">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+      {/* CLASSROOMS TABLE */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1000px] text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <th className="px-8 py-5 label-caps text-slate-400">Aula / Descripción</th>
+              <th className="px-8 py-5 label-caps text-slate-400">Curso Vinculado</th>
+              <th className="px-8 py-5 label-caps text-slate-400">Instructor / Estudiantes</th>
+              <th className="px-8 py-5 label-caps text-slate-400 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-900/5 dark:divide-white/5">
             {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex gap-6 items-center">
-                    <Skeleton className="h-16 w-16 rounded-2xl" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-5 w-48" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              [1, 2, 3].map(i => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan={4} className="px-8 py-10"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
+                </tr>
+              ))
             ) : filteredClassrooms.length > 0 ? (
               filteredClassrooms.map((classroom) => (
-                <div key={classroom.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="h-16 w-16 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <School className="h-8 w-8" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-center md:text-left">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{classroom.name}</h3>
-                    {classroom.description && (
-                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 truncate">{classroom.description}</p>
-                    )}
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        <BookOpen className="h-3 w-3 mr-1" /> {(classroom as any).course_title || 'Sin curso'}
-                      </Badge>
-                      <span className="text-xs font-bold text-slate-400">
-                        {(classroom as any).teacher_email || 'Sin profesor'}
-                      </span>
-                      <span className="text-xs font-bold text-slate-400">
-                        <Users className="h-3 w-3 inline mr-1" />{(classroom as any).total_students || 0} estudiantes
-                      </span>
+                <tr key={classroom.id} className="card-hover group">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-5">
+                      <div className="h-12 w-12 shrink-0 flex items-center justify-center border border-slate-900/10 dark:border-white/10 text-sky-500 bg-slate-50 dark:bg-white/5 transition-colors group-hover:bg-sky-500 group-hover:text-white">
+                        <School className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-sky-500 transition-colors">
+                          {classroom.name}
+                        </p>
+                        {classroom.description && (
+                          <p className="label-micro text-slate-400 mt-0.5 truncate max-w-[300px]">{classroom.description.toUpperCase()}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-                      onClick={() => navigate(`/admin/classrooms/${classroom.id}/manage`)}
-                    >
-                      <Users className="mr-2 h-4 w-4" /> Inscripciones
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl p-2">
-                        <DropdownMenuItem
-                          onSelect={() => navigate(`/admin/classrooms/${classroom.id}/edit`)}
-                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" /> Editar Aula
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => navigate(`/admin/classrooms/${classroom.id}/manage`)}
-                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                        >
-                          <Users className="mr-2 h-4 w-4" /> Ver Inscripciones
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => setClassroomToDelete(classroom)}
-                          className="font-bold py-3 text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className="label-micro border border-slate-900/10 dark:border-white/10 px-3 py-1 bg-slate-50 dark:bg-white/5 font-bold">
+                      <BookOpen className="h-3 w-3 inline mr-2 text-sky-500" />
+                      {(classroom as any).course_title?.toUpperCase() || 'SIN CURSO ASIGNADO'}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="space-y-1.5">
+                      <p className="label-micro text-slate-500 flex items-center gap-2">
+                        <span className="h-1 w-1 bg-sky-500" />
+                        {(classroom as any).teacher_email?.toLowerCase() || 'no_instructor@system'}
+                      </p>
+                      <p className="label-micro font-black text-slate-700 dark:text-slate-300">
+                        {(classroom as any).total_students || 0} ESTUDIANTES INSCRITOS
+                      </p>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-none border-slate-900/10 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest h-9 px-4"
+                        onClick={() => navigate(`/admin/classrooms/${classroom.id}/manage`)}
+                      >
+                        <Users className="h-3.5 w-3.5 mr-2" /> Inscripciones
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="rounded-none border-slate-900/10 h-9 w-9">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-none border-slate-900/10 dark:border-white/10">
+                          <DropdownMenuItem
+                            onSelect={() => navigate(`/admin/classrooms/${classroom.id}/edit`)}
+                            className="label-micro py-3"
+                          >
+                            <Edit2 className="h-4 w-4 mr-2" /> Editar Aula
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => navigate(`/admin/classrooms/${classroom.id}/manage`)}
+                            className="label-micro py-3"
+                          >
+                            <Users className="h-4 w-4 mr-2" /> Ver Listado
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => setClassroomToDelete(classroom)}
+                            className="label-micro py-3 text-rose-600 focus:text-rose-600"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Eliminar Aula
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
               ))
             ) : (
-              <div className="py-20 text-center">
-                <School className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                  {searchTerm ? 'No se encontraron aulas' : 'Aún no hay aulas creadas'}
-                </h3>
-                <p className="text-slate-500 font-medium mt-1">
-                  {searchTerm ? 'Prueba con otro término de búsqueda.' : 'Crea la primera aula para empezar.'}
-                </p>
-                {!searchTerm && (
-                  <Button asChild className="mt-4 bg-sky-600 hover:bg-sky-700 rounded-xl font-black">
-                    <Link to="/admin/classrooms/new"><Plus className="mr-2 h-4 w-4" /> Crear Aula</Link>
-                  </Button>
-                )}
-              </div>
+              <tr>
+                <td colSpan={4} className="py-24 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
+                    <School className="h-6 w-6 text-slate-200" />
+                  </div>
+                  <p className="label-caps text-slate-400">No se encontraron aulas en los registros</p>
+                </td>
+              </tr>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </tbody>
+        </table>
+      </div>
 
       {/* Delete Dialog */}
       <AlertDialog open={!!classroomToDelete} onOpenChange={(open) => !open && !isDeleting && setClassroomToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl">
+        <AlertDialogContent className="rounded-none border-slate-900/10">
           <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            <div className="flex h-16 w-16 items-center justify-center border border-rose-500/20 bg-rose-500/5 mx-auto mb-6">
+              <AlertCircle className="h-8 w-8 text-rose-500" />
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar aula?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Esta acción no se puede deshacer. Se eliminará permanentemente el aula{' '}
-              <span className="font-bold text-slate-900 dark:text-white">"{classroomToDelete?.name}"</span>.
+            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Eliminar Aula</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm font-medium py-4">
+              Esta acción es permanente e irreversible. Se eliminará el aula <span className="text-slate-900 dark:text-white font-bold">"{classroomToDelete?.name?.toUpperCase()}"</span> y todas sus inscripciones asociadas.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isDeleting} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={isDeleting} onClick={handleDelete} className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold shadow-lg shadow-red-500/20">
-              {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+          <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+            <AlertDialogCancel className="rounded-none font-bold uppercase text-[10px] tracking-[0.2em]" disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              onClick={handleDelete}
+              className="rounded-none bg-rose-600 hover:bg-rose-700 font-bold uppercase text-[10px] tracking-[0.2em]"
+            >
+              {isDeleting ? 'ELIMINANDO...' : 'CONFIRMAR ELIMINACIÓN'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

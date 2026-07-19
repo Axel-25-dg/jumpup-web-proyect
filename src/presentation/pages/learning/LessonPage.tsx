@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
-import { ArrowLeft, CheckCircle2, Sparkles, Volume2, HelpCircle, Loader2, ChevronRight, BookOpen } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/presentation/components/ui/card'
+import {
+  ArrowLeft, CheckCircle2, Sparkles, Volume2, HelpCircle, Loader2,
+  Trophy, ChevronRight, BookOpen, AlertCircle
+} from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
-import { Badge } from '@/presentation/components/ui/badge'
+import { toast } from 'sonner'
 
 interface Exercise {
   id: number
   title: string
   question_text: string
   exercise_type: 'multiple_choice' | 'translate' | 'listen' | 'fill_blank' | 'match'
-  options: string[] | Record<string, string> | any // puede ser array o JSON object
+  options: string[] | Record<string, string> | any
   correct_answer: string
   audio_url?: string
 }
@@ -49,8 +51,10 @@ export default function LessonPage() {
           apiClient.get<Exercise[]>(`/exercises/?lesson=${lessonId}`)
         ])
         const rawExercisesData = exercisesRes.data as any
-        const exercisesData: Exercise[] = Array.isArray(rawExercisesData) ? rawExercisesData : (rawExercisesData?.data || rawExercisesData?.results || [])
-        
+        const exercisesData: Exercise[] = Array.isArray(rawExercisesData)
+          ? rawExercisesData
+          : (rawExercisesData?.data || rawExercisesData?.results || [])
+
         setLesson(lessonRes.data)
         setExercises(exercisesData)
       } catch (err) {
@@ -65,19 +69,19 @@ export default function LessonPage() {
   if (isLoading) {
     return (
       <div className="flex h-96 flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="text-sm text-muted-foreground mt-2">Cargando lección interactiva...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <span className="label-micro text-slate-400 mt-2">Cargando lección interactiva...</span>
       </div>
     )
   }
 
   if (!lesson || exercises.length === 0) {
     return (
-      <div className="max-w-md mx-auto text-center py-12 space-y-4">
-        <HelpCircle className="h-16 w-16 mx-auto text-muted-foreground opacity-50" />
-        <h2 className="text-xl font-bold">Lección no disponible</h2>
-        <p className="text-muted-foreground">Esta lección no contiene ejercicios interactivos actualmente o no pudo cargarse.</p>
-        <Button asChild>
+      <div className="max-w-md mx-auto text-center py-16 space-y-6">
+        <HelpCircle className="h-12 w-12 mx-auto text-slate-300 dark:text-slate-700" />
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Lección no disponible</h2>
+        <p className="label-micro text-slate-400 leading-normal">Esta lección no contiene ejercicios interactivos actualmente.</p>
+        <Button asChild className="bg-sky-500 hover:bg-sky-600 text-white font-bold">
           <Link to="/courses">Volver a los Cursos</Link>
         </Button>
       </div>
@@ -85,24 +89,21 @@ export default function LessonPage() {
   }
 
   const currentExercise = exercises[currentIdx]
-  const progressPercent = Math.round(((currentIdx) / exercises.length) * 100)
+  const progressPercent = Math.round((currentIdx / exercises.length) * 100)
 
   if (!currentExercise) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] animate-in fade-in zoom-in-95">
-        <div className="bg-slate-100 dark:bg-slate-800 p-6 rounded-full mb-6">
-          <BookOpen className="h-12 w-12 text-slate-400" />
-        </div>
-        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">No hay ejercicios aún</h3>
-        <p className="text-slate-500 font-medium">El profesor no ha agregado ejercicios a esta leccin todava.</p>
-        <Button variant="outline" className="mt-8 font-black rounded-xl" asChild>
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <BookOpen className="h-10 w-10 text-slate-200 dark:text-slate-700 mx-auto mb-3" />
+        <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">No hay ejercicios aún</p>
+        <p className="label-micro text-slate-400 mb-4">El profesor no ha agregado ejercicios a esta lección todavía.</p>
+        <Button variant="outline" className="font-bold border-slate-900/10 dark:border-white/10" asChild>
           <Link to="/courses">Volver a cursos</Link>
         </Button>
       </div>
     )
   }
 
-  // Parseo seguro de opciones para el ejercicio actual
   let parsedOptions: string[] = []
   if (currentExercise.options) {
     if (Array.isArray(currentExercise.options)) {
@@ -114,7 +115,6 @@ export default function LessonPage() {
         parsedOptions = []
       }
     } else if (typeof currentExercise.options === 'object') {
-      // Si es un objeto (por ejemplo para relacionar columnas), convertimos sus llaves o valores
       parsedOptions = Object.keys(currentExercise.options)
     }
   }
@@ -160,7 +160,6 @@ export default function LessonPage() {
       setIsCorrect(false)
       setCorrectAnswerFeedback('')
     } else {
-      // Finalizar lección y guardar progreso
       setIsSaving(true)
       try {
         const finalScore = Math.round((correctAnswersCount / exercises.length) * 100)
@@ -172,7 +171,7 @@ export default function LessonPage() {
         setIsFinished(true)
       } catch (err) {
         console.error('Error saving progress:', err)
-        // Aún así marcar como finalizado para UX
+        toast.warning('Progreso completado localmente. Error del servidor al sincronizar.')
         setIsFinished(true)
       } finally {
         setIsSaving(false)
@@ -183,115 +182,113 @@ export default function LessonPage() {
   if (isFinished) {
     const finalScore = Math.round((correctAnswersCount / exercises.length) * 100)
     return (
-      <div className="max-w-md mx-auto space-y-6 text-center py-12">
-        <Card className="border-primary/20 shadow-xl overflow-hidden bg-gradient-to-b from-sky-50/50 to-white">
-          <CardHeader className="pt-8 pb-4">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-600 font-extrabold text-4xl animate-bounce">
-              🎉
+      <div className="max-w-md mx-auto space-y-6 py-12 px-4 animate-in fade-in zoom-in-95">
+        <div className="border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/[0.02] overflow-hidden">
+          <div className="pt-8 pb-4 text-center border-b border-slate-900/10 dark:border-white/10">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center border border-amber-200 dark:border-amber-800/30 text-amber-500 bg-amber-500/10">
+              <Trophy className="h-6 w-6" />
             </div>
-            <CardTitle className="text-2xl mt-4">¡Lección Completada!</CardTitle>
-            <CardDescription className="text-primary font-semibold flex items-center justify-center gap-1">
-              <Sparkles className="h-4 w-4" />
+            <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white mt-4">¡Lección Completada!</h2>
+            <p className="label-micro text-sky-500 font-bold flex items-center justify-center gap-1 mt-1">
+              <Sparkles className="h-3 w-3" />
               Has ganado +{lesson.xp_reward} XP
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6 px-6">
+            </p>
+          </div>
+
+          <div className="p-6 space-y-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-card p-4 rounded-xl border">
-                <span className="text-3xl font-extrabold text-primary">{correctAnswersCount}/{exercises.length}</span>
-                <span className="text-xs text-muted-foreground block mt-1">Correctas</span>
+              <div className="border border-slate-900/10 dark:border-white/10 p-4 text-center bg-slate-50/50 dark:bg-white/[0.01]">
+                <span className="text-2xl font-black text-sky-500">{correctAnswersCount}/{exercises.length}</span>
+                <span className="label-micro text-slate-400 block mt-1">Correctas</span>
               </div>
-              <div className="bg-card p-4 rounded-xl border">
-                <span className="text-3xl font-extrabold text-amber-500">{finalScore}%</span>
-                <span className="text-xs text-muted-foreground block mt-1">Calificación</span>
+              <div className="border border-slate-900/10 dark:border-white/10 p-4 text-center bg-slate-50/50 dark:bg-white/[0.01]">
+                <span className="text-2xl font-black text-amber-500">{finalScore}%</span>
+                <span className="label-micro text-slate-400 block mt-1">Calificación</span>
               </div>
             </div>
-            <p className="text-sm text-muted-foreground font-normal">
+            <p className="label-micro text-slate-400 text-center leading-normal">
               Excelente trabajo. ¡Sigue practicando todos los días para mantener activa tu racha diaria!
             </p>
-          </CardContent>
-          <CardFooter className="bg-muted/30 px-6 py-4 flex flex-col gap-3">
-            <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95" asChild>
+          </div>
+
+          <div className="p-6 pt-0 border-t border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01] flex flex-col gap-2.5">
+            <Button className="w-full h-10 bg-sky-500 hover:bg-sky-600 text-white font-bold" asChild>
               <Link to={courseId ? `/courses/${courseId}` : '/courses'}>Volver a la Clase</Link>
             </Button>
-            <Button variant="ghost" className="w-full h-12 text-slate-500 hover:text-slate-800 font-bold rounded-xl hover:bg-slate-200/50 transition-all active:scale-95" asChild>
+            <Button variant="outline" className="w-full h-10 border-slate-900/10 dark:border-white/10 font-bold" asChild>
               <Link to="/dashboard">Ver mi Dashboard</Link>
             </Button>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 py-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="max-w-2xl mx-auto space-y-8 py-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
       {/* Top Header - Modern Progress */}
       <div className="flex items-center gap-6">
-        <Button variant="ghost" size="icon" asChild className="rounded-2xl h-12 w-12 hover:bg-slate-100 transition-colors">
+        <Button variant="ghost" size="icon" asChild className="-ml-2 h-10 w-10 text-slate-500 hover:text-slate-800 hover:bg-transparent">
           <Link to="/courses">
-            <ArrowLeft className="h-6 w-6 text-slate-600" />
+            <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-2">
           <div className="flex justify-between items-end">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Progreso de Lección</span>
-              <p className="text-sm font-black text-slate-900">Ejercicio {currentIdx + 1} <span className="text-slate-400 font-bold">/ {exercises.length}</span></p>
+            <div className="space-y-0.5">
+              <span className="label-micro text-slate-400">Progreso de Lección</span>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">
+                Ejercicio {currentIdx + 1} <span className="text-slate-400 font-medium">/ {exercises.length}</span>
+              </p>
             </div>
-            <span className="text-xs font-black text-primary bg-sky-50 px-2 py-1 rounded-lg">{progressPercent}%</span>
+            <span className="label-micro px-1.5 py-0.5 border border-sky-500/30 text-sky-500 bg-sky-500/5">{progressPercent}%</span>
           </div>
-          <div className="h-3 w-full rounded-full bg-slate-100 overflow-hidden p-0.5 border border-slate-200/50">
+          <div className="h-1.5 w-full bg-slate-900/10 dark:bg-white/10">
             <div
-              className="h-full rounded-full bg-primary transition-all duration-700 ease-out shadow-[0_0_10px_rgba(18,146,224,0.3)]"
+              className="h-full bg-sky-500 transition-all duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
       </div>
 
-      {/* Main Exercise Card - Gamified UI */}
-      <Card className="shadow-2xl shadow-slate-200/50 border-none bg-white rounded-[2.5rem] overflow-hidden">
-        <CardHeader className="p-8 pb-4 relative overflow-hidden">
-          {/* Decorative background */}
-          <div className="absolute top-0 right-0 -mr-8 -mt-8 h-32 w-32 bg-sky-50 rounded-full blur-2xl"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-6">
-              <Badge className="bg-slate-900 text-white px-4 py-1.5 font-black text-[10px] uppercase tracking-widest rounded-xl border-none">
-                {currentExercise.exercise_type.replace('_', ' ')}
-              </Badge>
-              <div className="flex items-center gap-1.5 bg-amber-50 text-amber-600 px-3 py-1 rounded-xl">
-                 <Sparkles className="h-3.5 w-3.5" />
-                 <span className="text-xs font-black">+{Math.round(lesson.xp_reward / exercises.length)} XP</span>
-              </div>
+      {/* Main Exercise Card */}
+      <div className="border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/[0.02] overflow-hidden">
+        <div className="p-6 border-b border-slate-900/10 dark:border-white/10">
+          <div className="flex items-center justify-between mb-4">
+            <span className="chip text-[9px] px-1.5 py-0.5">
+              {currentExercise.exercise_type.replace('_', ' ')}
+            </span>
+            <div className="flex items-center gap-1.5 label-micro text-amber-500">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>+{Math.round(lesson.xp_reward / exercises.length)} XP</span>
             </div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{currentExercise.title}</h2>
-            <p className="text-lg font-bold text-slate-500 leading-relaxed italic">
-              "{currentExercise.question_text}"
-            </p>
           </div>
-        </CardHeader>
+          <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-2">{currentExercise.title}</h2>
+          <p className="text-sm font-bold text-slate-500 italic leading-relaxed">
+            "{currentExercise.question_text}"
+          </p>
+        </div>
 
-        <CardContent className="p-8 space-y-8">
+        <div className="p-6 space-y-6">
           {/* Audio player if listen type */}
           {currentExercise.exercise_type === 'listen' && currentExercise.audio_url && (
             <div className="flex justify-center py-6">
               <button
-                className="group relative h-24 w-24 rounded-[2rem] bg-primary flex items-center justify-center text-white shadow-xl shadow-sky-200 transform active:scale-95 transition-all"
+                className="group relative h-16 w-16 border border-sky-500/20 bg-sky-500/10 flex items-center justify-center text-sky-500 hover:bg-sky-500 hover:text-white transition-colors"
                 onClick={() => {
                   const audio = new Audio(currentExercise.audio_url)
                   audio.play().catch(e => console.error('Audio play error:', e))
                 }}
               >
-                <div className="absolute inset-0 bg-sky-400 rounded-[2rem] animate-ping opacity-20 group-hover:opacity-40"></div>
-                <Volume2 className="h-10 w-10 relative z-10" />
+                <Volume2 className="h-6 w-6 relative z-10" />
               </button>
             </div>
           )}
 
-          {/* Multiple choice or Translation cards options */}
+          {/* Multiple choice or Translation options */}
           {(currentExercise.exercise_type === 'multiple_choice' || currentExercise.exercise_type === 'translate') && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {parsedOptions.map((opt, i) => {
                 const isSelected = selectedAnswer === opt
                 const isCorrectOption = hasChecked && opt === currentExercise.correct_answer
@@ -302,30 +299,28 @@ export default function LessonPage() {
                     key={i}
                     disabled={hasChecked}
                     onClick={() => handleSelectOption(opt)}
-                    className={`group relative flex items-center text-left p-6 rounded-[1.5rem] border-2 transition-all duration-300 transform ${
+                    className={`group relative flex items-center text-left p-4 border transition-all duration-200 ${
                       isSelected
                         ? isCorrectOption || (hasChecked && isCorrect)
-                          ? 'border-emerald-500 bg-emerald-50'
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/10'
                           : isWrongSelection
-                            ? 'border-rose-500 bg-rose-50'
-                            : 'border-primary bg-sky-50/50'
+                            ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/10'
+                            : 'border-sky-500 bg-sky-50 dark:bg-sky-950/10'
                         : isCorrectOption
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-slate-100 hover:border-sky-200 hover:bg-slate-50 hover:scale-[1.02]'
-                    } ${hasChecked ? 'cursor-default' : 'cursor-pointer active:scale-95'}`}
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/10'
+                          : 'border-slate-900/10 dark:border-white/10 hover:border-sky-500/40 hover:bg-sky-500/[0.02]'
+                    } ${hasChecked ? 'cursor-default' : 'cursor-pointer'}`}
                   >
-                    <span className={`h-8 w-8 shrink-0 rounded-xl border flex items-center justify-center mr-4 text-xs font-black transition-colors ${
-                      isSelected ? 'bg-primary text-white border-transparent' : 'bg-slate-100 text-slate-400 border-slate-200'
+                    <span className={`h-6 w-6 shrink-0 border flex items-center justify-center mr-3 text-[10px] font-black transition-colors ${
+                      isSelected ? 'bg-sky-500 text-white border-transparent' : 'bg-slate-50 dark:bg-white/5 text-slate-400 border-slate-900/10 dark:border-white/10'
                     }`}>
                       {String.fromCharCode(65 + i)}
                     </span>
-                    <span className={`flex-1 font-black text-sm ${
-                      isSelected ? 'text-sky-900' : 'text-slate-700'
-                    }`}>{opt}</span>
+                    <span className={`flex-1 font-bold text-xs ${isSelected ? 'text-sky-900 dark:text-sky-400' : 'text-slate-700 dark:text-slate-300'}`}>{opt}</span>
 
-                    {isCorrectOption && (
-                      <CheckCircle2 className="h-6 w-6 text-emerald-500 absolute -top-3 -right-3 bg-white rounded-full" />
-                    )}
+                    <CheckCircle2 className={`h-4 w-4 text-emerald-500 absolute -top-2 -right-2 bg-white dark:bg-[#0a0a0b] rounded-full transition-all duration-200 ${
+                      isCorrectOption ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
+                    }`} />
                   </button>
                 )
               })}
@@ -334,8 +329,8 @@ export default function LessonPage() {
 
           {/* Fill in the blank text input */}
           {currentExercise.exercise_type === 'fill_blank' && (
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tu Respuesta:</label>
+            <div className="space-y-2">
+              <label className="label-micro text-slate-400">Tu Respuesta:</label>
               <div className="relative">
                 <input
                   type="text"
@@ -343,70 +338,65 @@ export default function LessonPage() {
                   value={selectedAnswer}
                   onChange={(e) => setSelectedAnswer(e.target.value)}
                   placeholder="Escribe lo que escuchas o traduces..."
-                  className={`w-full text-xl font-black p-6 rounded-[1.5rem] border-4 transition-all focus:outline-none bg-slate-50 ${
+                  className={`w-full text-base font-bold p-4 border transition-all focus:outline-none bg-transparent ${
                     hasChecked
                       ? isCorrect ? 'border-emerald-500 text-emerald-600' : 'border-rose-500 text-rose-600'
-                      : 'border-transparent focus:border-primary focus:bg-white'
+                      : 'border-slate-900/10 dark:border-white/10 focus:border-sky-500'
                   }`}
                 />
-                {!hasChecked && <Sparkles className="absolute right-6 top-1/2 -translate-y-1/2 h-6 w-6 text-sky-300" />}
+                <Sparkles className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-sky-400 transition-all duration-200 ${
+                  !hasChecked ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
+                }`} />
               </div>
             </div>
           )}
-        </CardContent>
+        </div>
 
-        <CardFooter className="p-8 pt-0 flex flex-col gap-6">
-          {/* Result Alert box - Modernized */}
-          {hasChecked && (
-            <div className={`w-full flex items-center gap-6 p-6 rounded-[2rem] animate-in slide-in-from-bottom-4 duration-500 ${
-              isCorrect ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-200' : 'bg-rose-500 text-white shadow-xl shadow-rose-200'
-            }`}>
-              <div className="h-16 w-16 shrink-0 flex items-center justify-center rounded-2xl bg-white/20 text-3xl">
-                 {isCorrect ? '✨' : '🧐'}
-              </div>
-              <div className="flex-1">
-                <h5 className="font-black text-lg leading-none mb-1">{isCorrect ? '¡Fabuloso!' : '¡Casi lo logras!'}</h5>
-                <p className="text-sm font-bold opacity-90">
-                  {isCorrect ? 'Respuesta perfecta, sumas puntos a tu racha.' : (correctAnswerFeedback || '¡Sigue intentándolo!')}
-                </p>
-              </div>
+        <div className="p-6 pt-0 border-t border-slate-900/10 dark:border-white/10 flex flex-col gap-4 bg-slate-50/50 dark:bg-white/[0.01]">
+          {/* Result Alert box - Refined Editorial Style */}
+          <div className={`w-full flex items-center gap-4 p-4 border transition-all duration-200 ${
+            hasChecked
+              ? isCorrect
+                ? 'scale-100 opacity-100 border-emerald-250 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                : 'scale-100 opacity-100 border-rose-250 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+              : 'scale-0 opacity-0 h-0 p-0 border-0 pointer-events-none overflow-hidden'
+          }`}>
+            <div className="h-10 w-10 shrink-0 flex items-center justify-center border border-current bg-white dark:bg-transparent">
+              {hasChecked && (isCorrect ? <Sparkles className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />)}
             </div>
-          )}
+            <div className="flex-1">
+              <h5 className="font-black text-xs uppercase tracking-wider mb-0.5">{isCorrect ? '¡Fabuloso!' : '¡Casi lo logras!'}</h5>
+              <p className="label-micro text-current opacity-85 leading-normal">
+                {isCorrect ? 'Respuesta perfecta, sumas puntos a tu racha.' : (correctAnswerFeedback || '¡Sigue intentándolo!')}
+              </p>
+            </div>
+          </div>
 
           {/* Action buttons */}
-          <div className="w-full">
-            {!hasChecked ? (
-              <Button
-                disabled={!selectedAnswer.trim() || checkingAnswer}
-                onClick={handleCheckAnswer}
-                className="w-full h-16 rounded-[1.5rem] font-black text-lg bg-slate-900 hover:bg-black shadow-xl shadow-slate-200 transition-all active:scale-95 group"
-              >
-                {checkingAnswer ? 'Comprobando...' : 'Comprobar'}
-                {!checkingAnswer && <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />}
-              </Button>
-            ) : (
-              <Button
-                onClick={handleNext}
-                disabled={isSaving}
-                className={`w-full h-16 rounded-[1.5rem] font-black text-lg shadow-xl transition-all active:scale-95 group ${
-                  isCorrect
-                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-100'
-                    : 'bg-primary hover:bg-sky-600 text-white shadow-sky-100'
-                }`}
-              >
-                {isSaving ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <>
-                    {currentIdx + 1 < exercises.length ? 'Siguiente Ejercicio' : 'Finalizar y Guardar'}
-                    <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-2 transition-transform" />
-                  </>
-                )}
-              </Button>
-            )}
+          <div className="w-full pt-4">
+            <Button
+              disabled={(!hasChecked && !selectedAnswer.trim()) || checkingAnswer || isSaving}
+              onClick={!hasChecked ? handleCheckAnswer : handleNext}
+              className={`w-full h-12 text-sm font-bold text-white flex items-center justify-center gap-2 ${
+                !hasChecked
+                  ? 'bg-slate-900 hover:bg-slate-800 dark:bg-sky-500 dark:hover:bg-sky-600'
+                  : isCorrect
+                    ? 'bg-emerald-600 hover:bg-emerald-700'
+                    : 'bg-sky-500 hover:bg-sky-600'
+              }`}
+            >
+              {checkingAnswer || isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  {!hasChecked ? 'Comprobar' : (currentIdx + 1 < exercises.length ? 'Siguiente Ejercicio' : 'Finalizar y Guardar')}
+                  <ChevronRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

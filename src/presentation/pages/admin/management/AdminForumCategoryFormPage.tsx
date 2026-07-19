@@ -5,10 +5,11 @@ import {
   Save,
   Loader2,
   MessageSquare,
+  Layers,
+  FileText,
+  Hash
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -92,8 +93,7 @@ export default function AdminForumCategoryFormPage() {
       navigate('/admin/forum-categories')
     } catch (error: any) {
       console.error('Error saving forum category:', error)
-      const errorMsg = error?.detail || error?.message || 'Error al guardar la categoría'
-      toast.error(errorMsg)
+      toast.error(error?.message || 'Error al guardar la categoría')
     } finally {
       setIsSubmitting(false)
     }
@@ -101,132 +101,168 @@ export default function AdminForumCategoryFormPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <p className="label-caps text-slate-400">Sincronizando Nodo Social...</p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="p-6 max-w-3xl mx-auto w-full">
-      <div className="flex items-center gap-4 mb-8">
-        <Link
-          to="/admin/forum-categories"
-          className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-            {isEdit ? 'Editar Categoría del Foro' : 'Nueva Categoría del Foro'}
-          </h1>
-          <p className="text-slate-500 mt-1">
-            {isEdit ? 'Modifica los datos de la categoría' : 'Crea una nueva categoría para el foro de la comunidad'}
-          </p>
+    <form onSubmit={handleSubmit(onSubmit)} className="animate-in fade-in duration-500 pb-20">
+      {/* HERO SECTION */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin/forum-categories"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <MessageSquare className="h-3.5 w-3.5 text-sky-500" />
+                Arquitectura Social
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isEdit ? 'Editar' : 'Nueva'} <span className="text-sky-500">Categoría</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Estructuración de espacios de debate, clasificación temática y jerarquía del conocimiento compartido.
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/admin/forum-categories')}
+              className="rounded-none border-slate-900/10 dark:border-white/10 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all shadow-none"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isEdit ? 'Actualizar Registro' : 'Crear Categoría'}
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <Card className="border-none shadow-2xl shadow-slate-200/50 bg-white rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          {/* Name */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-slate-400" /> Nombre de la Categoría
-            </label>
-            <Input
-              {...register('name')}
-              placeholder="Ej. Dudas Técnicas, Conversación..."
-              className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg ${errors.name ? 'border-red-500' : ''}`}
-            />
-            {errors.name && <span className="text-red-500 text-xs font-bold">{errors.name.message as string}</span>}
-          </div>
+      {/* FORM BODY */}
+      <div className="max-w-6xl mx-auto px-8 md:px-12 py-12">
+        <div className="grid lg:grid-cols-[1fr_350px] gap-12">
+          {/* Main Fields */}
+          <div className="space-y-12">
+            {/* Identity Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Layers className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Definición Temática</h2>
+              </div>
 
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900">Descripción</label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              placeholder="Describe el propósito de esta categoría..."
-              className={`w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 placeholder:text-slate-400 resize-none ${errors.description ? 'border-red-500' : ''}`}
-            />
-            {errors.description && <span className="text-red-500 text-xs font-bold">{errors.description.message as string}</span>}
-          </div>
-
-          {/* Icon selector */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900">Icono</label>
-            <div className="grid grid-cols-10 gap-2">
-              {PRESET_ICONS.map((icon) => (
-                <button
-                  key={icon}
-                  type="button"
-                  onClick={() => setValue('icon', icon, { shouldValidate: true })}
-                  className={`h-10 w-10 flex items-center justify-center rounded-xl text-lg transition-all ${
-                    selectedIcon === icon
-                      ? 'bg-indigo-100 ring-2 ring-indigo-500 scale-110 shadow-md'
-                      : 'bg-slate-50 hover:bg-slate-100 border border-slate-200'
-                  }`}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
-            <input type="hidden" {...register('icon')} />
-            {errors.icon && <span className="text-red-500 text-xs font-bold">{errors.icon.message as string}</span>}
-          </div>
-
-          {/* Order & Active */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900">Orden</label>
-              <Input
-                {...register('order', { valueAsNumber: true })}
-                type="number"
-                min={1}
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.order ? 'border-red-500' : ''}`}
-              />
-              {errors.order && <span className="text-red-500 text-xs font-bold">{errors.order.message as string}</span>}
-            </div>
-
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 self-end">
-              <label className="relative inline-flex items-center cursor-pointer">
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Nombre de la Categoría <span className="text-sky-500">*</span></label>
                 <input
-                  type="checkbox"
-                  {...register('is_active')}
-                  className="sr-only peer"
+                  {...register('name')}
+                  placeholder="EJ. DUDAS TÉCNICAS Y SOPORTE"
+                  className={`w-full border ${errors.name ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-500/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
-              </label>
-              <div>
-                <span className="text-sm font-bold text-slate-900">Activo</span>
-                <p className="text-xs text-slate-500 font-medium">Categoría visible en el foro</p>
+                {errors.name && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.name.message)}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Descripción del Espacio <span className="text-sky-500">*</span></label>
+                <div className="relative">
+                   <FileText className="absolute left-4 top-4 h-4 w-4 text-slate-300" />
+                   <textarea
+                    {...register('description')}
+                    placeholder="PROPÓSITO Y REGLAS DE PARTICIPACIÓN..."
+                    className={`w-full min-h-32 border ${errors.description ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-medium uppercase tracking-wider outline-none focus:border-sky-500 transition-colors resize-none`}
+                  />
+                </div>
+                {errors.description && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.description.message)}</p>}
+              </div>
+            </div>
+
+            {/* Visual Identity */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Hash className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Identidad Visual</h2>
+              </div>
+              <div className="space-y-4">
+                <label className="label-caps text-slate-400 text-[10px]">Iconografía del Sistema</label>
+                <div className="grid grid-cols-5 md:grid-cols-10 gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
+                  {PRESET_ICONS.map((icon) => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => setValue('icon', icon, { shouldValidate: true })}
+                      className={`h-12 flex items-center justify-center text-lg transition-colors ${
+                        selectedIcon === icon
+                          ? 'bg-sky-500 text-white'
+                          : 'bg-white dark:bg-[#0a0a0b] text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+                <input type="hidden" {...register('icon')} />
+                {errors.icon && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.icon.message)}</p>}
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Action buttons */}
-      <div className="mt-8 flex justify-end gap-3">
-        <Link
-          to="/admin/forum-categories"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-4 focus:ring-slate-100"
-        >
-          Cancelar
-        </Link>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:-translate-y-0.5 hover:bg-indigo-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 active:translate-y-0 disabled:opacity-70 disabled:pointer-events-none"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          {isSubmitting ? 'Guardando...' : (isEdit ? 'Actualizar Categoría' : 'Crear Categoría')}
-        </Button>
+          {/* Sidebar / Settings */}
+          <div className="space-y-8">
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <h3 className="label-caps text-slate-900 dark:text-white font-black mb-6">Parámetros de Red</h3>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Orden de Prioridad</label>
+                  <div className="relative">
+                    <Hash className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('order', { valueAsNumber: true })}
+                      type="number"
+                      min={1}
+                      className={`w-full border ${errors.order ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors`}
+                    />
+                  </div>
+                  {errors.order && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.order.message)}</p>}
+                </div>
+
+                <div className="pt-4 border-t border-slate-900/10 dark:border-white/10">
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="label-caps text-slate-600 dark:text-slate-400 text-[10px] font-bold">Estado del Nodo</span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        {...register('is_active')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-12 h-6 bg-slate-200 dark:bg-white/5 rounded-none border border-slate-900/10 dark:border-white/10 peer-checked:bg-sky-500 peer-checked:border-sky-500 transition-all after:content-[''] after:absolute after:top-1 after:left-1 after:bg-slate-400 dark:after:bg-slate-600 peer-checked:after:bg-white after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-6"></div>
+                    </div>
+                  </label>
+                  <p className="label-micro text-slate-400 mt-3 font-mono">
+                    LAS CATEGORÍAS INACTIVAS OCULTAN TODOS LOS HILOS ASOCIADOS.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 border-dashed">
+              <p className="label-micro text-slate-400 leading-relaxed font-mono uppercase">
+                LA REORGANIZACIÓN DE CATEGORÍAS AFECTA LA NAVEGACIÓN GLOBAL DEL FORO ESTUDIANTIL.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </form>
   )

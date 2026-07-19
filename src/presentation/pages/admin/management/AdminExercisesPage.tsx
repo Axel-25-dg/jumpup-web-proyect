@@ -16,11 +16,7 @@ import {
   ListChecks,
   Loader2
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Textarea } from '@/presentation/components/ui/textarea'
-import { Badge } from '@/presentation/components/ui/badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,9 +30,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
 } from '@/presentation/components/ui/dialog'
 import { toast } from 'sonner'
 import { courseRepo } from '@/infrastructure/factories/teacher.factory'
@@ -201,218 +194,288 @@ export default function AdminExercisesPage() {
   const showAudioField = exerciseType === 'listen'
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/admin"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Gestión de Ejercicios</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Crea preguntas con opciones, traducción, listening y más</p>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <CheckCircle2 className="h-3.5 w-3.5 text-sky-500" />
+                Evaluación
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              Gestión de <span className="text-sky-500">Ejercicios</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Diseño de reactivos, validación de respuestas y configuración de motores de evaluación.
+            </p>
           </div>
-        </div>
-        <div className="flex gap-3">
           <Button
-            className="h-12 rounded-2xl font-black bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-500/20 px-6 group"
             onClick={() => {
               if (!selectedLessonId) { toast.error('Selecciona una lección primero'); return }
               resetForm()
               setIsModalOpen(true)
             }}
             disabled={!selectedLessonId}
+            className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all disabled:opacity-50"
           >
-            <Plus className="mr-2 h-5 w-5" /> Nuevo Ejercicio
+            <Plus className="h-4 w-4 mr-2" /> Nuevo Ejercicio
           </Button>
+        </div>
+      </section>
+
+      {/* SELECTORS & FILTERS */}
+      <div className="border-b border-slate-900/10 dark:border-white/10 p-6 md:p-8 grid grid-cols-1 lg:grid-cols-4 gap-6 items-end bg-white dark:bg-transparent">
+        <div className="space-y-2">
+          <label className="label-caps text-slate-400">Curso</label>
+          <select
+            value={selectedCourseId ?? ''}
+            onChange={(e) => setSelectedCourseId(e.target.value ? Number(e.target.value) : null)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors appearance-none"
+          >
+            <option value="" className="bg-white dark:bg-[#0a0a0b]">SELECCIONAR CURSO...</option>
+            {courses.map(c => (
+              <option key={c.id} value={c.id} className="bg-white dark:bg-[#0a0a0b]">{c.title.toUpperCase()}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="label-caps text-slate-400">Módulo</label>
+          <select
+            value={selectedModuleId ?? ''}
+            onChange={(e) => setSelectedModuleId(e.target.value ? Number(e.target.value) : null)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors appearance-none disabled:opacity-40"
+            disabled={!selectedCourseId}
+          >
+            <option value="" className="bg-white dark:bg-[#0a0a0b]">SELECCIONAR MÓDULO...</option>
+            {modules.map(m => (
+              <option key={m.id} value={m.id} className="bg-white dark:bg-[#0a0a0b]">{m.title.toUpperCase()}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="label-caps text-slate-400">Lección</label>
+          <select
+            value={selectedLessonId ?? ''}
+            onChange={(e) => setSelectedLessonId(e.target.value ? Number(e.target.value) : null)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors appearance-none disabled:opacity-40"
+            disabled={!selectedModuleId}
+          >
+            <option value="" className="bg-white dark:bg-[#0a0a0b]">SELECCIONAR LECCIÓN...</option>
+            {lessons.map(l => (
+              <option key={l.id} value={l.id} className="bg-white dark:bg-[#0a0a0b]">{l.title.toUpperCase()}</option>
+            ))}
+          </select>
+        </div>
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            placeholder="BUSCAR REACTIVO..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+          />
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="border-none shadow-xl shadow-slate-200/50 bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden">
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Curso</label>
-              <select value={selectedCourseId ?? ''} onChange={(e) => setSelectedCourseId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="">Selecciona...</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Módulo</label>
-              <select value={selectedModuleId ?? ''} onChange={(e) => setSelectedModuleId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                disabled={!selectedCourseId}>
-                <option value="">Selecciona...</option>
-                {modules.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Lección</label>
-              <select value={selectedLessonId ?? ''} onChange={(e) => setSelectedLessonId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                disabled={!selectedModuleId}>
-                <option value="">Selecciona...</option>
-                {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
-              </select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Exercises List */}
-      {selectedLessonId ? (
-        <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-          <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-            <div className="relative w-full sm:max-w-md">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-              <Input placeholder="Buscar ejercicio..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium" />
-            </div>
-            <Badge className="bg-emerald-100 text-emerald-700 font-bold px-3 py-1">{exercises.length} ejercicios</Badge>
-          </div>
-          <CardContent className="p-0">
-            {exercises.length > 0 ? (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredExercises.map((exercise: any) => {
+      {/* DATA TABLE */}
+      <div className="overflow-x-auto">
+        {selectedLessonId ? (
+          <table className="w-full min-w-[1000px] text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+                <th className="px-8 py-5 label-caps text-slate-400">Tipo / Reactivo</th>
+                <th className="px-8 py-5 label-caps text-slate-400">Configuración</th>
+                <th className="px-8 py-5 label-caps text-slate-400 text-right">Acciones de Gestión</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-900/5 dark:divide-white/5">
+              {filteredExercises.length > 0 ? (
+                filteredExercises.map((exercise: any) => {
                   const Icon = EXERCISE_TYPE_ICONS[exercise.exercise_type] || HelpCircle
                   return (
-                    <div key={exercise.id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center shrink-0">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <h3 className="font-black text-slate-900 dark:text-white truncate">{exercise.question_text}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge className="bg-emerald-100 text-emerald-700 text-[10px] uppercase font-black">
-                              {EXERCISE_TYPE_LABELS[exercise.exercise_type] || exercise.exercise_type}
-                            </Badge>
-                            {exercise.options && Array.isArray(exercise.options) && (
-                              <span className="text-xs font-bold text-slate-400">{exercise.options.length} opciones</span>
-                            )}
+                    <tr key={exercise.id} className="card-hover group">
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-5">
+                          <div className="h-10 w-10 shrink-0 flex items-center justify-center border border-slate-900/10 dark:border-white/10 bg-slate-50 dark:bg-white/5">
+                            <Icon className="h-4 w-4 text-sky-500" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-sky-500 transition-colors line-clamp-1">
+                              {exercise.question_text}
+                            </p>
+                            <span className="label-micro text-slate-400 font-mono mt-0.5">
+                              {EXERCISE_TYPE_LABELS[exercise.exercise_type]?.toUpperCase() || exercise.exercise_type.toUpperCase()}
+                            </span>
                           </div>
                         </div>
-                      </div>
-                      <Button variant="outline" size="sm" className="h-10 w-10 rounded-xl p-0 text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0 ml-4"
-                        onClick={() => setExerciseToDelete(exercise)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      </td>
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-3">
+                          {exercise.options && (
+                            <span className="label-micro px-2 py-0.5 border border-slate-900/10 dark:border-white/10 text-slate-500">
+                              {exercise.options.length} OPCIONES
+                            </span>
+                          )}
+                          <span className="label-micro text-emerald-600 font-mono">
+                            VAL: {exercise.correct_answer.substring(0, 20)}...
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="rounded-none border-slate-900/10 h-9 w-9 text-rose-500 hover:bg-rose-500 hover:text-white transition-colors"
+                          onClick={() => setExerciseToDelete(exercise)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </td>
+                    </tr>
                   )
-                })}
-              </div>
-            ) : (
-              <div className="py-20 text-center">
-                <CheckCircle2 className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Sin ejercicios</h3>
-                <p className="text-slate-500 font-medium">Esta lección aún no tiene ejercicios.</p>
-                <Button className="mt-4 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700" onClick={() => { resetForm(); setIsModalOpen(true) }}>
-                  <Plus className="mr-2 h-4 w-4" /> Crear Primer Ejercicio
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="border-none shadow-2xl shadow-slate-200/50 bg-white dark:bg-slate-900 rounded-[2.5rem]">
-          <CardContent className="py-20 text-center">
-            <BookOpen className="h-16 w-16 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-            <h3 className="text-xl font-black text-slate-900 dark:text-white">Selecciona curso, módulo y lección</h3>
-            <p className="text-slate-500 font-medium mt-2">Elige las opciones arriba para ver los ejercicios.</p>
-          </CardContent>
-        </Card>
-      )}
+                })
+              ) : (
+                <tr>
+                  <td colSpan={3} className="py-24 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
+                      <HelpCircle className="h-6 w-6 text-slate-300" />
+                    </div>
+                    <p className="label-caps text-slate-400 mb-6">No hay reactivos registrados en esta lección</p>
+                    <Button
+                      size="sm"
+                      onClick={() => { resetForm(); setIsModalOpen(true) }}
+                      className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[10px] tracking-widest px-6"
+                    >
+                      Crear Primer Reactivo
+                    </Button>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        ) : (
+          <div className="py-32 text-center border-b border-slate-900/10 dark:border-white/10">
+            <BookOpen className="h-12 w-12 text-slate-200 dark:text-slate-800 mx-auto mb-6" />
+            <p className="label-caps text-slate-400">Selecciona la jerarquía académica para gestionar ejercicios</p>
+          </div>
+        )}
+      </div>
 
-      {/* Create Exercise Modal */}
+      {/* CREATE MODAL - Editorial */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-2xl rounded-3xl bg-white dark:bg-slate-900 max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Nuevo Ejercicio</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-5 py-4">
-            {/* Tipo de ejercicio */}
+        <DialogContent className="rounded-none border-slate-900/10 dark:border-white/10 p-0 overflow-hidden max-w-2xl">
+          <div className="bg-slate-900 dark:bg-white p-6">
+            <h2 className="text-xl font-black text-white dark:text-slate-900 uppercase tracking-tight">
+              Nuevo Reactivo de Evaluación
+            </h2>
+          </div>
+          <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
             <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Tipo de Ejercicio</label>
-              <select value={exerciseType} onChange={(e) => setExerciseType(e.target.value)}
-                className="w-full h-14 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <option value="multiple_choice">Opción múltiple</option>
-                <option value="translate">Traducir</option>
-                <option value="listen">Escuchar</option>
-                <option value="fill_blank">Completar espacio</option>
-                <option value="match">Emparejar</option>
+              <label className="label-caps text-slate-400">Tipo de Reactivo</label>
+              <select
+                value={exerciseType}
+                onChange={(e) => setExerciseType(e.target.value)}
+                className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors appearance-none"
+              >
+                <option value="multiple_choice" className="bg-white dark:bg-[#0a0a0b]">OPCIÓN MÚLTIPLE</option>
+                <option value="translate" className="bg-white dark:bg-[#0a0a0b]">TRADUCCIÓN TÉCNICA</option>
+                <option value="listen" className="bg-white dark:bg-[#0a0a0b]">COMPRENSIÓN AUDITIVA</option>
+                <option value="fill_blank" className="bg-white dark:bg-[#0a0a0b]">COMPLETAR ESPACIOS</option>
+                <option value="match" className="bg-white dark:bg-[#0a0a0b]">EMPAREJAMIENTO</option>
               </select>
             </div>
 
-            {/* Pregunta */}
             <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Texto de la Pregunta <span className="text-red-500">*</span></label>
-              <Textarea value={questionText} onChange={(e) => setQuestionText(e.target.value)}
-                placeholder="Ej. ¿Cuál es el pasado simple del verbo 'Go'?"
-                className="min-h-[80px] rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-medium resize-none p-4" />
+              <label className="label-caps text-slate-400">Enunciado / Pregunta</label>
+              <textarea
+                value={questionText}
+                onChange={(e) => setQuestionText(e.target.value)}
+                placeholder="EJ. ¿CUÁL ES EL PASADO SIMPLE DEL VERBO 'GO'?"
+                className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors min-h-[100px] resize-none"
+              />
             </div>
 
-            {/* Opciones (solo para multiple_choice) */}
             {showOptionsField && (
               <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900 dark:text-white">Opciones (una por línea)</label>
-                <Textarea value={optionsText} onChange={(e) => setOptionsText(e.target.value)}
-                  placeholder="Opción 1&#10;Opción 2&#10;Opción 3&#10;Opción 4"
-                  className="min-h-[120px] rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-medium resize-none p-4" />
-                <p className="text-xs font-bold text-slate-400">La respuesta correcta debe coincidir exactamente con una de estas opciones</p>
+                <label className="label-caps text-slate-400">Opciones de Respuesta (Una por línea)</label>
+                <textarea
+                  value={optionsText}
+                  onChange={(e) => setOptionsText(e.target.value)}
+                  placeholder="OPCIÓN A&#10;OPCIÓN B&#10;OPCIÓN C"
+                  className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors min-h-[120px] resize-none"
+                />
               </div>
             )}
 
-            {/* URL de audio (solo para listen) */}
             {showAudioField && (
               <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900 dark:text-white">URL del Audio</label>
-                <Input value={audioUrl} onChange={(e) => setAudioUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/audio.mp3"
-                  className="h-14 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-medium" />
+                <label className="label-caps text-slate-400">Recurso de Audio (URL)</label>
+                <input
+                  value={audioUrl}
+                  onChange={(e) => setAudioUrl(e.target.value)}
+                  placeholder="HTTPS://CDN.PLATAFORMA.COM/AUDIO/001.MP3"
+                  className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+                />
               </div>
             )}
 
-            {/* Respuesta correcta */}
             <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Respuesta Correcta <span className="text-red-500">*</span></label>
-              <Input value={correctAnswer} onChange={(e) => setCorrectAnswer(e.target.value)}
-                placeholder="Ej. Went"
-                className="h-14 rounded-xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-medium" />
-              <p className="text-xs font-bold text-slate-400">Para opción múltiple, debe coincidir exactamente con una opción de arriba</p>
+              <label className="label-caps text-slate-400 text-emerald-600">Respuesta Correcta (Validación)</label>
+              <input
+                value={correctAnswer}
+                onChange={(e) => setCorrectAnswer(e.target.value)}
+                placeholder="VALOR EXACTO PARA VALIDACIÓN"
+                className="w-full border border-emerald-500/30 dark:border-emerald-500/20 bg-emerald-500/5 py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-emerald-500 transition-colors"
+              />
             </div>
           </div>
-          <DialogFooter className="gap-3">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)} className="rounded-xl h-12 px-6 font-bold">Cancelar</Button>
-            <Button onClick={handleCreateExercise} disabled={isSaving}
-              className="rounded-xl h-12 px-6 font-bold bg-emerald-600 hover:bg-emerald-700">
-              {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-              Crear Ejercicio
+          <div className="p-6 bg-slate-50 dark:bg-white/5 border-t border-slate-900/10 dark:border-white/10 flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+              className="rounded-none font-bold uppercase text-[10px] tracking-widest"
+            >
+              Cancelar
             </Button>
-          </DialogFooter>
+            <Button
+              onClick={handleCreateExercise}
+              disabled={isSaving}
+              className="rounded-none bg-sky-500 hover:bg-sky-600 text-white font-bold uppercase text-[10px] tracking-widest"
+            >
+              {isSaving ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
+              Confirmar Reactivo
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* DELETE DIALOG - Editorial */}
       <AlertDialog open={!!exerciseToDelete} onOpenChange={(open) => !open && !isDeleting && setExerciseToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl">
+        <AlertDialogContent className="rounded-none border-slate-900/10">
           <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4"><AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" /></div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar ejercicio?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Esto eliminará permanentemente el ejercicio y sus datos asociados.
+            <div className="flex h-16 w-16 items-center justify-center border border-rose-500/20 bg-rose-500/5 mx-auto mb-6">
+              <AlertCircle className="h-8 w-8 text-rose-500" />
+            </div>
+            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Eliminar Reactivo</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm font-medium py-4">
+              ¿Confirmas la eliminación permanente de este ejercicio? Esta acción afectará las métricas de evaluación de la lección actual.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isDeleting} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={isDeleting} onClick={handleDeleteExercise} className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold">
-              {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+          <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+            <AlertDialogCancel className="rounded-none font-bold uppercase text-[10px] tracking-[0.2em]">Cancelar</AlertDialogCancel>
+            <AlertDialogAction disabled={isDeleting} onClick={handleDeleteExercise} className="rounded-none bg-rose-600 hover:bg-rose-700 font-bold uppercase text-[10px] tracking-[0.2em]">
+              {isDeleting ? 'Eliminando...' : 'Confirmar Eliminación'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
+
   )
 }

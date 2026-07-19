@@ -8,11 +8,7 @@ import {
   Image as ImageIcon,
   Loader2
 } from 'lucide-react'
-import { Card, } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import { getContactsUseCase, getMessagesUseCase, sendMessageUseCase } from '@/infrastructure/factories/teacher.factory'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import type { Contact, Message } from '@/domain/entities/message.entity'
@@ -77,7 +73,6 @@ export default function TeacherInboxPage() {
     setMessage('')
     setIsSending(true)
 
-    // Optimistic UI
     const optimisticMessage: Message = {
       id: Date.now(),
       sender_id: user.user_id,
@@ -93,181 +88,175 @@ export default function TeacherInboxPage() {
         receiver_id: activeContact.id,
         content: newMessageText,
       })
-      // Replace optimistic with real message
       setMessages(prev => prev.map(m => m.id === optimisticMessage.id ? sent : m))
     } catch (error) {
       console.error('Error sending message:', error)
       toast.error('Error al enviar el mensaje')
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
-      setMessage(newMessageText) // Restore text on failure
+      setMessage(newMessageText)
     } finally {
       setIsSending(false)
     }
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700 h-[calc(100vh-120px)] flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Bandeja de Entrada</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Comunícate con tus estudiantes</p>
-        </div>
-      </div>
+    <div className="animate-in fade-in duration-500 h-[calc(100vh-64px)] overflow-hidden">
+      {/* Editorial Layout: Sidebar + Main */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 h-full bg-slate-900/10 dark:bg-white/10 gap-px">
 
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden flex-1 flex flex-col md:flex-row h-full">
-        {/* Sidebar Contacts */}
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 flex flex-col h-full bg-slate-50/50 dark:bg-slate-800/20">
-          <div className="p-6">
-             <div className="relative">
-               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-               <Input 
-                 placeholder="Buscar contacto..." 
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-                 className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-               />
-             </div>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
-            <div className="px-4 space-y-2">
-              {isLoadingContacts ? (
-                <div className="space-y-3">
-                  {[1,2,3,4].map(i => (
-                    <div key={i} className="flex items-center gap-4 p-4">
-                      <Skeleton className="h-12 w-12 rounded-full" />
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-3 w-16" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : filteredContacts.length > 0 ? (
-                filteredContacts.map(contact => (
-                  <button
-                    key={contact.id}
-                    onClick={() => setActiveContact(contact)}
-                    className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all text-left ${activeContact?.id === contact.id ? 'bg-sky-50 dark:bg-sky-900/30 shadow-sm border border-sky-100 dark:border-sky-800' : 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50 border border-transparent'}`}
-                  >
-                    <div className="relative">
-                      <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
-                        <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-sky-500 text-white font-black">
-                          {contact.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      {contact.is_online && (
-                        <span className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-800 rounded-full"></span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className={`text-sm font-black truncate ${activeContact?.id === contact.id ? 'text-sky-900 dark:text-sky-400' : 'text-slate-900 dark:text-slate-200'}`}>{contact.name}</h4>
-                        <span className="text-[10px] font-bold text-slate-400">{new Date(contact.last_activity).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                      </div>
-                      <p className={`text-xs font-bold truncate mt-0.5 ${activeContact?.id === contact.id ? 'text-sky-600 dark:text-sky-500' : 'text-slate-500 dark:text-slate-400'}`}>{contact.role}</p>
-                    </div>
-                    {contact.unread_count > 0 && (
-                      <div className="h-5 w-5 rounded-full bg-rose-500 flex items-center justify-center text-[10px] font-black text-white shrink-0">
-                        {contact.unread_count}
-                      </div>
-                    )}
-                  </button>
-                ))
-              ) : (
-                <div className="text-center py-10">
-                  <p className="text-slate-400 font-medium text-sm">No hay contactos</p>
-                </div>
-              )}
+        {/* SIDEBAR: Contacts */}
+        <div className="lg:col-span-1 bg-white dark:bg-slate-950 flex flex-col h-full overflow-hidden">
+          <div className="p-8 border-b border-slate-900/10 dark:border-white/10">
+            <h1 className="text-3xl font-black tracking-tighter uppercase mb-6">Mensajes.</h1>
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-sky-500 transition-colors" />
+              <input
+                type="text"
+                placeholder="BUSCAR CONTACTO..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-12 pl-10 pr-4 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none label-caps transition-colors"
+              />
             </div>
           </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-900/5 dark:divide-white/5">
+            {isLoadingContacts ? (
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="p-8 animate-pulse flex items-center gap-4">
+                  <div className="h-10 w-10 bg-slate-100 dark:bg-slate-800" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-2/3 bg-slate-100 dark:bg-slate-800" />
+                    <div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-800" />
+                  </div>
+                </div>
+              ))
+            ) : filteredContacts.length > 0 ? (
+              filteredContacts.map(contact => (
+                <button
+                  key={contact.id}
+                  onClick={() => setActiveContact(contact)}
+                  className={`w-full p-8 text-left transition-all hover:bg-slate-50 dark:hover:bg-white/5 ${activeContact?.id === contact.id ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : ''}`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className="font-black tracking-tight uppercase text-sm">{contact.name}</h4>
+                    <span className={`label-micro ${activeContact?.id === contact.id ? 'text-slate-400' : 'text-slate-500'}`}>
+                      {new Date(contact.last_activity).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className={`label-micro truncate ${activeContact?.id === contact.id ? 'text-slate-300' : 'text-slate-400'}`}>
+                    {contact.role}
+                  </p>
+                  {contact.unread_count > 0 && activeContact?.id !== contact.id && (
+                    <div className="mt-3 h-1.5 w-1.5 bg-sky-500 rounded-full" />
+                  )}
+                </button>
+              ))
+            ) : (
+              <div className="p-12 text-center">
+                <p className="label-caps text-slate-400">Sin contactos</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col h-full bg-white dark:bg-slate-900 relative">
-           {activeContact ? (
-             <>
-               {/* Chat Header */}
-               <div className="h-20 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-8 bg-white dark:bg-slate-900 z-10 shrink-0">
-                 <div className="flex items-center gap-4">
-                    <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-800 shadow-sm">
-                      <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-sky-500 text-white font-black text-xs">
-                        {activeContact.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-black text-slate-900 dark:text-white">{activeContact.name}</h3>
-                      <p className="text-xs font-bold text-emerald-500">{activeContact.is_online ? 'En línea ahora' : 'Desconectado'}</p>
+        {/* MAIN: Chat Content */}
+        <div className="lg:col-span-3 bg-white dark:bg-slate-950 flex flex-col h-full overflow-hidden">
+          {activeContact ? (
+            <>
+              {/* Header */}
+              <div className="px-8 h-20 border-b border-slate-900/10 dark:border-white/10 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 border border-slate-900/10 dark:border-white/10 flex items-center justify-center font-black text-xs uppercase">
+                    {activeContact.name.substring(0, 2)}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 dark:text-white tracking-tight uppercase">{activeContact.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <span className={`h-1.5 w-1.5 rounded-full ${activeContact.is_online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                      <span className="label-micro text-slate-400 uppercase">{activeContact.is_online ? 'En línea' : 'Desconectado'}</span>
                     </div>
-                 </div>
-                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-                   <MoreVertical className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                 </Button>
-               </div>
+                  </div>
+                </div>
+                <button className="h-10 w-10 flex items-center justify-center border border-transparent hover:border-slate-900/10 dark:hover:border-white/10 transition-colors">
+                  <MoreVertical className="h-4 w-4 text-slate-400" />
+                </button>
+              </div>
 
-               {/* Chat Messages */}
-               <div className="flex-1 overflow-y-auto p-8 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-50/50 dark:bg-slate-900/50 dark:opacity-90">
-                  <div className="flex flex-col gap-6">
-                    {isLoadingMessages ? (
-                      <div className="flex justify-center"><p className="text-slate-400 text-sm">Cargando mensajes...</p></div>
-                    ) : messages.length > 0 ? (
-                      messages.map((msg) => {
-                        const isMine = msg.sender_id === user?.user_id
-                        return (
-                          <div key={msg.id} className={`flex items-end gap-3 max-w-[80%] ${isMine ? 'self-end flex-row-reverse' : ''}`}>
-                             {!isMine && (
-                               <Avatar className="h-8 w-8 shrink-0 border-2 border-white dark:border-slate-800">
-                                 <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-sky-500 text-white font-black text-[10px]">
-                                   {activeContact.name.substring(0, 2).toUpperCase()}
-                                 </AvatarFallback>
-                               </Avatar>
-                             )}
-                             <div className={`${isMine ? 'bg-sky-600 shadow-md shadow-sky-500/20 text-white rounded-3xl rounded-br-sm' : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm rounded-3xl rounded-bl-sm'} p-4`}>
-                                <p className={`text-sm font-medium ${isMine ? 'text-white' : 'text-slate-700 dark:text-slate-200'}`}>{msg.content}</p>
-                                <span className={`text-[10px] font-bold mt-2 block ${isMine ? 'text-sky-200 text-right' : 'text-slate-400 dark:text-slate-500'}`}>
-                                  {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                             </div>
-                          </div>
-                        )
-                      })
-                    ) : (
-                      <div className="text-center py-20 text-slate-400 text-sm font-medium">
-                        No hay mensajes en esta conversación. ¡Saluda!
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30 dark:bg-white/2">
+                {isLoadingMessages ? (
+                  <div className="flex justify-center py-20"><p className="label-caps text-slate-400 animate-pulse">Cargando conversación...</p></div>
+                ) : messages.length > 0 ? (
+                  messages.map((msg) => {
+                    const isMine = msg.sender_id === user?.user_id
+                    return (
+                      <div key={msg.id} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
+                        <div className={`max-w-[80%] md:max-w-[60%] p-6 border-2 ${isMine ? 'bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-950' : 'bg-white border-slate-900/10 dark:bg-slate-900 dark:border-white/10 text-slate-900 dark:text-white'}`}>
+                          <p className="text-sm font-medium leading-relaxed">{msg.content}</p>
+                        </div>
+                        <span className="label-micro text-slate-400 mt-2 uppercase">
+                          {new Date(msg.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
-                    )}
+                    )
+                  })
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-30 grayscale">
+                    <MessageSquare className="h-12 w-12 mb-4" />
+                    <p className="label-caps">Comienza la conversación</p>
                   </div>
-               </div>
+                )}
+              </div>
 
-               {/* Chat Input */}
-               <form onSubmit={handleSendMessage} className="p-4 md:p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 shrink-0">
-                  <div className="flex items-center gap-3">
-                     <Button type="button" variant="ghost" size="icon" className="h-12 w-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 text-slate-400">
-                       <Paperclip className="h-5 w-5" />
-                     </Button>
-                     <Button type="button" variant="ghost" size="icon" className="h-12 w-12 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 text-slate-400 hidden sm:flex">
-                       <ImageIcon className="h-5 w-5" />
-                     </Button>
-                     <Input 
-                       value={message}
-                       onChange={(e) => setMessage(e.target.value)}
-                       placeholder="Escribe un mensaje..."
-                       className="h-14 rounded-2xl border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-medium text-slate-900 dark:text-white"
-                     />
-                     <Button type="submit" disabled={isSending || !message.trim()} className="h-14 w-14 rounded-2xl bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-500/20 shrink-0 p-0 flex items-center justify-center text-white">
-                       {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 ml-1" />}
-                     </Button>
+              {/* Input Area */}
+              <div className="p-8 border-t border-slate-900/10 dark:border-white/10 shrink-0">
+                <form onSubmit={handleSendMessage} className="flex items-end gap-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <button type="button" className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-sky-500 transition-colors">
+                      <Paperclip className="h-4 w-4" />
+                    </button>
+                    <button type="button" className="h-10 w-10 flex items-center justify-center text-slate-400 hover:text-sky-500 transition-colors hidden sm:flex">
+                      <ImageIcon className="h-4 w-4" />
+                    </button>
                   </div>
-               </form>
-             </>
-           ) : (
-             <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
-               <MessageSquare className="h-16 w-16 mb-4 opacity-20" />
-               <p className="font-medium">Selecciona un contacto para iniciar</p>
-             </div>
-           )}
+                  <div className="flex-1">
+                    <textarea
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      placeholder="ESCRIBE UN MENSAJE..."
+                      rows={1}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleSendMessage()
+                        }
+                      }}
+                      className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-3 font-bold transition-colors resize-none overflow-hidden"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isSending || !message.trim()}
+                    size="lg"
+                    className="h-14 w-14 p-0 shrink-0 flex items-center justify-center"
+                  >
+                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                  </Button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-20 opacity-20 grayscale">
+              <div className="flex h-24 w-24 items-center justify-center border-4 border-slate-900 dark:border-white mb-8">
+                <MessageSquare className="h-10 w-10" />
+              </div>
+              <h2 className="text-2xl font-black uppercase tracking-tighter">Selecciona un contacto.</h2>
+              <p className="label-caps mt-2">Para iniciar una conversación</p>
+            </div>
+          )}
         </div>
-      </Card>
+      </div>
     </div>
   )
 }

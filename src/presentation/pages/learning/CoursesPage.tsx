@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { toast } from 'sonner'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { BookOpen, CheckCircle2, ChevronRight, PlayCircle, Loader2, Trophy, Sparkles } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/presentation/components/ui/card'
-import { Badge } from '@/presentation/components/ui/badge'
 import { Button } from '@/presentation/components/ui/button'
 
 interface Course {
@@ -51,19 +48,16 @@ export default function CoursesPage() {
           apiClient.get<any>('/classrooms/mine/')
         ])
         
-        // Obtener aulas en las que está inscrito el estudiante para permitir solo esos cursos
         const classData = classRes.data as any
         const classArray = Array.isArray(classData) ? classData : (classData?.data || classData?.results || [])
         const allowedCourseIds = new Set(classArray.map((c: any) => c.course).filter(Boolean))
 
-        // Extract array safely and filter by enrolled courses
         const coursesData = coursesRes.data as any
         const coursesArray = Array.isArray(coursesData) ? coursesData : (coursesData?.data || coursesData?.results || [])
         const filteredCourses = coursesArray.filter((c: Course) => allowedCourseIds.has(c.id))
         
         setCourses(filteredCourses)
         
-        // Extraer IDs de lecciones completadas si vienen en el resumen o progreso
         const progressData = progressRes.data
         if (progressData && Array.isArray(progressData.completed_lesson_ids)) {
           setCompletedLessonIds(progressData.completed_lesson_ids)
@@ -87,7 +81,6 @@ export default function CoursesPage() {
       const rawModulesData = modulesRes.data as any
       const modulesData: Module[] = Array.isArray(rawModulesData) ? rawModulesData : (rawModulesData?.data || rawModulesData?.results || [])
 
-      // Cargar lecciones por cada módulo
       const modulesWithLessons = await Promise.all(
         modulesData.map(async (mod) => {
           const lessonsRes = await apiClient.get<Lesson[]>(`/lessons/?module=${mod.id}`)
@@ -114,233 +107,211 @@ export default function CoursesPage() {
   if (isLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <Card className="hidden">
-        <CardHeader>
-          <CardTitle>Dummy</CardTitle>
-          <CardDescription>Dummy</CardDescription>
-        </CardHeader>
-        <CardContent>Dummy</CardContent>
-      </Card>
-      {/* Cursos List */}
-      <aside className="lg:w-80 space-y-6">
-        <div className="bg-white rounded-2xl p-6 shadow-xl shadow-slate-200/50 border border-slate-100">
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <BookOpen className="h-6 w-6 text-indigo-600" />
-            Cursos
+    <div className="flex flex-col lg:flex-row gap-0 border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/[0.02] animate-in fade-in duration-500">
+      {/* Sidebar de Cursos */}
+      <aside className="lg:w-80 border-r border-slate-900/10 dark:border-white/10">
+        <div className="p-8 border-b border-slate-900/10 dark:border-white/10">
+          <div className="chip mb-4">
+            <BookOpen className="h-3.5 w-3.5 text-sky-500" />
+            Academia
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            Mis Cursos
           </h2>
-          <p className="text-sm font-medium text-slate-500 mt-1 mb-6">Continúa tu camino al dominio.</p>
+          <p className="label-micro text-slate-400 dark:text-slate-500 mt-1">Tu progreso educativo</p>
+        </div>
 
-          <div className="space-y-3">
-            {courses.length === 0 ? (
-              <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
-                <BookOpen className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-sm font-bold text-slate-700">Sin cursos</h3>
-                <p className="text-xs text-slate-500 mt-1 mb-4">Inscríbete en un aula virtual para ver tus cursos.</p>
-                <Button asChild size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">
-                  <Link to="/classrooms">Ir a Aulas</Link>
-                </Button>
-              </div>
-            ) : (
-              courses.map((course) => (
+        <div className="divide-y divide-slate-900/10 dark:divide-white/10">
+          {courses.length === 0 ? (
+            <div className="p-8 text-center">
+              <p className="label-caps text-slate-400">Sin inscripciones</p>
+              <Button asChild variant="outline" className="mt-4 w-full">
+                <Link to="/classrooms">Ir a Aulas</Link>
+              </Button>
+            </div>
+          ) : (
+            courses.map((course) => (
               <button
                 key={course.id}
                 onClick={() => handleSelectCourse(course)}
-                className={`w-full text-left p-4 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                className={`w-full text-left p-6 transition-all duration-200 group relative ${
                   selectedCourse?.id === course.id
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-[1.02]'
-                    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border border-transparent hover:border-indigo-100'
+                    ? 'bg-sky-500/[0.06] border-r-2 border-sky-500'
+                    : 'hover:bg-sky-500/[0.04]'
                 }`}
               >
-                <div className="flex flex-col gap-2 relative z-10">
-                  <div className="flex justify-between items-center">
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                       selectedCourse?.id === course.id ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-600'
-                    }`}>
-                      {course.difficulty_level}
-                    </span>
-                  </div>
-                  <h3 className="font-black text-sm leading-tight">{course.title}</h3>
+                <div className="space-y-2">
+                  <span className={`label-micro ${
+                    selectedCourse?.id === course.id ? 'text-sky-500' : 'text-slate-400'
+                  }`}>
+                    {course.difficulty_level}
+                  </span>
+                  <h3 className={`font-bold text-sm leading-tight transition-colors ${
+                    selectedCourse?.id === course.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-400'
+                  }`}>
+                    {course.title}
+                  </h3>
                 </div>
                 {selectedCourse?.id === course.id && (
-                  <div className="absolute top-0 right-0 p-2 opacity-20">
-                    <ChevronRight className="h-12 w-12 -mr-4 -mt-2" />
-                  </div>
+                  <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-sky-500" />
                 )}
               </button>
-            )))}
-          </div>
+            ))
+          )}
         </div>
 
-        {/* Gamification Widget */}
-        <div className="bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl p-6 text-white shadow-xl shadow-orange-200/50">
+        {/* Gamification Widget - Editorial Style */}
+        <div className="p-8 border-t border-slate-900/10 dark:border-white/10 bg-slate-50 dark:bg-white/[0.01]">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-white/20 p-2 rounded-lg">
-               <Trophy className="h-6 w-6" />
+            <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/5">
+               <Trophy className="h-4 w-4 text-amber-500" />
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-widest opacity-80">Tu Rango</p>
-              <h4 className="text-lg font-black">Platino IV</h4>
+              <p className="label-micro text-slate-400">Rango Actual</p>
+              <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Platino IV</h4>
             </div>
           </div>
           <div className="space-y-2">
-            <div className="flex justify-between text-[10px] font-black uppercase">
-              <span>Progreso de Nivel</span>
-              <span>75%</span>
+            <div className="flex justify-between label-micro">
+              <span className="text-slate-500">Nivel de Progreso</span>
+              <span className="text-sky-500">75%</span>
             </div>
-            <div className="h-2 w-full bg-black/10 rounded-full overflow-hidden">
-              <div className="h-full bg-white rounded-full w-[75%] shadow-sm"></div>
+            <div className="h-1 w-full bg-slate-200 dark:bg-white/10 rounded-none">
+              <div className="h-full bg-sky-500 w-[75%]"></div>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Curso Detalle / Modulos */}
-      <main className="flex-1 min-w-0 space-y-8">
+      {/* Contenido Principal */}
+      <main className="flex-1 min-w-0">
         {selectedCourse ? (
-          <div className="animate-in fade-in zoom-in-95 duration-500">
-            <div className="relative overflow-hidden rounded-3xl bg-white p-8 shadow-xl border border-slate-100 mb-8">
-              <div className="relative z-10">
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                   {selectedCourse.language_info && (
-                    <Badge className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 font-black text-[10px] uppercase tracking-wider border-none">
-                      {selectedCourse.language_info.name}
-                    </Badge>
-                   )}
-                   <Badge variant="outline" className="border-indigo-200 text-indigo-600 font-black text-[10px] uppercase tracking-wider px-3 py-1">
-                      {selectedCourse.difficulty_level}
-                   </Badge>
-                </div>
-                <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4">
-                  {selectedCourse.title}
-                </h1>
-                <p className="text-lg text-slate-500 font-medium max-w-2xl leading-relaxed mb-6">
-                  {selectedCourse.description}
-                </p>
-                <div className="flex gap-4">
-                  <Button onClick={() => toast.success('Solicitud de acceso enviada. Espera la confirmacin de un profesor.')} className="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-6 py-5 rounded-xl shadow-lg shadow-indigo-200">
-                    Solicitar Unirse
-                  </Button>
-                </div>
+          <div className="animate-in fade-in duration-500">
+            <div className="p-8 md:p-12 border-b border-slate-900/10 dark:border-white/10">
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                {selectedCourse.language_info && (
+                  <span className="chip border-sky-500/20 text-sky-600 bg-sky-500/[0.05]">
+                    {selectedCourse.language_info.name}
+                  </span>
+                )}
+                <span className="chip">
+                  {selectedCourse.difficulty_level}
+                </span>
               </div>
-
-              {/* Decorative element */}
-              <div className="absolute -right-20 -top-20 h-64 w-64 bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
+              <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-6 uppercase">
+                {selectedCourse.title}
+              </h1>
+              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium max-w-3xl leading-relaxed">
+                {selectedCourse.description}
+              </p>
             </div>
 
-            {isLoadingModules ? (
-              <div className="flex flex-col h-64 items-center justify-center gap-4">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
-                <span className="text-sm font-black text-slate-400 uppercase tracking-widest">Organizando lecciones...</span>
-              </div>
-            ) : modules.length > 0 ? (
-              <div className="space-y-8">
-                {modules.map((mod) => (
-                  <div key={mod.id} className="space-y-4">
-                    <div className="flex items-center gap-4 ml-2">
-                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white font-black text-lg shadow-lg">
-                          {mod.position}
-                       </div>
-                       <div>
-                          <h2 className="text-xl font-black text-slate-900 leading-none">{mod.title}</h2>
-                          <p className="text-sm font-bold text-slate-400 mt-1">{mod.description}</p>
-                       </div>
-                    </div>
+            <div className="p-8 md:p-12">
+              {isLoadingModules ? (
+                <div className="flex flex-col h-64 items-center justify-center gap-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+                  <span className="label-caps text-slate-400">Cargando currículo...</span>
+                </div>
+              ) : modules.length > 0 ? (
+                <div className="space-y-12">
+                  {modules.map((mod) => (
+                    <div key={mod.id} className="space-y-6">
+                      <div className="flex items-center gap-4">
+                         <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-slate-900 dark:border-white bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black text-sm">
+                            {mod.position}
+                         </div>
+                         <div>
+                            <h2 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">{mod.title}</h2>
+                            <p className="label-micro text-slate-400 mt-0.5">{mod.description}</p>
+                         </div>
+                      </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                      {mod.lessons?.map((lesson) => {
-                         const isCompleted = lesson.is_completed || completedLessonIds.includes(lesson.id)
-                         return (
-                          <div
-                            key={lesson.id}
-                            className={`group flex items-center justify-between p-5 rounded-2xl bg-white border transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 ${
-                              isCompleted ? 'border-emerald-100' : 'border-slate-100 hover:border-indigo-200'
-                            }`}
-                          >
-                            <div className="flex items-center gap-4 min-w-0">
-                              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-all duration-300 ${
-                                isCompleted
-                                  ? 'bg-emerald-50 text-emerald-600'
-                                  : 'bg-indigo-50 text-indigo-600 group-hover:scale-110'
-                              }`}>
-                                {isCompleted ? <CheckCircle2 className="h-6 w-6" /> : <PlayCircle className="h-6 w-6" />}
-                              </div>
-                              <div className="min-w-0">
-                                <h4 className="font-black text-slate-900 text-sm truncate group-hover:text-indigo-600 transition-colors">
-                                  {lesson.title}
-                                </h4>
-                                <div className="flex items-center gap-2 mt-1">
-                                   <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                      {lesson.content_type}
-                                   </span>
-                                   <span className="text-[10px] font-black text-amber-600 flex items-center gap-0.5">
-                                      <Sparkles className="h-3 w-3" />
-                                      {lesson.xp_reward} XP
-                                   </span>
+                      <div className="grid gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
+                        {mod.lessons?.map((lesson) => {
+                           const isCompleted = lesson.is_completed || completedLessonIds.includes(lesson.id)
+                           return (
+                            <div
+                              key={lesson.id}
+                              className="group flex items-center justify-between p-6 bg-white dark:bg-[#0a0a0b] card-hover"
+                            >
+                              <div className="flex items-center gap-5 min-w-0">
+                                <div className={`flex h-10 w-10 shrink-0 items-center justify-center border ${
+                                  isCompleted
+                                    ? 'border-emerald-500/30 bg-emerald-500/5 text-emerald-500'
+                                    : 'border-slate-900/10 dark:border-white/10 text-slate-400'
+                                }`}>
+                                  {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <PlayCircle className="h-4 w-4" />}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate uppercase tracking-tight">
+                                    {lesson.title}
+                                  </h4>
+                                  <div className="flex items-center gap-4 mt-1">
+                                     <span className="label-micro text-slate-400">
+                                        {lesson.content_type}
+                                     </span>
+                                     <span className="label-micro text-amber-500 flex items-center gap-1 font-bold">
+                                        <Sparkles className="h-3 w-3" />
+                                        {lesson.xp_reward} XP
+                                     </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
 
-                            <Button
-                              size="sm"
-                              variant={isCompleted ? 'outline' : 'default'}
-                              asChild
-                              className={`rounded-xl px-5 font-black transition-all ${
-                                isCompleted
-                                  ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100'
-                              }`}
-                            >
-                              <Link to={`/courses/${selectedCourse.id}/lessons/${lesson.id}`}>
-                                {isCompleted ? 'Repasar' : 'Comenzar'}
-                                <ChevronRight className="ml-1 h-4 w-4" />
-                              </Link>
-                            </Button>
-                          </div>
-                         )
-                      })}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                asChild
+                                className={`rounded-none px-6 font-bold uppercase text-[10px] tracking-widest transition-all ${
+                                  isCompleted
+                                    ? 'border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/5'
+                                    : 'border-slate-900 dark:border-white hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black'
+                                }`}
+                              >
+                                <Link to={`/courses/${selectedCourse.id}/lessons/${lesson.id}`}>
+                                  {isCompleted ? 'Repasar' : 'Comenzar'}
+                                  <ChevronRight className="ml-1 h-3 w-3" />
+                                </Link>
+                              </Button>
+                            </div>
+                           )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                <BookOpen className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">Próximamente...</h3>
-                <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto mt-2">
-                  Estamos preparando el contenido de este curso. ¡Vuelve pronto para comenzar a aprender!
-                </p>
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 border border-dashed border-slate-900/10 dark:border-white/10">
+                  <BookOpen className="h-8 w-8 text-slate-300 mx-auto mb-4" />
+                  <h3 className="label-caps text-slate-900 dark:text-white">Contenido en preparación</h3>
+                  <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto">
+                    Vuelve pronto para comenzar tu aprendizaje en este curso.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
-          <div className="flex h-[600px] flex-col items-center justify-center text-center p-12 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-50 dark:border-slate-800 transform-gpu transition-all">
-            <div className="relative mb-8">
-              <div className="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 animate-pulse"></div>
-              <div className="relative bg-gradient-to-tr from-indigo-600 to-purple-600 p-10 rounded-[2rem] shadow-2xl shadow-indigo-200 dark:shadow-none rotate-3 hover:rotate-0 transition-transform duration-500">
-                <BookOpen className="h-16 w-16 text-white" />
+          <div className="flex h-full flex-col items-center justify-center text-center p-12 bg-slate-50 dark:bg-transparent">
+            <div className="mb-8">
+              <div className="flex h-20 w-20 items-center justify-center border-2 border-slate-900 dark:border-white">
+                <BookOpen className="h-10 w-10 text-sky-500" />
               </div>
             </div>
-            <h3 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-4">Elige tu destino</h3>
-            <p className="text-lg font-medium text-slate-500 dark:text-slate-400 max-w-md leading-relaxed mb-10">
-              Selecciona uno de nuestros cursos especializados en la barra lateral para desbloquear lecciones interactivas, tutoría IA y certificados oficiales.
+            <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mb-4">Selecciona un Curso</h3>
+            <p className="label-caps text-slate-400 max-w-xs leading-relaxed">
+              Explora tus clases activas desde el panel lateral para comenzar.
             </p>
-            <div className="flex gap-4">
-               {courses.slice(0, 2).map((c, i) => (
-                 <Badge key={i} variant="outline" className="px-4 py-2 border-slate-200 dark:border-slate-800 text-slate-400 font-black uppercase tracking-widest text-[10px]">
-                    {c.title.split(' ')[0]}
-                 </Badge>
-               ))}
-            </div>
           </div>
         )}
       </main>
     </div>
   )
 }
+
