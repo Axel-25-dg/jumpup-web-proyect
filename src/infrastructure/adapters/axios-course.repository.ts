@@ -217,6 +217,15 @@ export class AxiosCourseRepository implements CourseRepository {
     }
   }
 
+  async updateExercise(id: number, payload: Partial<ExercisePayload>): Promise<any> {
+    try {
+      const { data } = await apiClient.patch(`/exercises/${id}/`, payload);
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
   async deleteExercise(id: number): Promise<void> {
     try {
       await apiClient.delete(`/exercises/${id}/`);

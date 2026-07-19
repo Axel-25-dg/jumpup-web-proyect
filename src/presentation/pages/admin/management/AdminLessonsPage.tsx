@@ -209,7 +209,7 @@ export default function AdminLessonsPage() {
                   <td colSpan={5} className="px-8 py-8"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
                 </tr>
               ))
-            ) : filteredLessons.length > 0 ? (
+            ) : !isLoading && filteredLessons.length > 0 ? (
               filteredLessons.map((lesson) => {
                 const Icon = contentTypeIcons[lesson.content_type] || FileText
                 return (
@@ -271,23 +271,23 @@ export default function AdminLessonsPage() {
                   </tr>
                 )
               })
-            ) : (
-              <tr>
-                <td colSpan={5} className="py-24 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
-                    <BookOpen className="h-6 w-6 text-slate-300" />
-                  </div>
-                  <p className="label-caps text-slate-400 mb-6">No hay lecciones registradas</p>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate('/admin/management/lessons/new')}
-                    className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[10px] tracking-widest px-6"
-                  >
-                    Crear Primera Leccion
-                  </Button>
-                </td>
-              </tr>
-            )}
+              ) : !isLoading ? (
+                <tr>
+                  <td colSpan={5} className="py-24 text-center">
+                    <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
+                      <BookOpen className="h-6 w-6 text-slate-300" />
+                    </div>
+                    <p className="label-caps text-slate-400 mb-6">No hay lecciones registradas</p>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/admin/management/lessons/new')}
+                      className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[10px] tracking-widest px-6"
+                    >
+                      Crear Primera Leccion
+                    </Button>
+                  </td>
+                </tr>
+              ) : null}
           </tbody>
         </table>
       </div>

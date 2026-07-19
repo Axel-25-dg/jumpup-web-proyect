@@ -165,7 +165,7 @@ export default function AdminModulesPage() {
                   <td colSpan={4} className="px-8 py-8"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
                 </tr>
               ))
-            ) : filteredModules.length > 0 ? (
+            ) : !isLoading && filteredModules.length > 0 ? (
               filteredModules.map((mod, index) => (
                 <tr key={mod.id} className="card-hover group">
                   <td className="px-8 py-6">
@@ -208,7 +208,7 @@ export default function AdminModulesPage() {
                   </td>
                 </tr>
               ))
-            ) : (
+            ) : !isLoading ? (
               <tr>
                 <td colSpan={4} className="py-24 text-center">
                   <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
@@ -224,7 +224,7 @@ export default function AdminModulesPage() {
                   </Button>
                 </td>
               </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>

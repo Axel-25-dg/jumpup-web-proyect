@@ -32,6 +32,7 @@ export interface CourseRepository {
   deleteLesson(id: number): Promise<void>;
   getExercisesByLesson(lessonId: number): Promise<any[]>;
   createExercise(payload: ExercisePayload): Promise<any>;
+  updateExercise(id: number, payload: Partial<ExercisePayload>): Promise<any>;
   deleteExercise(id: number): Promise<void>;
   getLanguages(): Promise<Array<{ id: number; name: string; code: string }>>;
   createLanguage?(payload: { name: string; code: string }): Promise<any>;

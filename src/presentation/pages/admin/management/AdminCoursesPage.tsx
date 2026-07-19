@@ -173,7 +173,7 @@ export default function AdminCoursesPage() {
                   <td colSpan={4} className="px-8 py-8"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
                 </tr>
               ))
-            ) : filteredCourses.length > 0 ? (
+            ) : !isLoading && filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <tr key={course.id} className="card-hover group">
                   <td className="px-8 py-6">
@@ -245,7 +245,7 @@ export default function AdminCoursesPage() {
                   </td>
                 </tr>
               ))
-            ) : (
+            ) : !isLoading ? (
               <tr>
                 <td colSpan={4} className="py-24 text-center">
                   <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
@@ -254,7 +254,7 @@ export default function AdminCoursesPage() {
                   <p className="label-caps text-slate-400">No se encontraron registros de cursos</p>
                 </td>
               </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>

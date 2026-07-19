@@ -44,6 +44,7 @@ const AdminModuleFormPage = lazy(() => import('../pages/admin/management/AdminMo
 const AdminLessonsPage = lazy(() => import('../pages/admin/management/AdminLessonsPage'))
 const AdminLessonFormPage = lazy(() => import('../pages/admin/management/AdminLessonFormPage'))
 const AdminExercisesPage = lazy(() => import('../pages/admin/management/AdminExercisesPage'))
+const AdminExerciseFormPage = lazy(() => import('../pages/admin/management/AdminExerciseFormPage'))
 const AdminLanguagesPage = lazy(() => import('../pages/admin/management/AdminLanguagesPage'))
 const AdminAnnouncementsPage = lazy(() => import('../pages/admin/management/AdminAnnouncementsPage'))
 const AdminAnnouncementFormPage = lazy(() => import('../pages/admin/management/AdminAnnouncementFormPage'))
@@ -255,6 +256,8 @@ export default function AppRouter() {
                 <Route path="/admin/management/lessons/new" element={<AdminLessonFormPage />} />
                 <Route path="/admin/management/lessons/:id/edit" element={<AdminLessonFormPage />} />
                 <Route path="/admin/management/exercises" element={<AdminExercisesPage />} />
+                <Route path="/admin/management/exercises/new" element={<AdminExerciseFormPage />} />
+                <Route path="/admin/management/exercises/:id/edit" element={<AdminExerciseFormPage />} />
                 <Route path="/admin/management/languages" element={<AdminLanguagesPage />} />
                 
                 {/* Admin - Classrooms */}
