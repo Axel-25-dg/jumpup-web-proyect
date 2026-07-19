@@ -9,14 +9,10 @@ import {
   Trash2,
   Users,
   Eye,
-  ArrowRight,
-  AlertCircle
+  AlertCircle,
+  ArrowLeft
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Badge } from '@/presentation/components/ui/badge'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -95,156 +91,190 @@ export default function AdminCoursesPage() {
     if (statusFilter === 'draft') return c.is_active === false || c.status === 'draft'
     return true
   })
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Gestión de Cursos</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Administra todos los cursos de la plataforma</p>
-        </div>
-        <div className="flex gap-3">
-          <Button asChild className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6 group">
-            <Link to="/admin/management/courses/new">
-              <Plus className="mr-2 h-5 w-5" /> Crear Nuevo Curso
-              <ArrowRight className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-            </Link>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <BookOpen className="h-3.5 w-3.5 text-sky-500" />
+                Académico
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              Catálogo de <span className="text-sky-500">Cursos</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Gestión centralizada de la oferta académica, niveles de dificultad y estados de publicación.
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate('/admin/management/courses/new')}
+            className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all"
+          >
+            <Plus className="h-4 w-4 mr-2" /> Crear Curso
           </Button>
+        </div>
+      </section>
+
+      {/* FILTERS & SEARCH */}
+      <div className="border-b border-slate-900/10 dark:border-white/10 p-6 md:p-8 flex flex-col lg:flex-row gap-6 justify-between items-center bg-white dark:bg-transparent">
+        <div className="relative w-full lg:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            placeholder="BUSCAR POR TÍTULO DEL CURSO..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3.5 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+          />
+        </div>
+        <div className="flex gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10 overflow-hidden">
+          {(['all', 'active', 'draft'] as const).map(status => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-6 py-3 label-caps transition-all ${
+                statusFilter === status
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                  : 'bg-white dark:bg-[#0a0a0b] text-slate-500 hover:bg-slate-50 dark:hover:bg-white/5'
+              }`}
+            >
+              {status === 'all' ? 'Todos' : status === 'active' ? 'Publicados' : 'Borradores'}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Course List Section */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-           <div className="relative w-full sm:max-w-md">
-             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-             <Input 
-               placeholder="Buscar curso por título..." 
-               value={searchTerm}
-               onChange={(e) => setSearchTerm(e.target.value)}
-               className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
-             />
-           </div>
-           <div className="flex gap-2">
-             <Button onClick={() => setStatusFilter('all')} variant={statusFilter === 'all' ? 'default' : 'outline'} className={`h-12 rounded-xl font-bold ${statusFilter === 'all' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Todos</Button>
-             <Button onClick={() => setStatusFilter('active')} variant={statusFilter === 'active' ? 'default' : 'outline'} className={`h-12 rounded-xl font-bold ${statusFilter === 'active' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Activos</Button>
-             <Button onClick={() => setStatusFilter('draft')} variant={statusFilter === 'draft' ? 'default' : 'outline'} className={`h-12 rounded-xl font-bold ${statusFilter === 'draft' ? 'bg-sky-600 hover:bg-sky-700' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>Borradores</Button>
-           </div>
-        </div>
-        <CardContent className="p-0">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+      {/* DATA TABLE */}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[1000px] text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <th className="px-8 py-5 label-caps text-slate-400">Curso / Especialidad</th>
+              <th className="px-8 py-5 label-caps text-slate-400">Nivel / Idioma</th>
+              <th className="px-8 py-5 label-caps text-slate-400">Estado</th>
+              <th className="px-8 py-5 label-caps text-slate-400 text-right">Acciones de Gestión</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-900/5 dark:divide-white/5">
             {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[1,2,3].map(i => (
-                  <div key={i} className="flex gap-6 items-center">
-                    <Skeleton className="h-24 w-40 rounded-2xl" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-24" />
-                      <Skeleton className="h-6 w-64" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              [1, 2, 3, 4].map(i => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan={4} className="px-8 py-8"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
+                </tr>
+              ))
             ) : filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
-                <div key={course.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="h-24 w-40 rounded-2xl overflow-hidden shrink-0 relative bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    {course.image_url ? (
-                      <img src={course.image_url} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <BookOpen className="h-8 w-8 text-slate-300 dark:text-slate-600" />
-                    )}
-                    {course.status === 'draft' && (
-                       <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                         <Badge className="bg-slate-900 text-white font-black uppercase text-[10px]">Borrador</Badge>
-                       </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0 text-center md:text-left">
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                      <Badge className={course.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-                        {course.is_active ? 'Publicado' : 'Inactivo'}
-                      </Badge>
-                      <Badge className="bg-sky-100 text-sky-700">{course.difficulty_level}</Badge>
-                      <span className="flex items-center text-xs font-bold text-slate-500">
-                        <Users className="h-3.5 w-3.5 mr-1" /> {course.students || 0} estudiantes
-                      </span>
+                <tr key={course.id} className="card-hover group">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-5">
+                      <div className="h-12 w-20 shrink-0 border border-slate-900/10 dark:border-white/10 overflow-hidden bg-slate-100 dark:bg-white/5">
+                        {course.image_url ? (
+                          <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <BookOpen className="h-5 w-5 text-slate-300" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-sky-500 transition-colors">
+                          {course.title}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="label-micro flex items-center gap-1.5 text-slate-400">
+                            <Users className="h-3 w-3" /> {course.students || 0} ESTUDIANTES
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{course.title}</h3>
-                    <p className="text-xs font-bold text-slate-400 mt-1">{course.language_name}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-10 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-                      onClick={() => navigate(`/admin/management/courses/${course.id}/edit`)}
-                    >
-                      <Edit2 className="mr-2 h-4 w-4" /> Editar
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl shadow-slate-200/50 dark:shadow-slate-900/50 p-2">
-                        <DropdownMenuItem 
-                          onSelect={() => navigate(`/admin/management/courses/${course.id}/edit`)}
-                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" /> Editar Curso
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onSelect={() => handleToggleActive(course)}
-                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                        >
-                          <Eye className="mr-2 h-4 w-4" /> {course.is_active ? 'Desactivar' : 'Activar'}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onSelect={() => setCourseToDelete(course)}
-                          className="font-bold py-3 text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="space-y-1">
+                      <span className="label-micro px-2 py-0.5 border border-sky-500/20 text-sky-600 bg-sky-500/5 uppercase">
+                        {course.difficulty_level}
+                      </span>
+                      <p className="label-micro text-slate-400 font-mono">{course.language_name}</p>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className={`label-micro flex items-center gap-2 ${course.is_active ? 'text-emerald-600' : 'text-amber-500'}`}>
+                      <span className={`h-1.5 w-1.5 ${course.is_active ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      {course.is_active ? 'PUBLICADO' : 'INACTIVO'}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-none border-slate-900/10 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest h-9"
+                        onClick={() => navigate(`/admin/management/courses/${course.id}/edit`)}
+                      >
+                        <Edit2 className="h-3.5 w-3.5 mr-2" /> Editar
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="rounded-none border-slate-900/10 h-9 w-9">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-none border-slate-900/10 dark:border-white/10">
+                          <DropdownMenuItem onSelect={() => navigate(`/admin/management/courses/${course.id}/edit`)} className="label-micro py-3">
+                            <Edit2 className="h-4 w-4 mr-2" /> Editar Curso
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => handleToggleActive(course)} className="label-micro py-3">
+                            <Eye className="h-4 w-4 mr-2" /> {course.is_active ? 'Ocultar Catálogo' : 'Mostrar Catálogo'}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setCourseToDelete(course)} className="label-micro py-3 text-rose-500 focus:text-rose-500">
+                            <Trash2 className="h-4 w-4 mr-2" /> Eliminar Permanente
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
               ))
             ) : (
-              <div className="py-20 text-center">
-                <BookOpen className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">No se encontraron cursos</h3>
-                <p className="text-slate-500 font-medium">No hay cursos que coincidan con tu búsqueda.</p>
-              </div>
+              <tr>
+                <td colSpan={4} className="py-24 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
+                    <BookOpen className="h-6 w-6 text-slate-300" />
+                  </div>
+                  <p className="label-caps text-slate-400">No se encontraron registros de cursos</p>
+                </td>
+              </tr>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </tbody>
+        </table>
+      </div>
 
+      {/* Delete Dialog - Editorial */}
       <AlertDialog open={!!courseToDelete} onOpenChange={(open) => !open && !isDeleting && setCourseToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl">
+        <AlertDialogContent className="rounded-none border-slate-900/10">
           <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            <div className="flex h-16 w-16 items-center justify-center border border-rose-500/20 bg-rose-500/5 mx-auto mb-6">
+              <AlertCircle className="h-8 w-8 text-rose-500" />
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar curso?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Esta acción no se puede deshacer. Esto eliminará permanentemente el curso <br/>
-              <span className="font-bold text-slate-900 dark:text-white">"{courseToDelete?.title}"</span> y todos sus datos asociados.
+            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Eliminar Curso</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm font-medium py-4">
+              ¿Estás seguro de eliminar <span className="text-slate-900 dark:text-white font-bold">"{courseToDelete?.title}"</span>? Esta acción eliminará permanentemente todos los módulos, lecciones y progreso de alumnos asociados.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isDeleting} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={isDeleting} onClick={handleDeleteCourse} className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold shadow-lg shadow-red-500/20">
-              {isDeleting ? 'Eliminando...' : 'Sí, eliminar curso'}
+          <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+            <AlertDialogCancel className="rounded-none font-bold uppercase text-[10px] tracking-[0.2em]">Cancelar</AlertDialogCancel>
+            <AlertDialogAction disabled={isDeleting} onClick={handleDeleteCourse} className="rounded-none bg-rose-600 hover:bg-rose-700 font-bold uppercase text-[10px] tracking-[0.2em]">
+              {isDeleting ? 'Eliminando...' : 'Confirmar Eliminación'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
+
   )
 }

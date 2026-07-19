@@ -9,10 +9,9 @@ import {
   Clock,
   Users,
   Globe,
+  Layers
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -24,8 +23,8 @@ import type { Course } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
   title: z.string().min(3, 'Mínimo 3 caracteres').max(200, 'Máximo 200 caracteres'),
-  description: z.string().optional(),
-  course: z.coerce.number().optional(),
+  description: z.string().optional().or(z.literal('')),
+  course: z.coerce.number().optional().or(z.literal(0)),
   scheduled_date: z.string().min(1, 'La fecha es obligatoria'),
   scheduled_time: z.string().min(1, 'La hora es obligatoria'),
   duration_min: z.coerce.number().min(15, 'Mínimo 15 minutos').max(480, 'Máximo 8 horas'),
@@ -102,7 +101,7 @@ export default function AdminLiveSessionFormPage() {
         max_students: data.max_students,
         status: 'scheduled',
       }
-      if (data.course) payload.course = Number(data.course)
+      if (data.course && data.course !== 0) payload.course = Number(data.course)
 
       if (isEdit && id) {
         await adminLiveSessionUseCase.update(Number(id), payload)
@@ -114,8 +113,7 @@ export default function AdminLiveSessionFormPage() {
       navigate('/admin/live-sessions')
     } catch (error: any) {
       console.error('Error saving live session:', error)
-      const errorMsg = error?.detail || error?.message || 'Error al guardar la sesión'
-      toast.error(errorMsg)
+      toast.error(error?.message || 'Error al guardar la sesión')
     } finally {
       setIsSubmitting(false)
     }
@@ -123,163 +121,191 @@ export default function AdminLiveSessionFormPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-rose-500 border-t-transparent" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <p className="label-caps text-slate-400">Sincronizando Bitácora en Vivo...</p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="p-6 max-w-3xl mx-auto w-full">
-      <div className="flex items-center gap-4 mb-8">
-        <Link
-          to="/admin/live-sessions"
-          className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-            {isEdit ? 'Editar Sesión' : 'Nueva Sesión en Vivo'}
-          </h1>
-          <p className="text-slate-500 mt-1">
-            {isEdit ? 'Modifica los datos de la sesión' : 'Programa una nueva sesión de videotutoría'}
-          </p>
-        </div>
-      </div>
-
-      <Card className="border-none shadow-2xl shadow-slate-200/50 bg-white rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <Video className="h-4 w-4 text-slate-400" /> Título de la Sesión
-            </label>
-            <Input
-              {...register('title')}
-              placeholder="Ej. Clase de conversación — Nivel B2"
-              className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
-            />
-            {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
+    <form onSubmit={handleSubmit(onSubmit)} className="animate-in fade-in duration-500 pb-20">
+      {/* HERO SECTION */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin/live-sessions"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <Video className="h-3.5 w-3.5 text-sky-500" />
+                Control de Sesiones
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isEdit ? 'Editar' : 'Nueva'} <span className="text-sky-500">Sesión</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Programación de tutorías en tiempo real, control de aforo y despliegue de infraestructura.
+            </p>
           </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900">Descripción</label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              placeholder="Describe el contenido de la sesión..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-colors focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-500/10 placeholder:text-slate-400 resize-none"
-            />
-          </div>
-
-          {/* Course */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900">Curso (opcional)</label>
-            <select
-              {...register('course')}
-              className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500"
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/admin/live-sessions')}
+              className="rounded-none border-slate-900/10 dark:border-white/10 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
             >
-              <option value="">Sin curso específico</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all shadow-none"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isEdit ? 'Actualizar Registro' : 'Programar Sesión'}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* FORM BODY */}
+      <div className="max-w-6xl mx-auto px-8 md:px-12 py-12">
+        <div className="grid lg:grid-cols-[1fr_350px] gap-12">
+          {/* Main Fields */}
+          <div className="space-y-12">
+            {/* General Info Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Layers className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Definición de Sesión</h2>
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Título del Evento <span className="text-sky-500">*</span></label>
+                <input
+                  {...register('title')}
+                  placeholder="EJ. TALLER DE PRONUNCIACIÓN AVANZADA"
+                  className={`w-full border ${errors.title ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                />
+                {errors.title && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.title.message)}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Agenda / Descripción</label>
+                <textarea
+                  {...register('description')}
+                  placeholder="TEMAS A TRATAR Y PREPARACIÓN REQUERIDA..."
+                  className={`w-full min-h-32 border ${errors.description ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-medium uppercase tracking-wider outline-none focus:border-sky-500 transition-colors resize-none`}
+                />
+              </div>
+            </div>
+
+            {/* Logistics Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Calendar className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Logística y Despliegue</h2>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Fecha de Ejecución <span className="text-sky-500">*</span></label>
+                  <div className="relative">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('scheduled_date')}
+                      type="date"
+                      className={`w-full border ${errors.scheduled_date ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors`}
+                    />
+                  </div>
+                  {errors.scheduled_date && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.scheduled_date.message)}</p>}
+                </div>
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Hora de Inicio (UTC) <span className="text-sky-500">*</span></label>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('scheduled_time')}
+                      type="time"
+                      className={`w-full border ${errors.scheduled_time ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors`}
+                    />
+                  </div>
+                  {errors.scheduled_time && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.scheduled_time.message)}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Vínculo de Infraestructura (ZOOM / MEET / TEAMS)</label>
+                <div className="relative">
+                  <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                  <input
+                    {...register('meeting_url')}
+                    type="url"
+                    placeholder="HTTPS://MEET.GOOGLE.COM/..."
+                    className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Date & Time */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-slate-400" /> Fecha
-              </label>
-              <Input
-                {...register('scheduled_date')}
-                type="date"
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.scheduled_date ? 'border-red-500' : ''}`}
-              />
-              {errors.scheduled_date && <span className="text-red-500 text-xs font-bold">{errors.scheduled_date.message as string}</span>}
+          {/* Sidebar / Settings */}
+          <div className="space-y-8">
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <h3 className="label-caps text-slate-900 dark:text-white font-black mb-6">Parámetros de Red</h3>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Curso Vinculado</label>
+                  <div className="relative">
+                    <select
+                      {...register('course')}
+                      className="w-full appearance-none border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+                    >
+                      <option value="0">SESIÓN GLOBAL / ABIERTA</option>
+                      {courses.map(c => <option key={c.id} value={c.id}>{c.title.toUpperCase()}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Duración Estimada (MIN)</label>
+                  <div className="relative">
+                    <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('duration_min')}
+                      type="number"
+                      className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors"
+                    />
+                  </div>
+                  {errors.duration_min && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.duration_min.message)}</p>}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Capacidad Máxima (NODOS)</label>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                    <input
+                      {...register('max_students')}
+                      type="number"
+                      className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors"
+                    />
+                  </div>
+                  {errors.max_students && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.max_students.message)}</p>}
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-slate-400" /> Hora de Inicio
-              </label>
-              <Input
-                {...register('scheduled_time')}
-                type="time"
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.scheduled_time ? 'border-red-500' : ''}`}
-              />
-              {errors.scheduled_time && <span className="text-red-500 text-xs font-bold">{errors.scheduled_time.message as string}</span>}
+
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 border-dashed">
+              <p className="label-micro text-slate-400 leading-relaxed font-mono uppercase">
+                LA PROGRAMACIÓN DEBE REALIZARSE CON AL MENOS 24H DE ANTELACIÓN PARA NOTIFICAR A LOS ESTUDIANTES VÍA EMAIL TÉCNICO.
+              </p>
             </div>
           </div>
-
-          {/* Duration & Max Students */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Clock className="h-4 w-4 text-slate-400" /> Duración (minutos)
-              </label>
-              <Input
-                {...register('duration_min')}
-                type="number"
-                min={15}
-                max={480}
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.duration_min ? 'border-red-500' : ''}`}
-              />
-              {errors.duration_min && <span className="text-red-500 text-xs font-bold">{errors.duration_min.message as string}</span>}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Users className="h-4 w-4 text-slate-400" /> Máximo de Estudiantes
-              </label>
-              <Input
-                {...register('max_students')}
-                type="number"
-                min={1}
-                max={500}
-                className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium ${errors.max_students ? 'border-red-500' : ''}`}
-              />
-              {errors.max_students && <span className="text-red-500 text-xs font-bold">{errors.max_students.message as string}</span>}
-            </div>
-          </div>
-
-          {/* Meeting URL */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <Globe className="h-4 w-4 text-slate-400" /> Enlace de Videoconferencia (opcional)
-            </label>
-            <Input
-              {...register('meeting_url')}
-              type="url"
-              placeholder="https://meet.google.com/abc-xyz"
-              className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium"
-            />
-            <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">Zoom, Google Meet, Teams u otra plataforma.</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Action buttons */}
-      <div className="mt-8 flex justify-end gap-3">
-        <Link
-          to="/admin/live-sessions"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
-        >
-          Cancelar
-        </Link>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-500/30 transition-all hover:-translate-y-0.5 hover:bg-rose-400 disabled:opacity-70 disabled:pointer-events-none"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          {isSubmitting ? 'Guardando...' : (isEdit ? 'Actualizar Sesión' : 'Programar Sesión')}
-        </Button>
+        </div>
       </div>
     </form>
   )

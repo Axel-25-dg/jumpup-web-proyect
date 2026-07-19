@@ -22,7 +22,6 @@ import {
   FolderOpen,
   Building2,
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Skeleton } from '@/presentation/components/ui/skeleton'
 import { Link } from 'react-router-dom'
@@ -171,106 +170,119 @@ export default function AdminDashboardPage() {
             </Link>
           </Button>
         </div>
-      </div>
+      </section>
 
-      {/* ===== STATS ROW ===== */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
-        {stats.map((stat, i) => (
-          <Link key={i} to={stat.to || '#'}>
-            <Card className="border-none shadow-sm bg-white rounded-2xl overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={`${stat.bg} ${stat.color} p-2.5 rounded-xl shrink-0 transition-transform group-hover:scale-110`}>
-                  <stat.icon size={18} />
+      {/* STATS GRID — editorial */}
+      <section className="border-b border-slate-900/10 dark:border-white/10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 border-l border-slate-900/10 dark:border-white/10">
+          {stats.map((stat, i) => (
+            <div key={i} className="p-8 md:p-10 border-b border-r border-slate-900/10 dark:border-white/10 group card-hover">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10">
+                  <stat.icon className="h-5 w-5 text-sky-500" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xl font-black text-slate-900 leading-none mb-0.5">{stat.value}</p>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block truncate">{stat.label}</span>
+                <div className={`flex items-center gap-1 label-caps ${stat.up ? 'text-emerald-600' : 'text-rose-500'}`}>
+                  {stat.up ? <ArrowUpRight className="h-3.5 w-3.5" /> : <ArrowDownRight className="h-3.5 w-3.5" />}
+                  {stat.trend}
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+              </div>
+              <p className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">{stat.value}</p>
+              <p className="mt-2 label-caps text-slate-500 dark:text-slate-400">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      {/* ===== TWO COLUMN LAYOUT ===== */}
-      <div className="grid gap-8 lg:grid-cols-5">
-        {/* ===== QUICK LINKS ===== */}
-        <div className="lg:col-span-3 space-y-6">
-          <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5 text-sky-500" />
-            Gestión Rápida
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {shortcutGroups.map((group) => (
-              <div key={group.title} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-3 border-b border-slate-50">
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{group.title}</span>
+      {/* MAIN CONTENT */}
+      <div className="grid gap-px lg:grid-cols-3 border-b border-slate-900/10 dark:border-white/10">
+
+        {/* RECENT USERS */}
+        <div className="lg:col-span-2 border-r border-slate-900/10 dark:border-white/10">
+          <div className="flex items-center justify-between px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Nuevos Usuarios</h2>
+              <p className="label-caps text-slate-400 dark:text-slate-500 mt-1">Actividad de registro hoy</p>
+            </div>
+            <div className="relative w-64 hidden sm:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar en el sistema..."
+                className="w-full pl-10 pr-4 h-10 text-sm border border-slate-900/10 dark:border-white/10 bg-transparent focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 text-slate-900 dark:text-white placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          <div className="divide-y divide-slate-900/5 dark:divide-white/5">
+            {recentUsers.map((user, i) => (
+              <div key={i} className="flex items-center gap-5 px-8 md:px-10 py-5 card-hover">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-slate-900/10 dark:border-white/10 font-bold text-sm text-sky-500">
+                  {user.name.charAt(0)}
                 </div>
-                <div className="p-2 space-y-0.5">
-                  {group.items.map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-sky-50 group-hover:text-sky-500 transition-colors">
-                          <item.icon size={15} />
-                        </div>
-                        <span className="text-sm font-bold text-slate-700 group-hover:text-sky-600 transition-colors">{item.label}</span>
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{item.badge}</span>
-                    </Link>
-                  ))}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{user.name}</p>
+                  <p className="label-micro text-slate-400 dark:text-slate-500">{user.email}</p>
+                </div>
+                <div className="hidden sm:flex items-center gap-6">
+                  <span className="label-caps text-slate-400 dark:text-slate-500">{user.role}</span>
+                  <span className="label-micro text-slate-300 dark:text-slate-600">{user.time}</span>
+                  <ArrowUpRight className="h-4 w-4 text-slate-300 dark:text-slate-600" />
                 </div>
               </div>
             ))}
           </div>
+
+          <div className="border-t border-slate-900/10 dark:border-white/10 p-6">
+            <Button variant="ghost" className="w-full gap-2 group" asChild>
+              <Link to="/admin/users">
+                Ver directorio completo
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        {/* ===== SIDEBAR ===== */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Stats Card */}
-          <div>
-            <h2 className="text-lg font-black text-slate-800 flex items-center gap-2 mb-4">
-              <Activity className="h-5 w-5 text-sky-500" />
-              Indicadores
-            </h2>
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm divide-y divide-slate-50">
-              {stats.map((stat, i) => (
-                <div key={i} className="flex items-center justify-between px-5 py-3 hover:bg-slate-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className={`${stat.bg} ${stat.color} p-2 rounded-lg`}>
-                      <stat.icon size={15} />
-                    </div>
-                    <span className="text-sm font-bold text-slate-600">{stat.label}</span>
-                  </div>
-                  <span className="font-black text-slate-900">{stat.value}</span>
-                </div>
-              ))}
+        {/* NAV SHORTCUTS */}
+        <aside>
+          <div className="flex items-center justify-between px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Gestión</h2>
+              <p className="label-caps text-slate-400 dark:text-slate-500 mt-1">Módulos del sistema</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10">
+              <LayoutGrid className="h-4 w-4 text-sky-500" />
             </div>
           </div>
 
-          {/* Systems Card */}
-          <Card className="border-none shadow-lg bg-gradient-to-br from-indigo-600 to-blue-700 text-white rounded-2xl overflow-hidden relative group">
-            <Activity className="absolute -right-6 -bottom-6 h-24 w-24 text-white/10 group-hover:scale-125 transition-transform duration-700" />
-            <CardContent className="p-6 relative z-10">
-              <h3 className="text-lg font-black mb-2">Sistemas</h3>
-              <p className="text-indigo-100/80 text-sm font-medium mb-5 leading-relaxed">
-                Infraestructura operando al <span className="text-white font-bold">99.9%</span>
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)] animate-pulse" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-indigo-200">En línea</span>
+          <div className="divide-y divide-slate-900/5 dark:divide-white/5">
+            {navItems.map((item, i) => (
+              <Link key={i} to={item.to} className="flex items-center gap-4 px-8 py-4 card-hover group">
+                <item.icon className="h-4 w-4 text-sky-500 shrink-0" />
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex-1">{item.label}</span>
+                <ArrowRight className="h-4 w-4 text-slate-300 dark:text-slate-600 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ))}
+          </div>
+
+          {/* System status */}
+          <div className="border-t border-slate-900/10 dark:border-white/10 px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="label-caps text-slate-900 dark:text-white">Sistemas</p>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="label-micro text-emerald-600">99.9% operativo</span>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] uppercase">
-                  Logs
-                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10">
+                <Activity className="h-4 w-4 text-sky-500" />
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   )

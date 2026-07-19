@@ -6,11 +6,10 @@ import {
   Loader2,
   FileText,
   Globe,
-  Upload,
+  Layers,
+  Link as LinkIcon
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -23,9 +22,9 @@ import type { Course, Module, Lesson } from '@/domain/entities/course.entity'
 
 const formSchema = z.object({
   title: z.string().min(3, 'Mínimo 3 caracteres').max(200, 'Máximo 200 caracteres'),
-  description: z.string().optional(),
+  description: z.string().optional().or(z.literal('')),
   course: z.coerce.number().min(1, 'El curso es obligatorio'),
-  lesson: z.coerce.number().optional(),
+  lesson: z.coerce.number().optional().or(z.literal(0)),
   resource_type: z.enum(['pdf', 'audio', 'video', 'word', 'image', 'link', 'other']),
   content_type: z.enum(['file', 'url', 'video']),
   file_url: z.string().optional().or(z.literal('')),
@@ -36,19 +35,19 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 const RESOURCE_TYPE_OPTIONS = [
-  { value: 'pdf', label: 'PDF' },
-  { value: 'audio', label: 'Audio' },
-  { value: 'video', label: 'Video' },
-  { value: 'word', label: 'Documento Word' },
-  { value: 'image', label: 'Imagen' },
-  { value: 'link', label: 'Enlace externo' },
-  { value: 'other', label: 'Otro' },
+  { value: 'pdf', label: 'PDF / DOCUMENTO' },
+  { value: 'audio', label: 'AUDIO / MP3' },
+  { value: 'video', label: 'VIDEO / MP4' },
+  { value: 'word', label: 'DOC / EDITABLE' },
+  { value: 'image', label: 'IMAGEN / GRÁFICO' },
+  { value: 'link', label: 'VÍNCULO / URL' },
+  { value: 'other', label: 'OTROS / VARIOS' },
 ]
 
 const CONTENT_TYPE_OPTIONS = [
-  { value: 'file', label: 'Archivo' },
-  { value: 'url', label: 'URL externa' },
-  { value: 'video', label: 'Video embebido' },
+  { value: 'file', label: 'ARCHIVO LOCAL' },
+  { value: 'url', label: 'URL EXTERNA' },
+  { value: 'video', label: 'STREAMING / EMBED' },
 ]
 
 export default function AdminResourceFormPage() {
@@ -80,7 +79,6 @@ export default function AdminResourceFormPage() {
   const contentType = watch('content_type')
   const selectedCourse = watch('course')
 
-  // Load courses on mount
   useEffect(() => {
     const loadCourses = async () => {
       try {
@@ -91,23 +89,18 @@ export default function AdminResourceFormPage() {
     loadCourses()
   }, [])
 
-  // Load modules when course changes
   useEffect(() => {
     if (selectedCourse) {
       courseRepo.getModulesByCourse(Number(selectedCourse))
         .then(mods => {
           setModules(mods || [])
           setLessons([])
-          setValue('lesson', '')
+          // No reset lesson here if we are loading initial data
         })
         .catch(() => setModules([]))
-    } else {
-      setModules([])
-      setLessons([])
     }
-  }, [selectedCourse, setValue])
+  }, [selectedCourse])
 
-  // Load existing resource if editing
   useEffect(() => {
     if (isEdit && id) {
       (async () => {
@@ -125,19 +118,15 @@ export default function AdminResourceFormPage() {
             is_public: resource.is_public,
           })
           if (resource.lesson) {
-            // Load lessons for the selected course
-            try {
-              const mods = await courseRepo.getModulesByCourse(Number(resource.course))
-              setModules(mods || [])
-              // Find lesson's module and load its lessons
-              for (const mod of (mods || [])) {
+             const mods = await courseRepo.getModulesByCourse(Number(resource.course))
+             setModules(mods || [])
+             for (const mod of (mods || [])) {
                 const less = await courseRepo.getLessonsByModule(mod.id)
                 if (less.some(l => l.id === resource.lesson)) {
                   setLessons(less)
                   break
                 }
-              }
-            } catch { /* */ }
+             }
           }
         } catch (error) {
           toast.error('Error al cargar el recurso')
@@ -147,19 +136,6 @@ export default function AdminResourceFormPage() {
       })()
     }
   }, [id, isEdit, reset])
-
-  const handleCourseChange = async (courseId: string) => {
-    setValue('course', courseId)
-    setValue('lesson', '')
-    if (courseId) {
-      try {
-        const mods = await courseRepo.getModulesByCourse(Number(courseId))
-        setModules(mods || [])
-      } catch {
-        setModules([])
-      }
-    }
-  }
 
   const handleModuleChange = async (moduleId: string) => {
     setValue('lesson', '')
@@ -209,7 +185,7 @@ export default function AdminResourceFormPage() {
           external_url: data.external_url || null,
           is_public: data.is_public,
         }
-        if (data.lesson) payload.lesson = Number(data.lesson)
+        if (data.lesson && data.lesson !== 0) payload.lesson = Number(data.lesson)
 
         if (isEdit && id) {
           await adminResourceUseCase.update(Number(id), payload)
@@ -222,8 +198,7 @@ export default function AdminResourceFormPage() {
       navigate('/admin/resources')
     } catch (error: any) {
       console.error('Error saving resource:', error)
-      const errorMsg = error?.detail || error?.message || 'Error al guardar el recurso'
-      toast.error(errorMsg)
+      toast.error(error?.message || 'Error al guardar el recurso')
     } finally {
       setIsSubmitting(false)
     }
@@ -231,209 +206,231 @@ export default function AdminResourceFormPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
+        <p className="label-caps text-slate-400">Sincronizando Activo Digital...</p>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="p-6 max-w-3xl mx-auto w-full">
-      <div className="flex items-center gap-4 mb-8">
-        <Link
-          to="/admin/resources"
-          className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-            {isEdit ? 'Editar Recurso' : 'Nuevo Recurso'}
-          </h1>
-          <p className="text-slate-500 mt-1">
-            {isEdit ? 'Modifica los datos del recurso' : 'Crea un nuevo recurso educativo'}
-          </p>
-        </div>
-      </div>
-
-      <Card className="border-none shadow-2xl shadow-slate-200/50 bg-white rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          {/* Title */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-slate-400" /> Título del Recurso
-            </label>
-            <Input
-              {...register('title')}
-              placeholder="Ej. Guía de gramática básica"
-              className={`h-14 rounded-xl border-slate-200 bg-slate-50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
-            />
-            {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
+    <form onSubmit={handleSubmit(onSubmit)} className="animate-in fade-in duration-500 pb-20">
+      {/* HERO SECTION */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/admin/resources"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <FileText className="h-3.5 w-3.5 text-sky-500" />
+                Biblioteca Técnica
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isEdit ? 'Editar' : 'Nuevo'} <span className="text-sky-500">Recurso</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Administración de activos digitales, materiales de apoyo y enlaces de referencia.
+            </p>
           </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900">Descripción</label>
-            <textarea
-              {...register('description')}
-              rows={4}
-              placeholder="Describe el recurso..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 transition-colors focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 placeholder:text-slate-400 resize-none"
-            />
-          </div>
-
-          {/* Course */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900">Curso (obligatorio)</label>
-            <select
-              value={selectedCourse || ''}
-              onChange={(e) => handleCourseChange(e.target.value)}
-              className={`w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 ${errors.course ? 'border-red-500' : ''}`}
+          <div className="flex gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => navigate('/admin/resources')}
+              className="rounded-none border-slate-900/10 dark:border-white/10 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-slate-50 dark:hover:bg-white/5 transition-all"
             >
-              <option value="">Selecciona un curso...</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-            </select>
-            {errors.course && <span className="text-red-500 text-xs font-bold">{errors.course.message as string}</span>}
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all shadow-none"
+            >
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {isEdit ? 'Actualizar Registro' : 'Crear Recurso'}
+            </Button>
           </div>
+        </div>
+      </section>
 
-          {/* Module & Lesson (conditional) */}
-          {selectedCourse && modules.length > 0 && (
-            <>
-              <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900">Módulo</label>
-                <select
-                  onChange={(e) => handleModuleChange(e.target.value)}
-                  className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="">Sin módulo específico</option>
-                  {modules.map((m) => (
-                    <option key={m.id} value={m.id}>{m.title}</option>
-                  ))}
-                </select>
+      {/* FORM BODY */}
+      <div className="max-w-6xl mx-auto px-8 md:px-12 py-12">
+        <div className="grid lg:grid-cols-[1fr_350px] gap-12">
+          {/* Main Fields */}
+          <div className="space-y-12">
+            {/* General Info Group */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <Layers className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Información del Recurso</h2>
               </div>
 
-              {lessons.length > 0 && (
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Título del Recurso <span className="text-sky-500">*</span></label>
+                <input
+                  {...register('title')}
+                  placeholder="EJ. GUÍA DE GRAMÁTICA BÁSICA"
+                  className={`w-full border ${errors.title ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                />
+                {errors.title && <p className="text-[10px] text-rose-500 font-mono mt-1">{String(errors.title.message)}</p>}
+              </div>
+
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400 text-[10px]">Descripción / Metadatos</label>
+                <textarea
+                  {...register('description')}
+                  placeholder="BREVE RESUMEN DEL CONTENIDO DEL RECURSO..."
+                  className={`w-full min-h-32 border ${errors.description ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-transparent py-4 px-4 text-[12px] font-medium uppercase tracking-wider outline-none focus:border-sky-500 transition-colors resize-none`}
+                />
+              </div>
+            </div>
+
+            {/* Asset Configuration */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-3 border-b border-slate-900/10 dark:border-white/10 pb-4">
+                <LinkIcon className="h-5 w-5 text-sky-500" />
+                <h2 className="label-caps text-slate-900 dark:text-white font-black">Configuración de Archivo</h2>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-sm font-black text-slate-900">Lección (opcional)</label>
+                  <label className="label-caps text-slate-400 text-[10px]">Tipo de Activo</label>
                   <select
-                    {...register('lesson')}
-                    className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    {...register('resource_type')}
+                    className="w-full appearance-none border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
                   >
-                    <option value="">Sin lección específica</option>
-                    {lessons.map((l) => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
+                    {RESOURCE_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
-              )}
-            </>
-          )}
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Modo de Entrega</label>
+                  <select
+                    {...register('content_type')}
+                    className="w-full appearance-none border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+                  >
+                    {CONTENT_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </div>
+              </div>
 
-          {/* Resource Type & Content Type */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900">Tipo de Recurso</label>
-              <select
-                {...register('resource_type')}
-                className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                {RESOURCE_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900">Tipo de Contenido</label>
-              <select
-                {...register('content_type')}
-                className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                {CONTENT_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
+              <div className="space-y-6">
+                 {/* File Upload */}
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Cargar Archivo Local</label>
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="border border-dashed border-slate-900/20 dark:border-white/10 py-10 px-4 text-center group-hover:border-sky-500 transition-colors">
+                      <p className="label-caps text-slate-400 text-[10px]">
+                        {selectedFile ? selectedFile.name.toUpperCase() : 'SELECCIONAR ARCHIVO O ARRASTRAR AQUÍ'}
+                      </p>
+                      <p className="label-micro text-slate-300 mt-2 font-mono">EL ARCHIVO REEMPLAZARÁ AL ACTUAL SI EXISTE</p>
+                    </div>
+                  </div>
+                </div>
 
-          {/* File upload */}
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <Upload className="h-4 w-4 text-slate-400" /> Archivo (opcional)
-            </label>
-            <input
-              type="file"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-              className="w-full h-14 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-            />
-          </div>
+                {/* URL inputs */}
+                {(contentType === 'file' || contentType === 'video') && (
+                  <div className="space-y-2">
+                    <label className="label-caps text-slate-400 text-[10px]">URL de Almacenamiento (CDN/S3)</label>
+                    <div className="relative">
+                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                      <input
+                        {...register('file_url')}
+                        placeholder="HTTPS://STORAGE.JUMPUP.COM/..."
+                        className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
 
-          {/* URL fields based on content type */}
-          {(contentType === 'file' || contentType === 'video') && (
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Globe className="h-4 w-4 text-slate-400" /> URL del Archivo
-              </label>
-              <Input
-                {...register('file_url')}
-                placeholder="https://ejemplo.com/archivo.pdf"
-                className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium"
-              />
-            </div>
-          )}
-
-          {contentType === 'url' && (
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Globe className="h-4 w-4 text-slate-400" /> URL Externa
-              </label>
-              <Input
-                {...register('external_url')}
-                placeholder="https://ejemplo.com/recurso"
-                className="h-14 rounded-xl border-slate-200 bg-slate-50 font-medium"
-              />
-            </div>
-          )}
-
-          {/* Toggle */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                {...register('is_public')}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-            </label>
-            <div>
-              <span className="text-sm font-bold text-slate-900">Público</span>
-              <p className="text-xs text-slate-500 font-medium">Visible para todos los estudiantes</p>
+                {contentType === 'url' && (
+                  <div className="space-y-2">
+                    <label className="label-caps text-slate-400 text-[10px]">URL de Referencia Externa</label>
+                    <div className="relative">
+                      <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                      <input
+                        {...register('external_url')}
+                        placeholder="HTTPS://EJEMPLO.COM/RECURSO"
+                        className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-4 pl-12 pr-4 text-[12px] font-mono outline-none focus:border-sky-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Action buttons */}
-      <div className="mt-8 flex justify-end gap-3">
-        <Link
-          to="/admin/resources"
-          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50"
-        >
-          Cancelar
-        </Link>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 hover:bg-emerald-400 disabled:opacity-70 disabled:pointer-events-none"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          {isSubmitting ? 'Guardando...' : (isEdit ? 'Actualizar Recurso' : 'Crear Recurso')}
-        </Button>
+          {/* Sidebar / Settings */}
+          <div className="space-y-8">
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <h3 className="label-caps text-slate-900 dark:text-white font-black mb-6">Ubicación Curricular</h3>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Curso Principal <span className="text-sky-500">*</span></label>
+                  <select
+                    {...register('course')}
+                    className={`w-full appearance-none border ${errors.course ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10'} bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors`}
+                  >
+                    <option value="">SELECCIONAR CURSO...</option>
+                    {courses.map(c => <option key={c.id} value={c.id}>{c.title.toUpperCase()}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Módulo de Referencia</label>
+                  <select
+                    onChange={(e) => handleModuleChange(e.target.value)}
+                    className="w-full appearance-none border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+                  >
+                    <option value="">MÓDULO GLOBAL / SIN ASIGNAR</option>
+                    {modules.map(m => <option key={m.id} value={m.id}>{m.title.toUpperCase()}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="label-caps text-slate-400 text-[10px]">Lección Específica</label>
+                  <select
+                    {...register('lesson')}
+                    className="w-full appearance-none border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] py-4 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+                  >
+                    <option value="0">TODA EL ÁREA / GENERAL</option>
+                    {lessons.map(l => <option key={l.id} value={l.id}>{l.title.toUpperCase()}</option>)}
+                  </select>
+                </div>
+
+                <div className="pt-4 border-t border-slate-900/10 dark:border-white/10">
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="label-caps text-slate-600 dark:text-slate-400 text-[10px] font-bold">Visibilidad Pública</span>
+                    <div className="relative inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        {...register('is_public')}
+                        className="sr-only peer"
+                      />
+                      <div className="w-12 h-6 bg-slate-200 dark:bg-white/5 rounded-none border border-slate-900/10 dark:border-white/10 peer-checked:bg-sky-500 peer-checked:border-sky-500 transition-all after:content-[''] after:absolute after:top-1 after:left-1 after:bg-slate-400 dark:after:bg-slate-600 peer-checked:after:bg-white after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-6"></div>
+                    </div>
+                  </label>
+                  <p className="label-micro text-slate-400 mt-3 font-mono">
+                    SI ES PÚBLICO, CUALQUIER ESTUDIANTE DEL CURSO PODRÁ DESCARGARLO.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 border border-slate-900/10 dark:border-white/10 border-dashed">
+              <p className="label-micro text-slate-400 leading-relaxed font-mono uppercase">
+                Asegúrese de que el archivo no supere los 50MB. Los enlaces externos deben comenzar con HTTPS:// para integridad de seguridad.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </form>
   )

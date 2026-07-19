@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import { apiClient } from '@/infrastructure/http/axios-client'
-import { LogOut, Edit2, CheckCircle2, User, Mail, Camera, Share2, Award, Bolt, Flame } from 'lucide-react'
-import { Card, CardContent, CardFooter } from '@/presentation/components/ui/card'
+import {
+  LogOut, Edit2, CheckCircle2, User, Mail, Award, Zap, Flame, Share2
+} from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
-import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
-import { Badge } from '@/presentation/components/ui/badge'
 
 export default function ProfilePage() {
   const { user, logout } = useAuthStore()
@@ -17,30 +16,13 @@ export default function ProfilePage() {
 
   // Cargar perfil completo al montar
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await apiClient.get('/auth/me/')
-        const data = res.data
-        setFirstName(data.username || data.first_name || '')
-        setLastName(data.last_name || '')
-      } catch {
-        // Fallback a datos del store
-        setFirstName(user?.username || '')
-      }
-
-      // Cargar stats según el rol
-      try {
-        const role = user?.role?.toLowerCase() || ''
-        let res
-        if (role === 'student') {
-          res = await apiClient.get('/dashboard/student/')
-          setStats(res.data.data || res.data)
-        } else if (role === 'admin' || role === 'administrador') {
-          res = await apiClient.get('/dashboard/admin/')
-          setStats(res.data)
-        } else if (role === 'teacher' || role === 'profesor') {
-          res = await apiClient.get('/dashboard/teacher/')
-          setStats(res.data)
+    async function fetchStats() {
+      if (user?.role === 'student') {
+        try {
+          const res = await apiClient.get('/dashboard/student/')
+          setStats(res.data.data)
+        } catch (err) {
+          console.error('Error fetching student stats:', err)
         }
       } catch {
         // stats no crítico
@@ -52,15 +34,6 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      await apiClient.patch('/auth/me/', {
-        first_name: firstName,
-        last_name: lastName,
-      })
-      // Refrescar store con datos actualizados
-      const { data } = await apiClient.get('/auth/me/')
-      useAuthStore.setState((state) => ({
-        user: state.user ? { ...state.user, username: data.username } : null
-      }))
       setIsEditing(false)
     } catch (err: any) {
       console.error('Error saving profile:', err)
@@ -69,25 +42,82 @@ export default function ProfilePage() {
     }
   }
 
+  const xpPercent = stats
+    ? Math.min(100, Math.round((stats.xp_progress / (stats.xp_for_next_level || 100)) * 100))
+    : 0
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
-      {/* Header Banner */}
-      <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-white">
-        <div className="h-48 bg-gradient-to-r from-sky-400 via-indigo-500 to-purple-600 relative">
-           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO HEADER */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16 bg-white dark:bg-transparent">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="h-20 w-20 border border-slate-900/10 dark:border-white/10 flex items-center justify-center bg-slate-50 dark:bg-white/5">
+              <span className="text-2xl font-black text-sky-500 uppercase">
+                {user?.username?.substring(0, 2)}
+              </span>
+            </div>
+            <div>
+              <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                {user?.username}
+              </h1>
+              <p className="label-micro text-slate-400 mt-1">{user?.email}</p>
+              <div className="flex items-center gap-3 mt-4">
+                <span className="chip">
+                  <User className="h-3 w-3 text-sky-500" />
+                  {user?.role === 'student' ? 'Estudiante' : user?.role === 'teacher' ? 'Profesor' : 'Admin'}
+                </span>
+                {stats && (
+                  <span className="chip border-sky-500/20 bg-sky-500/[0.05] text-sky-600">
+                    <Award className="h-3 w-3" />
+                    Nivel {stats.level}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="icon" className="rounded-none border-slate-900/10">
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+              disabled={isSaving}
+              className="rounded-none gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-widest px-8"
+            >
+              {isSaving ? 'Guardando...' : isEditing ? 'Confirmar Cambios' : 'Editar Perfil'}
+              {isEditing ? <CheckCircle2 className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
-        <CardContent className="pt-0 px-8 pb-8 relative">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end justify-between gap-6 -mt-20 mb-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative group">
-                <Avatar className="h-36 w-36 border-4 border-white shadow-xl bg-white">
-                  <AvatarFallback className="text-5xl font-black bg-gradient-to-tr from-sky-100 to-indigo-100 text-indigo-700">
-                    {user?.username?.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <button className="absolute bottom-2 right-2 p-3 rounded-full bg-slate-900 text-white shadow-lg hover:scale-110 transition-transform opacity-0 group-hover:opacity-100">
-                  <Camera className="h-4 w-4" />
-                </button>
+      </section>
+
+      {/* CONTENT GRID */}
+      <div className="grid gap-px lg:grid-cols-2 border-b border-slate-900/10 dark:border-white/10 bg-slate-900/10 dark:bg-white/10">
+
+        {/* PERSONAL INFO */}
+        <div className="bg-white dark:bg-[#0a0a0b]">
+          <div className="flex items-center gap-3 px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+            <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10">
+              <User className="h-4 w-4 text-sky-500" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">Información Personal</h2>
+              <p className="label-micro text-slate-400 mt-0.5">Gestión de identidad</p>
+            </div>
+          </div>
+
+          <div className="px-8 md:px-10 py-8 space-y-8">
+            <div className="grid sm:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400">Nombre</label>
+                <input
+                  disabled={!isEditing}
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  className="w-full border-b border-slate-900/10 dark:border-white/10 bg-transparent py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 disabled:opacity-60 transition-colors uppercase tracking-tight"
+                />
               </div>
               <div className="text-center sm:text-left mt-4 sm:mt-16">
                 <h1 className="text-3xl font-black text-slate-900 leading-none">{user?.username}</h1>
@@ -104,63 +134,28 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            
-            <div className="flex gap-3 w-full sm:w-auto">
-              <Button variant="outline" size="icon" className="rounded-2xl h-12 w-12 text-slate-400 hover:text-slate-700">
-                <Share2 className="h-5 w-5" />
-              </Button>
-              <Button 
-                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                disabled={isSaving}
-                className="rounded-2xl h-12 px-6 font-black bg-slate-900 text-white hover:bg-slate-800 flex-1 sm:flex-none"
-              >
-                {isSaving ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Editar Perfil'}
-                {isEditing ? <CheckCircle2 className="ml-2 h-4 w-4" /> : <Edit2 className="ml-2 h-4 w-4" />}
-              </Button>
-            </div>
-          </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Información Personal */}
-            <div className="space-y-6 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
-              <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
-                <User className="h-5 w-5 text-indigo-500" /> Información Personal
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Nombre</label>
-                    <input 
-                      disabled={!isEditing}
-                      value={firstName}
-                      onChange={e => setFirstName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all disabled:opacity-70 disabled:bg-slate-100"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Apellido</label>
-                    <input 
-                      disabled={!isEditing}
-                      value={lastName}
-                      onChange={e => setLastName(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all disabled:opacity-70 disabled:bg-slate-100"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Correo Electrónico</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <input 
-                      disabled
-                      value={user?.email}
-                      className="w-full bg-slate-100 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-slate-500 outline-none opacity-70"
-                    />
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <label className="label-caps text-slate-400">Dirección de Correo</label>
+              <div className="flex items-center gap-3 py-2.5 border-b border-slate-900/5 dark:border-white/5 opacity-50">
+                <Mail className="h-4 w-4 text-slate-400" />
+                <span className="text-sm font-medium text-slate-500">{user?.email}</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* RENDIMIENTO */}
+        <div className="bg-white dark:bg-[#0a0a0b]">
+          <div className="flex items-center gap-3 px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+            <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10">
+              <Zap className="h-4 w-4 text-sky-500" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">Rendimiento Técnico</h2>
+              <p className="label-micro text-slate-400 mt-0.5">Métricas de aprendizaje</p>
+            </div>
+          </div>
 
             {/* Estadísticas (Solo Estudiantes) */}
             {stats && user?.role === 'student' && (
@@ -193,39 +188,49 @@ export default function ProfilePage() {
                       <p className="text-2xl font-black">{stats.total_xp}</p>
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  <div className="mt-6 space-y-2">
-                    <div className="flex justify-between text-xs font-black uppercase tracking-wider text-slate-300">
-                      <span>Progreso Nivel {stats.level}</span>
-                      <span>{stats.xp_progress} / {stats.xp_for_next_level} XP</span>
-                    </div>
-                    <div className="h-3 w-full bg-black/40 rounded-full overflow-hidden p-0.5">
-                      <div 
-                        className="h-full bg-gradient-to-r from-sky-400 to-indigo-500 rounded-full"
-                        style={{ width: `${Math.min(100, Math.round((stats.xp_progress / (stats.xp_for_next_level || 100)) * 100))}%` }}
-                      />
-                    </div>
-                  </div>
+              {/* XP Bar Editorial */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-end">
+                  <span className="label-caps text-slate-400">Progreso de Nivel</span>
+                  <span className="text-sm font-black text-slate-900 dark:text-white">
+                    {stats.xp_progress} <span className="text-slate-400 font-medium">/ {stats.xp_for_next_level} XP</span>
+                  </span>
+                </div>
+                <div className="h-1 w-full bg-slate-100 dark:bg-white/5">
+                  <div
+                    className="h-full bg-sky-500 transition-all duration-1000"
+                    style={{ width: `${xpPercent}%` }}
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        </CardContent>
-        
-        <CardFooter className="bg-rose-50 p-6 border-t border-rose-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h4 className="font-black text-rose-900">Cerrar Sesión</h4>
-            <p className="text-sm font-medium text-rose-600">Finalizar tu sesión actual en este dispositivo.</p>
-          </div>
-          <Button 
-            variant="destructive" 
-            onClick={logout}
-            className="w-full sm:w-auto rounded-xl font-black bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-200"
-          >
-            <LogOut className="mr-2 h-4 w-4" /> Salir de JumpUp
-          </Button>
-        </CardFooter>
-      </Card>
+            </div>
+          ) : (
+            <div className="px-8 md:px-10 py-20 text-center flex flex-col items-center">
+              <div className="h-12 w-12 border border-slate-900/10 dark:border-white/10 flex items-center justify-center mb-4">
+                <Zap className="h-5 w-5 text-slate-300" />
+              </div>
+              <p className="label-caps text-slate-400">
+                {user?.role === 'student' ? 'Sincronizando datos...' : 'Métricas privadas'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* CERRAR SESIÓN / ZONA PELIGROSA */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-8 md:px-12 py-10 border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
+        <div className="text-center sm:text-left">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-tight">Sesión de Usuario</h3>
+          <p className="label-micro text-slate-400 mt-1">Finalizar acceso en este terminal</p>
+        </div>
+        <Button variant="outline" onClick={logout} className="rounded-none border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white px-10 font-bold uppercase text-[11px] tracking-widest transition-all">
+          <LogOut className="h-4 w-4 mr-2" />
+          Terminar Sesión
+        </Button>
+      </div>
     </div>
   )
 }

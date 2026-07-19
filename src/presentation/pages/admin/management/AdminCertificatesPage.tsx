@@ -12,10 +12,8 @@ import {
   Loader2,
   ArrowLeft,
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
-import { Badge } from '@/presentation/components/ui/badge'
 import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   DropdownMenu,
@@ -100,14 +98,14 @@ export default function AdminCertificatesPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'issued':
-        return { label: 'Emitido', color: 'bg-emerald-100 text-emerald-700' }
       case 'pending':
-        return { label: 'Pendiente', color: 'bg-amber-100 text-amber-700' }
+        return { label: 'Pendiente', color: 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' }
+      case 'issued':
+        return { label: 'Emitido', color: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' }
       case 'revoked':
-        return { label: 'Revocado', color: 'bg-rose-100 text-rose-700' }
+        return { label: 'Revocado', color: 'bg-rose-50 dark:bg-rose-900/20 text-rose-600' }
       default:
-        return { label: status, color: 'bg-slate-100 text-slate-700' }
+        return { label: status, color: 'bg-slate-100 dark:bg-white/[0.04] text-slate-500' }
     }
   }
 
@@ -122,168 +120,173 @@ export default function AdminCertificatesPage() {
   })
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/admin"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Certificados</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Emite y gestiona los certificados de la plataforma</p>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-12 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="-ml-2">
+                <Link to="/admin"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <Award className="h-3.5 w-3.5 text-sky-500" />
+                Certificados
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+              Emisión de <span className="text-sky-500">Certificados</span>.
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Emite y gestiona los certificados oficiales de la plataforma para alumnos acreditados.
+            </p>
           </div>
+          <Button onClick={() => navigate('/admin/certificates/issue')} size="lg" className="gap-2 shrink-0 group">
+            <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
+            Emitir Certificado
+          </Button>
         </div>
-        <Button
-          onClick={() => navigate('/admin/certificates/issue')}
-          className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6 group"
-        >
-          <Plus className="mr-2 h-5 w-5" /> Emitir Certificado
-        </Button>
+      </section>
+
+      {/* TOOLBAR */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center px-8 md:px-10 py-5 border-b border-slate-900/10 dark:border-white/10">
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input
+            placeholder="Buscar por código, email o título..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex gap-1.5">
+          {(['all', 'pending', 'issued', 'revoked'] as const).map(s => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`px-4 py-2 label-caps transition-colors ${
+                statusFilter === s
+                  ? 'bg-sky-500 text-white'
+                  : 'border border-slate-900/10 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+              }`}
+            >
+              {s === 'all' ? 'Todos' : s === 'pending' ? 'Pendientes' : s === 'issued' ? 'Emitidos' : 'Revocados'}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* List */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-            <Input
-              placeholder="Buscar por código, email o título..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-            />
-          </div>
-          <div className="flex gap-2">
-            {(['all', 'pending', 'issued', 'revoked'] as const).map(s => (
-              <Button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                variant={statusFilter === s ? 'default' : 'outline'}
-                className={`h-12 rounded-xl font-bold ${
-                  statusFilter === s
-                    ? 'bg-sky-600 hover:bg-sky-700'
-                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
-                }`}
-              >
-                {s === 'all' ? 'Todos' : s === 'pending' ? 'Pendientes' : s === 'issued' ? 'Emitidos' : 'Revocados'}
-              </Button>
+      {/* CERTIFICATES LIST */}
+      <div className="divide-y divide-slate-900/5 dark:divide-white/5 bg-transparent">
+        {isLoading ? (
+          <div className="p-8 space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex gap-4 items-center">
+                <Skeleton className="h-10 w-10 shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-        <CardContent className="p-0">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex gap-6 items-center">
-                    <Skeleton className="h-14 w-14 rounded-2xl" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-5 w-48" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
+        ) : filteredCerts.length > 0 ? (
+          filteredCerts.map((cert) => {
+            const statusBadge = getStatusBadge(cert.status)
+            return (
+              <div key={cert.id} className="p-6 flex flex-col md:flex-row items-center gap-6 card-hover group">
+                <div className="h-12 w-12 shrink-0 flex items-center justify-center border border-slate-900/10 dark:border-white/10 text-sky-500">
+                  <Award className="h-6 w-6" />
+                </div>
+                <div className="flex-1 min-w-0 text-center md:text-left">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
+                    <span className={`label-caps px-2 py-0.5 ${statusBadge.color}`}>{statusBadge.label}</span>
+                    <span className="label-caps px-2 py-0.5 border border-slate-900/10 dark:border-white/10 text-slate-500 font-mono">
+                      {cert.certificate_code}
+                    </span>
+                    <span className="label-caps px-2 py-0.5 border border-sky-900/10 text-sky-600">
+                      {cert.level}
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : filteredCerts.length > 0 ? (
-              filteredCerts.map((cert) => {
-                const statusBadge = getStatusBadge(cert.status)
-                return (
-                  <div key={cert.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                    <div className="h-14 w-14 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                      <Award className="h-7 w-7" />
-                    </div>
-                    <div className="flex-1 min-w-0 text-center md:text-left">
-                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1">
-                        <Badge className={statusBadge.color}>{statusBadge.label}</Badge>
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {cert.certificate_code}
-                        </Badge>
-                        <Badge variant="outline" className="bg-indigo-50 text-indigo-700 border-indigo-200">
-                          {cert.level}
-                        </Badge>
-                      </div>
-                      <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{cert.title}</h3>
-                      <p className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                        {cert.student_email} {cert.issued_by_email && `• Emitido por: ${cert.issued_by_email}`}
-                      </p>
-                      {cert.issued_at && (
-                        <p className="text-xs font-bold text-slate-400 mt-1">
-                          Emitido: {new Date(cert.issued_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
-                        </p>
-                      )}
-                    </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white truncate">{cert.title}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {cert.student_email} {cert.issued_by_email && `• Emitido por: ${cert.issued_by_email}`}
+                  </p>
+                  {cert.issued_at && (
+                    <p className="label-micro text-slate-400 dark:text-slate-500 mt-1">
+                      Emitido: {new Date(cert.issued_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    </p>
+                  )}
+                </div>
 
-                    <div className="flex items-center gap-2">
-                      {cert.status === 'pending' && (
-                        <Button
-                          size="sm"
-                          disabled={actionLoading === cert.id}
-                          onClick={() => handleIssue(cert)}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl h-10 px-4"
-                        >
-                          {actionLoading === cert.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><CheckCircle className="mr-2 h-4 w-4" /> Emitir</>}
-                        </Button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {cert.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      disabled={actionLoading === cert.id}
+                      onClick={() => handleIssue(cert)}
+                    >
+                      {actionLoading === cert.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <><CheckCircle className="mr-2 h-3.5 w-3.5" /> Emitir</>
                       )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                            <MoreVertical className="h-5 w-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl p-2">
-                          {cert.status === 'issued' && (
-                            <DropdownMenuItem
-                              onSelect={() => setCertToRevoke(cert)}
-                              className="font-bold py-3 text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl"
-                            >
-                              <XCircle className="mr-2 h-4 w-4" /> Revocar Certificado
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem
-                            onSelect={() => window.open(`http://localhost:8000/api/certificates/verify/${cert.certificate_code}/`, '_blank')}
-                            className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                          >
-                            <ExternalLink className="mr-2 h-4 w-4" /> Verificar
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                )
-              })
-            ) : (
-              <div className="py-20 text-center">
-                <Award className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                  {searchTerm ? 'No se encontraron certificados' : 'Aún no hay certificados'}
-                </h3>
-                <p className="text-slate-500 font-medium">
-                  {searchTerm ? 'Prueba con otro término de búsqueda.' : 'Emita el primer certificado para empezar.'}
-                </p>
+                    </Button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-52">
+                      {cert.status === 'issued' && (
+                        <DropdownMenuItem
+                          onSelect={() => setCertToRevoke(cert)}
+                          className="gap-2 text-rose-600 focus:text-rose-600"
+                        >
+                          <XCircle className="h-4 w-4" /> Revocar Certificado
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        onSelect={() => window.open(`http://localhost:8000/api/certificates/verify/${cert.certificate_code}/`, '_blank')}
+                        className="gap-2"
+                      >
+                        <ExternalLink className="h-4 w-4" /> Verificar en portal
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-            )}
+            )
+          })
+        ) : (
+          <div className="py-20 text-center">
+            <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
+              <Award className="h-6 w-6 text-sky-500" />
+            </div>
+            <p className="label-caps text-slate-400 dark:text-slate-500">No se encontraron certificados</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
       {/* Revoke Dialog */}
       <AlertDialog open={!!certToRevoke} onOpenChange={(open) => !open && !isRevoking && setCertToRevoke(null)}>
-        <AlertDialogContent className="rounded-3xl">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            <div className="flex h-14 w-14 items-center justify-center border border-rose-200 dark:border-rose-900/30 mx-auto mb-4">
+              <AlertCircle className="h-6 w-6 text-rose-500" />
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Revocar certificado?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
+            <AlertDialogTitle className="text-center text-xl font-black">¿Revocar certificado?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm">
               Esta acción marcará como revocado el certificado{' '}
               <span className="font-bold text-slate-900 dark:text-white">"{certToRevoke?.certificate_code}"</span>.
               El estudiante perderá la validez del mismo.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isRevoking} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
-            <AlertDialogAction disabled={isRevoking} onClick={handleRevoke} className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold shadow-lg shadow-red-500/20">
+          <AlertDialogFooter className="sm:justify-center gap-3">
+            <AlertDialogCancel disabled={isRevoking}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction disabled={isRevoking} onClick={handleRevoke} className="bg-rose-600 hover:bg-rose-700">
               {isRevoking ? 'Revocando...' : 'Sí, revocar'}
             </AlertDialogAction>
           </AlertDialogFooter>

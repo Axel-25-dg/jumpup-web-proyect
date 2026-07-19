@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
-  Video,
   Save,
   Loader2,
   Calendar,
   Clock,
   Users,
-  Link2
+  Link2,
+  Info
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -26,7 +24,7 @@ const formSchema = z.object({
   scheduled_date: z.string().min(1, 'La fecha es obligatoria'),
   scheduled_time: z.string().min(1, 'La hora es obligatoria'),
   duration_minutes: z.coerce.number().min(15, 'Mínimo 15 minutos').max(480, 'Máximo 8 horas'),
-  classroom_id: z.coerce.number().optional(),
+  classroom_id: z.coerce.number().nullable().optional(),
   join_url: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
 })
 
@@ -38,14 +36,15 @@ export default function ScheduleLiveSessionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<any>({
-    resolver: zodResolver(formSchema),
+  const { register, handleSubmit, formState: { errors } } = useForm<ScheduleFormData>({
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       title: '',
       scheduled_date: '',
       scheduled_time: '',
       duration_minutes: 60,
       join_url: '',
+      classroom_id: null as any
     }
   })
 
@@ -72,163 +71,162 @@ export default function ScheduleLiveSessionPage() {
         scheduled_date: scheduledDatetime,
         duration_minutes: data.duration_minutes,
         teacher_id: user.user_id,
-        classroom_id: data.classroom_id || undefined,
-        join_url: data.join_url || undefined,
+        classroom_id: data.classroom_id ?? undefined,
+        join_url: data.join_url ?? undefined,
         status: 'upcoming',
       })
       toast.success('Sesión en vivo programada con éxito')
       navigate('/teacher/live')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error creating live session:', error)
-      toast.error(error?.detail || 'Ocurrió un error al programar la sesión')
+      toast.error(error instanceof Error ? error.message : 'Ocurrió un error al programar la sesión')
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/teacher/live"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Programar Sesión en Vivo</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Agenda una clase virtual para tus alumnos</p>
+    <div className="animate-in fade-in duration-500">
+      {/* Header Editorial */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-20">
+        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
+          <div className="space-y-6 max-w-2xl">
+            <Link to="/teacher/live" className="inline-flex items-center gap-2 label-caps text-slate-400 hover:text-sky-500 transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" /> Volver a sesiones
+            </Link>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-slate-900 dark:text-white">
+              Nueva <br />
+              <span className="text-sky-500">Sesión.</span>
+            </h1>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="rounded-none border-2 border-slate-900 dark:border-white label-caps"
+              onClick={() => navigate('/teacher/live')}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              form="schedule-form"
+              type="submit"
+              size="lg"
+              disabled={isSubmitting}
+              className="gap-2 group"
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Programar
+            </Button>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-12 rounded-xl font-bold dark:border-slate-700"
-            onClick={() => navigate('/teacher/live')}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-12 rounded-xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 px-6"
-          >
-            {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-            Programar Sesión
-          </Button>
-        </div>
-      </div>
+      </section>
 
-      <div className="grid gap-8">
-        {/* Main Form */}
-        <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-          <CardContent className="p-8 space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Video className="h-4 w-4 text-slate-400" /> Título de la Sesión
-              </label>
-              <Input
-                {...register('title')}
-                placeholder="Ej. Clase de conversación — Nivel B2"
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
-              />
-              {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message as string}</span>}
-            </div>
+      {/* Form Editorial */}
+      <section className="border-b border-slate-900/10 dark:border-white/10">
+        <form id="schedule-form" onSubmit={handleSubmit((data) => onSubmit(data))} className="grid grid-cols-1 lg:grid-cols-2 bg-slate-900/10 dark:bg-white/10 gap-px">
 
-            {/* Date & Time */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-slate-400" /> Fecha
-                </label>
-                <Input
-                  {...register('scheduled_date')}
-                  type="date"
-                  className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.scheduled_date ? 'border-red-500' : ''}`}
+          {/* Main Info */}
+          <div className="bg-white dark:bg-slate-950 p-8 md:p-12 space-y-12">
+            <div className="space-y-8">
+              <h2 className="label-caps text-slate-400">Información General</h2>
+
+              <div className="space-y-3">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Título de la Sesión</label>
+                <input
+                  {...register('title')}
+                  placeholder="Ej. Conversación Avanzada: Arte y Cultura"
+                  className={`w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-3 text-2xl font-black tracking-tight transition-colors placeholder:text-slate-200 dark:placeholder:text-slate-800 ${errors.title ? 'border-red-500 focus:border-red-500' : ''}`}
                 />
-                {errors.scheduled_date && <span className="text-red-500 text-xs font-bold">{errors.scheduled_date.message as string}</span>}
+                {errors.title && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.title.message)}</p>}
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-400" /> Hora de Inicio
-                </label>
-                <Input
-                  {...register('scheduled_time')}
-                  type="time"
-                  className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.scheduled_time ? 'border-red-500' : ''}`}
-                />
-                {errors.scheduled_time && <span className="text-red-500 text-xs font-bold">{errors.scheduled_time.message as string}</span>}
+
+              <div className="grid grid-cols-2 gap-8 pt-4">
+                <div className="space-y-3">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                    <Calendar className="h-3.5 w-3.5 text-sky-500" /> Fecha
+                  </label>
+                  <input
+                    {...register('scheduled_date')}
+                    type="date"
+                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                  />
+                  {errors.scheduled_date && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.scheduled_date.message)}</p>}
+                </div>
+                <div className="space-y-3">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-sky-500" /> Hora
+                  </label>
+                  <input
+                    {...register('scheduled_time')}
+                    type="time"
+                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                  />
+                  {errors.scheduled_time && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.scheduled_time.message)}</p>}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* Duration & Classroom */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-slate-400" /> Duración (minutos)
+          {/* Configuration */}
+          <div className="bg-white dark:bg-slate-950 p-8 md:p-12 space-y-12">
+            <div className="space-y-8">
+              <h2 className="label-caps text-slate-400">Detalles de Conexión</h2>
+
+              <div className="space-y-3">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5 text-sky-500" /> Duración (Minutos)
                 </label>
-                <Input
+                <input
                   {...register('duration_minutes')}
                   type="number"
-                  min={15}
-                  max={480}
-                  className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.duration_minutes ? 'border-red-500' : ''}`}
+                  placeholder="60"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
                 />
-                {errors.duration_minutes && <span className="text-red-500 text-xs font-bold">{errors.duration_minutes.message as string}</span>}
+                {errors.duration_minutes && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.duration_minutes.message)}</p>}
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                  <Users className="h-4 w-4 text-slate-400" /> Aula Asignada (Opcional)
+
+              <div className="space-y-3">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                  <Users className="h-3.5 w-3.5 text-sky-500" /> Aula Asignada
                 </label>
                 <select
                   {...register('classroom_id')}
-                  className="w-full h-14 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors appearance-none cursor-pointer"
                 >
-                  <option value="">Sin aula específica</option>
+                  <option value="">Selecciona un aula (opcional)</option>
                   {classrooms.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
-            </div>
 
-            {/* Join URL */}
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Link2 className="h-4 w-4 text-slate-400" /> Enlace de Videoconferencia (Opcional)
-              </label>
-              <Input
-                {...register('join_url')}
-                type="url"
-                placeholder="Ej. https://meet.google.com/abc-xyz"
-                className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium ${errors.join_url ? 'border-red-500' : ''}`}
-              />
-              {errors.join_url && <span className="text-red-500 text-xs font-bold">{errors.join_url.message as string}</span>}
-              <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">Zoom, Google Meet, Teams u otra plataforma.</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Info Card */}
-        <Card className="border-none bg-indigo-50/50 dark:bg-indigo-900/10 rounded-[2.5rem] overflow-hidden border border-indigo-100 dark:border-indigo-900/30">
-          <CardContent className="p-8">
-            <div className="flex gap-4">
-              <div className="h-12 w-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center shrink-0">
-                <Video className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-indigo-900 dark:text-indigo-400">Notificación automática</h3>
-                <p className="text-indigo-700/70 dark:text-indigo-300/70 font-medium text-sm mt-1 leading-relaxed">
-                  Al programar la sesión, los alumnos del aula asignada recibirán una notificación automática con los detalles y el enlace de acceso.
-                </p>
+              <div className="space-y-3">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
+                  <Link2 className="h-3.5 w-3.5 text-sky-500" /> Enlace de Videollamada
+                </label>
+                <input
+                  {...register('join_url')}
+                  type="url"
+                  placeholder="https://meet.google.com/..."
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                />
+                {errors.join_url && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.join_url.message)}</p>}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-    </form>
+
+            <div className="flex gap-4 p-6 border-2 border-slate-900 dark:border-white">
+              <Info className="h-5 w-5 text-sky-500 shrink-0" />
+              <p className="text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-400">
+                Al programar esta sesión, los estudiantes del aula seleccionada recibirán una notificación inmediata en su panel y por correo electrónico.
+              </p>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
   )
 }
 
