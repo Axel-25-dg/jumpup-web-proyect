@@ -329,7 +329,7 @@ export default function AppShell() {
             <div className="bg-sky-500 p-1.5 rounded-none">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">JumpUp</span>
+            <span translate="no" className="text-lg font-semibold tracking-tight">JumpUp</span>
           </Link>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
@@ -722,7 +722,7 @@ export default function AppShell() {
               className="h-8 w-8 object-contain shrink-0"
             />
             {isSidebarExpanded && (
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white select-none">
+              <span translate="no" className="text-xl font-bold tracking-tight text-slate-900 dark:text-white select-none">
                 <span className="text-sky-500">ump</span>Up
               </span>
             )}
