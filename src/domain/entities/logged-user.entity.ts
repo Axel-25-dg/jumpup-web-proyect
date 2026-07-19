@@ -7,4 +7,6 @@ export interface LoggedUser {
   is_staff: boolean;
   is_superuser?: boolean;
   role: UserRole;
+  firstName?: string;
+  lastName?: string;
 }
