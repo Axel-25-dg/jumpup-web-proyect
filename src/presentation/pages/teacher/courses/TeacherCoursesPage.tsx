@@ -30,7 +30,7 @@ export default function TeacherCoursesPage() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const result = await courseRepo.getAll()
+        const result = await courseRepo.getAll({ page_size: 100 })
         setCourses(result.results || [])
       } catch (error) {
         console.error('Error fetching courses:', error)

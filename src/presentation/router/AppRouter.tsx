@@ -24,12 +24,13 @@ const AchievementsPage = lazy(() => import('../pages/dashboard/AchievementsPage'
 const GamesPage = lazy(() => import('../pages/learning/GamesPage'))
 const CoursesPage = lazy(() => import('../pages/learning/CoursesPage'))
 const LessonPage = lazy(() => import('../pages/learning/LessonPage'))
-const ChatPage = lazy(() => import('../pages/chat/ChatPage'))
 const ForumPage = lazy(() => import('../pages/forum/ForumPage'))
 const SocialFeedPage = lazy(() => import('../pages/social/SocialFeedPage'))
 const ClassroomsPage = lazy(() => import('../pages/classrooms/ClassroomsPage'))
+const ClassroomDetailPage = lazy(() => import('../pages/classrooms/ClassroomDetailPage'))
 const LiveSessionPage = lazy(() => import('../pages/live/LiveSessionPage'))
 const CertificatesPage = lazy(() => import('../pages/certificates/CertificatesPage'))
+const VerifyCertificatePage = lazy(() => import('../pages/certificates/VerifyCertificatePage'))
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
 
 // Admin & Teacher
@@ -137,6 +138,8 @@ export default function AppRouter() {
           {/* Rutas que NO deben verse si ya estás logueado */}
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route path="/verify" element={<VerifyCertificatePage />} />
+          <Route path="/verify/:code" element={<VerifyCertificatePage />} />
 
           <Route element={<AppShell />}>
             <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
@@ -155,7 +158,6 @@ export default function AppRouter() {
                <Route path="/games" element={<GamesPage />} />
                <Route path="/courses" element={<CoursesPage />} />
                <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage />} />
-               <Route path="/chat" element={<ChatPage />} />
                <Route path="/social" element={<SocialFeedPage />} />
                <Route path="/certificates" element={<CertificatesPage />} />
                <Route path="/cart" element={<CartPage />} />
@@ -192,6 +194,7 @@ export default function AppRouter() {
             <Route element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']} />}>
                <Route path="/forum" element={<ForumPage />} />
                <Route path="/classrooms" element={<ClassroomsPage />} />
+               <Route path="/classrooms/:id" element={<ClassroomDetailPage />} />
                <Route path="/live/:id" element={<LiveSessionPage />} />
                <Route path="/profile" element={<ProfilePage />} />
             </Route>

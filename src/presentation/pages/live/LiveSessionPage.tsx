@@ -18,9 +18,7 @@ interface Participant {
 interface LiveSessionDetails {
   id: number
   title: string
-  classroom_info?: {
-    name: string
-  }
+  course_title?: string
 }
 
 export default function LiveSessionPage() {
@@ -183,7 +181,7 @@ export default function LiveSessionPage() {
         <div className="flex-1 flex items-center px-6 gap-8 overflow-x-auto no-scrollbar py-2 md:py-0 border-t md:border-t-0 border-slate-900/10 dark:border-white/10">
           <div className="flex flex-col">
             <span className="label-micro text-slate-400">Aula</span>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{session.classroom_info?.name || 'General'}</span>
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{session.course_title || 'General'}</span>
           </div>
           <div className="flex flex-col">
             <span className="label-micro text-slate-400">Red</span>

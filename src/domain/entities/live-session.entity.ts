@@ -5,6 +5,7 @@ export interface LiveSession {
   duration_minutes: number;
   teacher_id: number;
   classroom_id?: number;
+  course_id?: number;
   status: 'upcoming' | 'live' | 'past' | 'cancelled';
   join_url?: string;
   enrolled_count?: number;

@@ -17,7 +17,7 @@ export class AxiosClassroomRepository implements ClassroomRepository {
   async getAllByTeacher(teacherId: number, params?: Record<string, any>): Promise<PaginatedResult<Classroom>> {
     try {
       const { data } = await apiClient.get<PaginatedResult<Classroom>>('/classrooms/', {
-        params: { ...params, teacher_id: teacherId }
+        params: { ...params, teacher: teacherId }
       });
       return data;
     } catch (err) {

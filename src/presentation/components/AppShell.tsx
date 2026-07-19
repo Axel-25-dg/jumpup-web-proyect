@@ -52,10 +52,21 @@ export default function AppShell() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [totalXp, setTotalXp] = useState<number | null>(null)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (user && (user.role === 'student' || user.role === 'estudiante')) {
+      import('@/infrastructure/http/axios-client').then(({ apiClient }) => {
+        apiClient.get('/dashboard/student/')
+          .then(res => setTotalXp(res.data.total_xp))
+          .catch(err => console.error('Error fetching total XP for AppShell:', err))
+      })
+    }
+  }, [user])
 
   // Sync theme class to documentElement
   useEffect(() => {
@@ -155,7 +166,6 @@ export default function AppShell() {
     return [
       { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, protected: true },
       { to: '/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
-      { to: '/chat', label: 'Tutor IA', icon: Sparkles, protected: true },
       { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
       { to: '/social', label: 'Social', icon: Users, protected: true },
       { to: '/classrooms', label: 'Aulas Vivas', icon: Radio, protected: true },
@@ -329,7 +339,7 @@ export default function AppShell() {
             <div className="bg-sky-500 p-1.5 rounded-none">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <span className="text-lg font-semibold tracking-tight">JumpUp</span>
+            <span translate="no" className="text-lg font-semibold tracking-tight">JumpUp</span>
           </Link>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
@@ -554,7 +564,7 @@ export default function AppShell() {
     {
       id: 3,
       title: "Feedback de Ejercicio",
-      desc: "El tutor IA analizó tu última pronunciación de voz.",
+      desc: "El profesor ha revisado tu última actividad.",
       time: "Hace 3 horas",
       read: true,
     }
@@ -586,10 +596,12 @@ export default function AppShell() {
           <div className="flex items-center gap-3">
             {user && (
               <>
-                <Badge variant="outline" className="hidden sm:flex bg-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20 gap-1.5 font-bold py-1.5 px-3 rounded-full">
-                  <Trophy className="h-3.5 w-3.5" />
-                  <span>1,240 XP</span>
-                </Badge>
+                {totalXp !== null && (
+                  <Badge variant="outline" className="hidden sm:flex bg-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20 gap-1.5 font-bold py-1.5 px-3 rounded-full">
+                    <Trophy className="h-3.5 w-3.5" />
+                    <span>{totalXp.toLocaleString()} XP</span>
+                  </Badge>
+                )}
               </>
             )}
 
@@ -722,7 +734,7 @@ export default function AppShell() {
               className="h-8 w-8 object-contain shrink-0"
             />
             {isSidebarExpanded && (
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white select-none">
+              <span translate="no" className="text-xl font-bold tracking-tight text-slate-900 dark:text-white select-none">
                 <span className="text-sky-500">ump</span>Up
               </span>
             )}

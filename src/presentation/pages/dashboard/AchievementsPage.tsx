@@ -28,8 +28,8 @@ export default function AchievementsPage() {
       setIsLoading(true)
       try {
         const [userAch, allAch] = await Promise.allSettled([
-          apiClient.get<UserAchievement[]>('/achievements/mine/'),
-          apiClient.get<AchievementData[]>('/achievements/all/')
+          apiClient.get<UserAchievement[]>('/my-achievements/'),
+          apiClient.get<AchievementData[]>('/achievements/')
         ])
         if (userAch.status === 'fulfilled') {
           const d = userAch.value.data as any

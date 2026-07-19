@@ -8,7 +8,8 @@ import {
   Clock,
   Users,
   Link2,
-  Info
+  Info,
+  ChevronDown
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import { useForm } from 'react-hook-form'
@@ -35,6 +36,7 @@ export default function ScheduleLiveSessionPage() {
   const user = useAuthStore(s => s.user)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
+  const [isLoadingClassrooms, setIsLoadingClassrooms] = useState(true)
 
   const { register, handleSubmit, formState: { errors } } = useForm<ScheduleFormData>({
     resolver: zodResolver(formSchema) as any,
@@ -50,28 +52,38 @@ export default function ScheduleLiveSessionPage() {
 
   useEffect(() => {
     const loadClassrooms = async () => {
-      if (!user?.user_id) return
+      const teacherId = user?.user_id || (user as any)?.id
+      if (!teacherId) return
+      setIsLoadingClassrooms(true)
       try {
-        const result = await getTeacherClassroomsUseCase.execute(user.user_id)
-        setClassrooms(result.results || [])
-      } catch {
-        // Non-critical error, classrooms are optional
+        const result = await getTeacherClassroomsUseCase.execute(teacherId)
+        setClassrooms(Array.isArray(result) ? result : (result?.results || []))
+      } catch (error) {
+        console.error('Error fetching classrooms:', error)
+        toast.error('No se pudieron cargar las aulas')
+      } finally {
+        setIsLoadingClassrooms(false)
       }
     }
     loadClassrooms()
   }, [user?.user_id])
 
   const onSubmit = async (data: ScheduleFormData) => {
-    if (!user?.user_id) return
+    const teacherId = user?.user_id || (user as any)?.id
+    if (!teacherId) return
     setIsSubmitting(true)
     try {
       const scheduledDatetime = `${data.scheduled_date}T${data.scheduled_time}:00`
+      const selectedClassroom = classrooms.find(c => c.id === Number(data.classroom_id))
+      const courseId = selectedClassroom?.course
+
       await createLiveSessionUseCase.execute({
         title: data.title,
         scheduled_date: scheduledDatetime,
         duration_minutes: data.duration_minutes,
-        teacher_id: user.user_id,
-        classroom_id: data.classroom_id ?? undefined,
+        teacher_id: teacherId,
+        classroom_id: data.classroom_id ? Number(data.classroom_id) : undefined,
+        course_id: courseId ?? undefined,
         join_url: data.join_url ?? undefined,
         status: 'upcoming',
       })
@@ -138,7 +150,7 @@ export default function ScheduleLiveSessionPage() {
                 <input
                   {...register('title')}
                   placeholder="Ej. Conversación Avanzada: Arte y Cultura"
-                  className={`w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-3 text-2xl font-black tracking-tight transition-colors placeholder:text-slate-200 dark:placeholder:text-slate-800 ${errors.title ? 'border-red-500 focus:border-red-500' : ''}`}
+                  className={`w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-3 text-2xl font-black tracking-tight transition-colors placeholder:text-slate-200 dark:placeholder:text-slate-800 text-slate-900 dark:text-white ${errors.title ? 'border-red-500 focus:border-red-500' : ''}`}
                 />
                 {errors.title && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.title.message)}</p>}
               </div>
@@ -151,7 +163,7 @@ export default function ScheduleLiveSessionPage() {
                   <input
                     {...register('scheduled_date')}
                     type="date"
-                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                   />
                   {errors.scheduled_date && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.scheduled_date.message)}</p>}
                 </div>
@@ -162,7 +174,7 @@ export default function ScheduleLiveSessionPage() {
                   <input
                     {...register('scheduled_time')}
                     type="time"
-                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                   />
                   {errors.scheduled_time && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.scheduled_time.message)}</p>}
                 </div>
@@ -183,7 +195,7 @@ export default function ScheduleLiveSessionPage() {
                   {...register('duration_minutes')}
                   type="number"
                   placeholder="60"
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                 />
                 {errors.duration_minutes && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.duration_minutes.message)}</p>}
               </div>
@@ -192,15 +204,28 @@ export default function ScheduleLiveSessionPage() {
                 <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
                   <Users className="h-3.5 w-3.5 text-sky-500" /> Aula Asignada
                 </label>
-                <select
-                  {...register('classroom_id')}
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors appearance-none cursor-pointer"
-                >
-                  <option value="">Selecciona un aula (opcional)</option>
-                  {classrooms.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  {isLoadingClassrooms ? (
+                    <div className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 py-2">
+                      <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 animate-pulse rounded" />
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        {...register('classroom_id')}
+                        className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 pr-8 font-bold transition-colors appearance-none cursor-pointer text-slate-900 dark:text-white"
+                      >
+                        <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                          {classrooms.length > 0 ? "Selecciona un aula (opcional)" : "Sin aulas disponibles (opcional)"}
+                        </option>
+                        {classrooms.map(c => (
+                          <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{c.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -211,7 +236,7 @@ export default function ScheduleLiveSessionPage() {
                   {...register('join_url')}
                   type="url"
                   placeholder="https://meet.google.com/..."
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white"
                 />
                 {errors.join_url && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.join_url.message)}</p>}
               </div>
