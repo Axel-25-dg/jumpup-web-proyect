@@ -49,8 +49,8 @@ const AdminLanguagesPage = lazy(() => import('../pages/admin/management/AdminLan
 const AdminLanguageFormPage = lazy(() => import('../pages/admin/management/AdminLanguageFormPage'))
 const AdminAnnouncementsPage = lazy(() => import('../pages/admin/management/AdminAnnouncementsPage'))
 const AdminAnnouncementFormPage = lazy(() => import('../pages/admin/management/AdminAnnouncementFormPage'))
-const AdminForumCategoriesPage = lazy(() => import('../pages/admin/management/AdminForumCategoriesPage'))
 const AdminForumCategoryFormPage = lazy(() => import('../pages/admin/management/AdminForumCategoryFormPage'))
+const AdminForumPage = lazy(() => import('../pages/admin/management/AdminForumPage'))
 const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminResourcesPage'))
 const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
 const AdminLiveSessionsPage = lazy(() => import('../pages/admin/management/AdminLiveSessionsPage'))
@@ -90,8 +90,6 @@ const ScheduleLiveSessionPage = lazy(() => import('../pages/teacher/live/Schedul
 const EditCoursePage = lazy(() => import('../pages/teacher/courses/EditCoursePage'))
 const ModuleExercisesPage = lazy(() => import('../pages/teacher/courses/ModuleExercisesPage'))
 const TeacherProfilePage = lazy(() => import('../pages/teacher/profile/TeacherProfilePage'))
-const CategoryListPage = lazy(() => import('../pages/categories/CategoryListPage'))
-const CategoryFormPage = lazy(() => import('../pages/categories/CategoryFormPage'))
 const CourseListPage = lazy(() => import('../pages/courses/CourseListPage'))
 const CourseFormPage = lazy(() => import('../pages/courses/CourseFormPage'))
 
@@ -214,11 +212,6 @@ export default function AppRouter() {
                 <Route path="/admin/users/new" element={<AdminUserFormPage />} />
                 <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
                 
-                {/* Categories */}
-                <Route path="/admin/categories" element={<CategoryListPage />} />
-                <Route path="/admin/categories/new" element={<CategoryFormPage />} />
-                <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
-                
                 {/* E-Commerce - Catalogo */}
                 <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
                 <Route path="/admin/catalogo/new" element={<AdminCatalogoFormPage />} />
@@ -233,8 +226,9 @@ export default function AppRouter() {
                 <Route path="/admin/announcements/new" element={<AdminAnnouncementFormPage />} />
                 <Route path="/admin/announcements/:id/edit" element={<AdminAnnouncementFormPage />} />
 
-                {/* Forum Categories */}
-                <Route path="/admin/forum-categories" element={<AdminForumCategoriesPage />} />
+                {/* Forum */}
+                <Route path="/admin/forum" element={<AdminForumPage />} />
+                <Route path="/admin/forum-categories" element={<AdminForumPage />} />
                 <Route path="/admin/forum-categories/new" element={<AdminForumCategoryFormPage />} />
                 <Route path="/admin/forum-categories/:id/edit" element={<AdminForumCategoryFormPage />} />
 
