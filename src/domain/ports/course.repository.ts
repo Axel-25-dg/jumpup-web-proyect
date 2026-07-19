@@ -28,6 +28,7 @@ export interface CourseRepository {
   updateModule(id: number, payload: Partial<Module>): Promise<Module>;
   deleteModule(id: number): Promise<void>;
   createLesson(payload: { module: number; title: string; content_type: string; content?: string; video_url?: string; order?: number; xp_reward?: number }): Promise<Lesson>;
+  updateLesson(id: number, payload: Partial<{ title: string; content_type: string; order: number; xp_reward: number }>): Promise<Lesson>;
   deleteLesson(id: number): Promise<void>;
   getExercisesByLesson(lessonId: number): Promise<any[]>;
   createExercise(payload: ExercisePayload): Promise<any>;
