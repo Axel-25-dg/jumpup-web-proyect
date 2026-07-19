@@ -14,12 +14,17 @@ export class AxiosClassroomRepository implements ClassroomRepository {
     }
   }
 
-  async getAllByTeacher(teacherId: number, params?: Record<string, any>): Promise<PaginatedResult<Classroom>> {
+  async getAllByTeacher(_teacherId: number, params?: Record<string, any>): Promise<PaginatedResult<Classroom>> {
     try {
-      const { data } = await apiClient.get<PaginatedResult<Classroom>>('/classrooms/', {
-        params: { ...params, teacher_id: teacherId }
+      const { data } = await apiClient.get<any>('/classrooms/mine/', {
+        params
       });
-      return data;
+      return {
+        count: Array.isArray(data) ? data.length : data.count,
+        next: null,
+        previous: null,
+        results: Array.isArray(data) ? data : (data.results || [])
+      };
     } catch (err) {
       throw parseApiError(err);
     }
