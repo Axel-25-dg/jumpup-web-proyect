@@ -166,15 +166,16 @@ export default function ClassroomsPage() {
         {/* CLASSROOMS & LIVE SESSIONS */}
         <div className="lg:col-span-2 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
           {/* Active Live Sessions */}
-          {liveSessions.length > 0 && (
-            <div className="border-b border-slate-900/10 dark:border-white/10 bg-white dark:bg-transparent">
-              <div className="flex items-center gap-4 px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
-                <span className="relative flex h-2.5 w-2.5 shrink-0">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-500" />
-                </span>
-                <h2 className="label-caps text-slate-900 dark:text-white font-black tracking-widest">Sesiones en Vivo</h2>
-              </div>
+          <div className="border-b border-slate-900/10 dark:border-white/10 bg-white dark:bg-transparent">
+            <div className="flex items-center gap-4 px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                {liveSessions.length > 0 && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />}
+                <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${liveSessions.length > 0 ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-700'}`} />
+              </span>
+              <h2 className="label-caps text-slate-900 dark:text-white font-black tracking-widest">Sesiones en Vivo</h2>
+            </div>
+            
+            {liveSessions.length > 0 ? (
               <div className="divide-y divide-slate-900/10 dark:divide-white/10">
                 {liveSessions.map((session) => (
                   <div key={session.id} className="flex items-center gap-6 px-8 md:px-10 py-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
@@ -193,8 +194,12 @@ export default function ClassroomsPage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="px-8 md:px-10 py-8">
+                <p className="label-micro text-slate-400 uppercase tracking-wider">No hay sesiones activas en este momento.</p>
+              </div>
+            )}
+          </div>
 
           {/* My Classrooms */}
           <div className="px-8 md:px-10 py-10">

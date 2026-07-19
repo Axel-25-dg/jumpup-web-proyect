@@ -8,7 +8,8 @@ import {
   Clock,
   Users,
   Link2,
-  Info
+  Info,
+  ChevronDown
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import { useForm } from 'react-hook-form'
@@ -35,6 +36,7 @@ export default function ScheduleLiveSessionPage() {
   const user = useAuthStore(s => s.user)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
+  const [isLoadingClassrooms, setIsLoadingClassrooms] = useState(true)
 
   const { register, handleSubmit, formState: { errors } } = useForm<ScheduleFormData>({
     resolver: zodResolver(formSchema) as any,
@@ -52,11 +54,15 @@ export default function ScheduleLiveSessionPage() {
     const loadClassrooms = async () => {
       const teacherId = user?.user_id || (user as any)?.id
       if (!teacherId) return
+      setIsLoadingClassrooms(true)
       try {
         const result = await getTeacherClassroomsUseCase.execute(teacherId)
         setClassrooms(Array.isArray(result) ? result : (result?.results || []))
-      } catch {
-        // Non-critical error, classrooms are optional
+      } catch (error) {
+        console.error('Error fetching classrooms:', error)
+        toast.error('No se pudieron cargar las aulas')
+      } finally {
+        setIsLoadingClassrooms(false)
       }
     }
     loadClassrooms()
@@ -198,15 +204,28 @@ export default function ScheduleLiveSessionPage() {
                 <label className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white flex items-center gap-2">
                   <Users className="h-3.5 w-3.5 text-sky-500" /> Aula Asignada
                 </label>
-                <select
-                  {...register('classroom_id')}
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors appearance-none cursor-pointer text-slate-900 dark:text-white"
-                >
-                  <option value="">Selecciona un aula (opcional)</option>
-                  {classrooms.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  {isLoadingClassrooms ? (
+                    <div className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 py-2">
+                      <div className="h-4 w-1/2 bg-slate-200 dark:bg-slate-800 animate-pulse rounded" />
+                    </div>
+                  ) : (
+                    <>
+                      <select
+                        {...register('classroom_id')}
+                        className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 pr-8 font-bold transition-colors appearance-none cursor-pointer text-slate-900 dark:text-white"
+                      >
+                        <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                          {classrooms.length > 0 ? "Selecciona un aula (opcional)" : "Sin aulas disponibles (opcional)"}
+                        </option>
+                        {classrooms.map(c => (
+                          <option key={c.id} value={c.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{c.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-0 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    </>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">

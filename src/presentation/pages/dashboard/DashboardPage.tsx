@@ -192,7 +192,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">{ach.achievement?.description}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
-                    <span className="label-caps text-sky-500">+{ach.achievement?.xp_reward} XP</span>
+                    <span className="label-caps text-sky-500">+{ach.achievement?.xp_reward || 0} XP</span>
                     <span className="label-micro text-slate-400 dark:text-slate-500">
                       {ach.unlocked_at ? new Date(ach.unlocked_at).toLocaleDateString() : 'Reciente'}
                     </span>
@@ -213,8 +213,7 @@ export default function DashboardPage() {
           <div className="border-t border-slate-900/10 dark:border-white/10 grid grid-cols-2 border-l border-slate-900/10 dark:border-white/10">
             {[
               { to: '/courses', title: 'Explorar', desc: 'Mis niveles activos', icon: Compass },
-              { to: '/chat', title: 'IA Tutor', desc: 'Soporte 24/7', icon: Sparkles },
-              { to: '/forum', title: 'Comunidad', desc: 'Foros de estudio', icon: Users },
+              { to: '/social', title: 'Social', desc: 'Conecta con otros', icon: Users },
               { to: '/achievements', title: 'Logros', desc: 'Tus medallas', icon: Trophy },
             ].map((link, i) => (
               <Link key={i} to={link.to} className="group p-8 border-b border-r border-slate-900/10 dark:border-white/10 card-hover transition-colors flex items-center gap-5">

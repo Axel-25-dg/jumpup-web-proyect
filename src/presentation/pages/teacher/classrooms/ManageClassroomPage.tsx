@@ -24,6 +24,7 @@ import {
 } from '@/presentation/components/ui/alert-dialog'
 import {
   getClassroomByIdUseCase,
+  getClassroomStudentsUseCase,
   approveStudentUseCase,
   rejectStudentUseCase,
   removeStudentUseCase
@@ -51,16 +52,22 @@ export default function ManageClassroomPage() {
         setClassroom(classroomData)
         
         const enrollments = (classroomData as any).enrollments || []
-        const mappedStudents: ClassroomStudent[] = enrollments.map((e: any) => ({
-          id: e.id,
-          classroom_id: classroomId,
-          student_id: e.student,
-          student_name: e.student_username,
-          student_email: e.student_email,
-          joined_at: e.enrolled_at,
-          status: e.is_active ? 'active' : 'pending',
-          progress: 0
-        }))
+        console.log('DEBUG classroomData:', classroomData)
+        console.log('DEBUG enrollments:', enrollments)
+        
+        const mappedStudents: ClassroomStudent[] = enrollments
+          .map((e: any) => ({
+            id: e.id,
+            classroom_id: classroomId,
+            student_id: e.student,
+            student_name: e.student_username,
+            student_email: e.student_email,
+            joined_at: e.enrolled_at || e.joined_at,
+            status: e.is_active ? 'active' : (e.status || 'pending'),
+            progress: e.progress || 0
+          }))
+          .filter((s: ClassroomStudent) => s.student_id !== classroomData.teacher_id && s.student_id !== classroomData.teacher)
+          
         setStudents(mappedStudents)
       } catch (error) {
         console.error('Error fetching classroom data:', error)

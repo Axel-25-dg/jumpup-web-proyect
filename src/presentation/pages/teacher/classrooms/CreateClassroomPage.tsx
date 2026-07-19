@@ -40,7 +40,7 @@ export default function CreateClassroomPage() {
   useEffect(() => {
     const loadCourses = async () => {
       try {
-        const result = await courseRepo.getAll()
+        const result = await courseRepo.getAll({ page_size: 100 })
         setCourses(result.results || [])
       } catch (err) {
         toast.error('No se pudieron cargar los cursos')
