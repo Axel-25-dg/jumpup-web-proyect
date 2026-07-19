@@ -24,7 +24,6 @@ import {
 } from '@/presentation/components/ui/alert-dialog'
 import {
   getClassroomByIdUseCase,
-  getClassroomStudentsUseCase,
   approveStudentUseCase,
   rejectStudentUseCase,
   removeStudentUseCase

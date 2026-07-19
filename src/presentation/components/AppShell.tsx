@@ -59,7 +59,7 @@ export default function AppShell() {
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (user && (user.role === 'student' || user.role === 'estudiante')) {
+    if (user && user.role === 'student') {
       import('@/infrastructure/http/axios-client').then(({ apiClient }) => {
         apiClient.get('/dashboard/student/')
           .then(res => setTotalXp(res.data.total_xp))

@@ -18,7 +18,7 @@ export default function VerifyCertificatePage() {
     setError(null)
     try {
       // The API returns the certificate details if valid, or 404 if invalid.
-      const res = await apiClient.get<Certificate>(`/certificates/verify/${codeToVerify}/`)
+      const res = await apiClient.get<any>(`/certificates/verify/${codeToVerify}/`)
       // Check if it's returning a nested object or directly the certificate
       const certData = res.data.certificate || res.data
       setCertificate(certData)
