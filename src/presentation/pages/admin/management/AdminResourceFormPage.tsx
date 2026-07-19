@@ -128,7 +128,7 @@ export default function AdminResourceFormPage() {
                 }
              }
           }
-        } catch (error) {
+        } catch {
           toast.error('Error al cargar el recurso')
         } finally {
           setIsLoading(false)

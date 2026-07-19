@@ -49,7 +49,7 @@ export default function TeacherCoursesPage() {
       await courseRepo.deleteCourse(courseToDelete.id)
       setCourses(courses.filter(c => c.id !== courseToDelete.id))
       toast.success(`Curso "${courseToDelete.title}" eliminado con éxito`)
-    } catch (error) {
+    } catch {
       toast.error('Ocurrió un error al intentar eliminar el curso')
     } finally {
       setIsDeleting(false)

@@ -31,8 +31,8 @@ export default function ProfilePage() {
     setIsSaving(true)
     try {
       await apiClient.patch('/auth/me/', {
-        first_name: firstName,
-        last_name: lastName
+        firstName: firstName,
+        lastName: lastName
       })
       await loadSession() // Reload user data in the store
       setIsEditing(false)
@@ -41,8 +41,8 @@ export default function ProfilePage() {
       // fallback to users/me if /auth/me/ is just a view and not updatable
       try {
         await apiClient.patch('/auth/users/me/', {
-          first_name: firstName,
-          last_name: lastName
+          firstName: firstName,
+          lastName: lastName
         })
         await loadSession()
         setIsEditing(false)

@@ -77,7 +77,7 @@ export default function AdminLiveSessionFormPage() {
             meeting_url: session.meeting_url || '',
             max_students: session.max_students,
           })
-        } catch (error) {
+        } catch {
           toast.error('Error al cargar la sesión')
         } finally {
           setIsLoading(false)

@@ -68,7 +68,7 @@ export default function AdminModulesPage() {
       await courseRepo.deleteModule(moduleToDelete.id)
       setAllModules(allModules.filter(m => m.id !== moduleToDelete.id))
       toast.success('Modulo eliminado con exito')
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar el modulo')
     } finally {
       setIsDeleting(false)

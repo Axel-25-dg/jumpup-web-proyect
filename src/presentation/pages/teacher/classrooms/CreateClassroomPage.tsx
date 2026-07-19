@@ -42,7 +42,7 @@ export default function CreateClassroomPage() {
       try {
         const result = await courseRepo.getAll({ page_size: 100 })
         setCourses(result.results || [])
-      } catch (err) {
+      } catch {
         toast.error('No se pudieron cargar los cursos')
       } finally {
         setIsLoadingCourses(false)

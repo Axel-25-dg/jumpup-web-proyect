@@ -67,7 +67,7 @@ export default function AdminCatalogoFormPage() {
             contenido_url: item.contenido_url || '',
             curso: item.curso ? String(item.curso) : '',
           })
-        } catch (error) {
+        } catch {
           toast.error('Error al cargar el producto')
         } finally {
           setIsLoading(false)

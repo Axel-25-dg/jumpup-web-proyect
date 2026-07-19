@@ -199,14 +199,14 @@ export default function VerifyCertificatePage() {
                     </p>
                     
                     <div id="pdf-actions" className="w-full flex justify-center print:hidden">
-                      {certificate.certificate_file ? (
+                      {certificate.certificate_code ? (
                         <Button
                           variant="default"
                           className="w-full max-w-sm rounded-none font-black uppercase text-[10px] tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white h-12 gap-3"
                           asChild
                         >
                           <a
-                            href={certificate.certificate_file}
+                            href={certificate.certificate_code}
                             target="_blank"
                             rel="noopener noreferrer"
                             download={`Certificado_${certificate.level}.pdf`}
