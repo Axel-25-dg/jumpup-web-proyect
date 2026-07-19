@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   BookOpen, Plus, Search, Edit2, Trash2, ArrowLeft,
-  Layers, AlertCircle, Loader2
+  Layers, AlertCircle
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import {
@@ -10,14 +10,12 @@ import {
   AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/presentation/components/ui/alert-dialog'
-import {
-  Dialog, DialogContent,
-} from '@/presentation/components/ui/dialog'
 import { toast } from 'sonner'
 import { courseRepo } from '@/infrastructure/factories/teacher.factory'
 import type { Course, Module } from '@/domain/entities/course.entity'
 
 export default function AdminModulesPage() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectedCourse = searchParams.get('course')
 
@@ -28,12 +26,6 @@ export default function AdminModulesPage() {
   )
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingModule, setEditingModule] = useState<Module | null>(null)
-  const [moduleTitle, setModuleTitle] = useState('')
-  const [moduleOrder, setModuleOrder] = useState(1)
-  const [isSaving, setIsSaving] = useState(false)
 
   const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -62,44 +54,6 @@ export default function AdminModulesPage() {
 
   const handleCourseChange = (courseId: string) => {
     setSelectedCourseId(courseId ? Number(courseId) : null)
-  }
-
-  const openCreateModal = () => {
-    setEditingModule(null)
-    setModuleTitle('')
-    setModuleOrder(1)
-    setIsModalOpen(true)
-  }
-
-  const openEditModal = (mod: Module) => {
-    setEditingModule(mod)
-    setModuleTitle(mod.title)
-    setModuleOrder(mod.order)
-    setIsModalOpen(true)
-  }
-
-  const handleSaveModule = async () => {
-    if (!moduleTitle.trim() || !selectedCourseId) {
-      toast.error('Completa todos los campos requeridos')
-      return
-    }
-    setIsSaving(true)
-    try {
-      if (editingModule) {
-        await courseRepo.updateModule(editingModule.id, { title: moduleTitle, order: moduleOrder })
-        toast.success('Módulo actualizado con éxito')
-      } else {
-        await courseRepo.createModule({ course: selectedCourseId, title: moduleTitle, order: moduleOrder })
-        toast.success('Módulo creado con éxito')
-      }
-      const mods = await courseRepo.getModulesByCourse(selectedCourseId)
-      setModules(mods)
-      setIsModalOpen(false)
-    } catch (error: any) {
-      toast.error(error?.detail || 'Error al guardar el módulo')
-    } finally {
-      setIsSaving(false)
-    }
   }
 
   const handleDeleteModule = async () => {
@@ -144,7 +98,7 @@ export default function AdminModulesPage() {
             </p>
           </div>
           <Button
-            onClick={openCreateModal}
+            onClick={() => selectedCourseId ? navigate(`/admin/management/modules/new?course=${selectedCourseId}`) : null}
             disabled={!selectedCourseId}
             className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all disabled:opacity-50"
           >
@@ -225,7 +179,7 @@ export default function AdminModulesPage() {
                           variant="outline"
                           size="sm"
                           className="rounded-none border-slate-900/10 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all font-bold text-[10px] uppercase tracking-widest h-9"
-                          onClick={() => openEditModal(mod)}
+                          onClick={() => navigate(`/admin/management/modules/${mod.id}/edit?course=${selectedCourseId}`)}
                         >
                           <Edit2 className="h-3.5 w-3.5 mr-2" /> Editar
                         </Button>
@@ -250,7 +204,7 @@ export default function AdminModulesPage() {
                     <p className="label-caps text-slate-400 mb-6">No hay módulos registrados en este curso</p>
                     <Button
                       size="sm"
-                      onClick={openCreateModal}
+                      onClick={() => navigate(`/admin/management/modules/new?course=${selectedCourseId}`)}
                       className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold uppercase text-[10px] tracking-widest px-6"
                     >
                       Crear Primer Módulo
@@ -267,55 +221,6 @@ export default function AdminModulesPage() {
           </div>
         )}
       </div>
-
-      {/* CREATE/EDIT MODAL - Editorial */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="rounded-none border-slate-900/10 dark:border-white/10 p-0 overflow-hidden max-w-md">
-          <div className="bg-slate-900 dark:bg-white p-6">
-            <h2 className="text-xl font-black text-white dark:text-slate-900 uppercase tracking-tight">
-              {editingModule ? 'Actualizar Módulo' : 'Nuevo Módulo Técnico'}
-            </h2>
-          </div>
-          <div className="p-8 space-y-6">
-            <div className="space-y-2">
-              <label className="label-caps text-slate-400">Título del Módulo</label>
-              <input
-                value={moduleTitle}
-                onChange={(e) => setModuleTitle(e.target.value)}
-                placeholder="EJ. UNIDAD 01: FUNDAMENTOS"
-                className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="label-caps text-slate-400">Orden de Secuencia</label>
-              <input
-                type="number"
-                min={1}
-                value={moduleOrder}
-                onChange={(e) => setModuleOrder(Number(e.target.value))}
-                className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 px-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors max-w-[120px]"
-              />
-            </div>
-          </div>
-          <div className="p-6 bg-slate-50 dark:bg-white/5 border-t border-slate-900/10 dark:border-white/10 flex justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsModalOpen(false)}
-              className="rounded-none font-bold uppercase text-[10px] tracking-widest"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSaveModule}
-              disabled={isSaving}
-              className="rounded-none bg-sky-500 hover:bg-sky-600 text-white font-bold uppercase text-[10px] tracking-widest"
-            >
-              {isSaving ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : null}
-              {editingModule ? 'Guardar Cambios' : 'Confirmar Creación'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* DELETE DIALOG - Editorial */}
       <AlertDialog open={!!moduleToDelete} onOpenChange={(open) => !open && !isDeleting && setModuleToDelete(null)}>
@@ -338,6 +243,5 @@ export default function AdminModulesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-
   )
 }

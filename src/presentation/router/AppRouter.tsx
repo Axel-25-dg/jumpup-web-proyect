@@ -40,6 +40,7 @@ const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'
 const AdminCoursesPage = lazy(() => import('../pages/admin/management/AdminCoursesPage'))
 const AdminCourseFormPage = lazy(() => import('../pages/admin/management/AdminCourseFormPage'))
 const AdminModulesPage = lazy(() => import('../pages/admin/management/AdminModulesPage'))
+const AdminModuleFormPage = lazy(() => import('../pages/admin/management/AdminModuleFormPage'))
 const AdminLessonsPage = lazy(() => import('../pages/admin/management/AdminLessonsPage'))
 const AdminExercisesPage = lazy(() => import('../pages/admin/management/AdminExercisesPage'))
 const AdminLanguagesPage = lazy(() => import('../pages/admin/management/AdminLanguagesPage'))
@@ -247,6 +248,8 @@ export default function AppRouter() {
                 <Route path="/admin/management/courses/new" element={<AdminCourseFormPage />} />
                 <Route path="/admin/management/courses/:id/edit" element={<AdminCourseFormPage />} />
                 <Route path="/admin/management/modules" element={<AdminModulesPage />} />
+                <Route path="/admin/management/modules/new" element={<AdminModuleFormPage />} />
+                <Route path="/admin/management/modules/:id/edit" element={<AdminModuleFormPage />} />
                 <Route path="/admin/management/lessons" element={<AdminLessonsPage />} />
                 <Route path="/admin/management/exercises" element={<AdminExercisesPage />} />
                 <Route path="/admin/management/languages" element={<AdminLanguagesPage />} />
