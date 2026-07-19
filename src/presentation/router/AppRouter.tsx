@@ -71,6 +71,8 @@ const AdminClassroomsPage = lazy(() => import('../pages/admin/management/AdminCl
 const AdminClassroomFormPage = lazy(() => import('../pages/admin/management/AdminClassroomFormPage'))
 const AdminCertificatesPage = lazy(() => import('../pages/admin/management/AdminCertificatesPage'))
 const AdminIssueCertificatePage = lazy(() => import('../pages/admin/management/AdminIssueCertificatePage'))
+const AdminCertificateDetailPage = lazy(() => import('../pages/admin/management/AdminCertificateDetailPage'))
+const AdminCertificateEditPage = lazy(() => import('../pages/admin/management/AdminCertificateEditPage'))
 
 // Teacher
 const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
@@ -272,6 +274,8 @@ export default function AppRouter() {
                 {/* Admin - Certificates */}
                 <Route path="/admin/certificates" element={<AdminCertificatesPage />} />
                 <Route path="/admin/certificates/issue" element={<AdminIssueCertificatePage />} />
+                <Route path="/admin/certificates/:id" element={<AdminCertificateDetailPage />} />
+                <Route path="/admin/certificates/:id/edit" element={<AdminCertificateEditPage />} />
              </Route>
           </Route>
 
