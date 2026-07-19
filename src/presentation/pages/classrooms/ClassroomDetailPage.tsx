@@ -22,6 +22,7 @@ interface LiveSession {
   status: string
   scheduled_at: string
   duration_min?: number
+  meeting_url?: string
 }
 
 interface Module {
@@ -79,8 +80,17 @@ export default function ClassroomDetailPage() {
         const liveRes = await apiClient.get<any>('/live-sessions/')
         const liveArray = Array.isArray(liveRes.data) ? liveRes.data : (liveRes.data?.results || [])
         const classroomSessions = liveArray.filter((s: any) => 
-          (s.classroom === Number(id) || s.classroom_id === Number(id)) && 
-          (s.status === 'live' || s.status === 'scheduled')
+          (
+            String(s.classroom) === String(id) || 
+            String(s.classroom_id) === String(id) || 
+            String(s.classroom?.id) === String(id) ||
+            (classroomData?.course && (
+              String(s.course) === String(classroomData.course) ||
+              String(s.course_id) === String(classroomData.course) ||
+              String(s.course?.id) === String(classroomData.course)
+            ))
+          ) && 
+          (s.status === 'live' || s.status === 'scheduled' || s.status === 'upcoming')
         )
         setLiveSessions(classroomSessions)
 
@@ -329,7 +339,11 @@ export default function ClassroomDetailPage() {
                       </div>
                     </div>
                     <Button className="w-full rounded-none bg-rose-500 hover:bg-rose-600 font-bold uppercase text-[10px] tracking-widest" asChild>
-                      <Link to={`/live/${session.id}`}>UNIRSE A LA REUNIÓN</Link>
+                      {session.meeting_url ? (
+                        <a href={session.meeting_url} target="_blank" rel="noopener noreferrer">UNIRSE A LA REUNIÓN</a>
+                      ) : (
+                        <Link to={`/live/${session.id}`}>UNIRSE A LA REUNIÓN</Link>
+                      )}
                     </Button>
                   </div>
                 ))}

@@ -157,9 +157,7 @@ export default function ManageClassroomPage() {
               </div>
             )}
           </div>
-          <Button variant="outline" className="rounded-none border-slate-900/10 dark:border-white/10 h-14 px-8 font-black uppercase text-[11px] tracking-[0.2em] hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all">
-            <Settings className="mr-3 h-4 w-4" /> Configuración Avanzada
-          </Button>
+
         </div>
       </section>
 

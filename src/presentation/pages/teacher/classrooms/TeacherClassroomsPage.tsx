@@ -125,16 +125,16 @@ export default function TeacherClassroomsPage() {
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-none border-slate-900/10 dark:border-white/10">
+                    <DropdownMenuContent align="end" className="rounded-none border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] z-50">
                       <DropdownMenuItem
                         onSelect={() => navigate(`/teacher/classrooms/${classroom.id}/manage`)}
-                        className="label-micro py-3"
+                        className="text-xs font-bold uppercase tracking-wider py-3 cursor-pointer"
                       >
                         <Edit2 className="h-4 w-4 mr-2" /> Gestionar
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() => setClassroomToDelete(classroom)}
-                        className="label-micro py-3 text-rose-600 focus:text-rose-600"
+                        className="text-xs font-bold uppercase tracking-wider py-3 cursor-pointer text-rose-600 focus:text-rose-600 focus:bg-rose-50 dark:focus:bg-rose-500/10"
                       >
                         <Trash2 className="h-4 w-4 mr-2" /> Eliminar Aula
                       </DropdownMenuItem>
@@ -142,7 +142,7 @@ export default function TeacherClassroomsPage() {
                   </DropdownMenu>
                 </div>
 
-                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{classroom.name}</h3>
+                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight mb-1 truncate">{classroom.name}</h3>
                 {classroom.description && (
                   <p className="label-micro text-slate-400 mb-4 line-clamp-2 uppercase">{classroom.description}</p>
                 )}
