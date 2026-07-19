@@ -38,6 +38,8 @@ function normalizeUser(raw: any): LoggedUser {
   
   return {
     ...userData,
+    firstName: userData.firstName || userData.first_name,
+    lastName: userData.lastName || userData.last_name,
     role: safeExtractRole(userData)
   } as LoggedUser;
 }
