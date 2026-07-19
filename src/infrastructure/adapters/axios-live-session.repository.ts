@@ -12,7 +12,7 @@ function toDomain(raw: any): LiveSession {
     duration_minutes: raw.duration_min,
     teacher_id: raw.teacher,
     course_id: raw.course,
-    status: raw.status,
+    status: raw.status === 'scheduled' ? 'upcoming' : raw.status,
     join_url: raw.meeting_url,
     enrolled_count: raw.participant_count
   } as LiveSession;
@@ -25,7 +25,9 @@ function toPayload(domain: Partial<LiveSession>): any {
   if (domain.duration_minutes !== undefined) payload.duration_min = domain.duration_minutes;
   if (domain.course_id !== undefined) payload.course = domain.course_id;
   if (domain.join_url !== undefined) payload.meeting_url = domain.join_url;
-  if (domain.status !== undefined) payload.status = domain.status;
+  if (domain.teacher_id !== undefined) payload.teacher = domain.teacher_id;
+  if (domain.classroom_id !== undefined) payload.classroom = domain.classroom_id;
+  if (domain.status !== undefined) payload.status = domain.status === 'upcoming' ? 'scheduled' : domain.status;
   return payload;
 }
 
