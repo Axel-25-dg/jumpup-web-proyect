@@ -6,7 +6,7 @@ import { useAuthStore } from '@/presentation/store/auth.store'
 import {
   Radio, VideoOff, Mic, MicOff, PhoneOff, Users, Loader2,
   MessageSquare, Settings, Hand, MonitorUp, Layout,
-  Signal, Shield, Sparkles, GraduationCap
+  Signal, Shield, Sparkles
 } from 'lucide-react'
 
 interface Participant {
@@ -101,7 +101,6 @@ export default function LiveSessionPage() {
     const wsUrl = `${wsProto}//${wsHost}/ws/live-session/${id}/?token=${token}`
 
     let ws: WebSocket | null = null
-    let hasOpenedOnce = false
 
     const rtcConfig = {
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -146,7 +145,6 @@ export default function LiveSessionPage() {
 
       ws.onopen = () => {
         setIsConnected(true)
-        hasOpenedOnce = true
       }
       ws.onmessage = async (event) => {
         try {

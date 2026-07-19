@@ -13,6 +13,7 @@ export interface Certificate {
   status_display: string;
   issued_at: string | null;
   created_at: string;
+  certificate_file?: string | null;
 }
 
 export interface CertificateCreatePayload {
