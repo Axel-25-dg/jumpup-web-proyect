@@ -50,6 +50,7 @@ export default function HomePage() {
     { value: '24/7', label: 'Tutoría con IA' },
   ]
 
+
   const features = [
     {
       icon: Brain,
