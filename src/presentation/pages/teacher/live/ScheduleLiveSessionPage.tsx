@@ -50,10 +50,11 @@ export default function ScheduleLiveSessionPage() {
 
   useEffect(() => {
     const loadClassrooms = async () => {
-      if (!user?.user_id) return
+      const teacherId = user?.user_id || (user as any)?.id
+      if (!teacherId) return
       try {
-        const result = await getTeacherClassroomsUseCase.execute(user.user_id)
-        setClassrooms(result.results || [])
+        const result = await getTeacherClassroomsUseCase.execute(teacherId)
+        setClassrooms(Array.isArray(result) ? result : (result?.results || []))
       } catch {
         // Non-critical error, classrooms are optional
       }
@@ -62,7 +63,8 @@ export default function ScheduleLiveSessionPage() {
   }, [user?.user_id])
 
   const onSubmit = async (data: ScheduleFormData) => {
-    if (!user?.user_id) return
+    const teacherId = user?.user_id || (user as any)?.id
+    if (!teacherId) return
     setIsSubmitting(true)
     try {
       const scheduledDatetime = `${data.scheduled_date}T${data.scheduled_time}:00`
@@ -73,8 +75,8 @@ export default function ScheduleLiveSessionPage() {
         title: data.title,
         scheduled_date: scheduledDatetime,
         duration_minutes: data.duration_minutes,
-        teacher_id: user.user_id,
-        classroom_id: data.classroom_id ?? undefined,
+        teacher_id: teacherId,
+        classroom_id: data.classroom_id ? Number(data.classroom_id) : undefined,
         course_id: courseId ?? undefined,
         join_url: data.join_url ?? undefined,
         status: 'upcoming',
@@ -142,7 +144,7 @@ export default function ScheduleLiveSessionPage() {
                 <input
                   {...register('title')}
                   placeholder="Ej. Conversación Avanzada: Arte y Cultura"
-                  className={`w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-3 text-2xl font-black tracking-tight transition-colors placeholder:text-slate-200 dark:placeholder:text-slate-800 ${errors.title ? 'border-red-500 focus:border-red-500' : ''}`}
+                  className={`w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-3 text-2xl font-black tracking-tight transition-colors placeholder:text-slate-200 dark:placeholder:text-slate-800 text-slate-900 dark:text-white ${errors.title ? 'border-red-500 focus:border-red-500' : ''}`}
                 />
                 {errors.title && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.title.message)}</p>}
               </div>
@@ -155,7 +157,7 @@ export default function ScheduleLiveSessionPage() {
                   <input
                     {...register('scheduled_date')}
                     type="date"
-                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                   />
                   {errors.scheduled_date && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.scheduled_date.message)}</p>}
                 </div>
@@ -166,7 +168,7 @@ export default function ScheduleLiveSessionPage() {
                   <input
                     {...register('scheduled_time')}
                     type="time"
-                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                    className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                   />
                   {errors.scheduled_time && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.scheduled_time.message)}</p>}
                 </div>
@@ -187,7 +189,7 @@ export default function ScheduleLiveSessionPage() {
                   {...register('duration_minutes')}
                   type="number"
                   placeholder="60"
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white [color-scheme:light] dark:[color-scheme:dark]"
                 />
                 {errors.duration_minutes && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.duration_minutes.message)}</p>}
               </div>
@@ -198,7 +200,7 @@ export default function ScheduleLiveSessionPage() {
                 </label>
                 <select
                   {...register('classroom_id')}
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors appearance-none cursor-pointer"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors appearance-none cursor-pointer text-slate-900 dark:text-white"
                 >
                   <option value="">Selecciona un aula (opcional)</option>
                   {classrooms.map(c => (
@@ -215,7 +217,7 @@ export default function ScheduleLiveSessionPage() {
                   {...register('join_url')}
                   type="url"
                   placeholder="https://meet.google.com/..."
-                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors"
+                  className="w-full bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 focus:border-sky-500 outline-none py-2 font-bold transition-colors text-slate-900 dark:text-white"
                 />
                 {errors.join_url && <p className="text-[10px] font-black text-red-500 uppercase">{String(errors.join_url.message)}</p>}
               </div>
