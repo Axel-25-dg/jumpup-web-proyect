@@ -6,16 +6,12 @@ import { Link } from 'react-router-dom'
 
 interface Certificate {
   id: number
-  code: string
-  difficulty_level: string
-  issued_date: string
+  certificate_code: string
+  level: string
+  issued_at: string | null
   status: 'pending' | 'issued' | 'revoked'
-  course_info?: {
-    title: string
-  }
-  teacher_info?: {
-    username: string
-  }
+  title: string
+  issued_by_email: string | null
 }
 
 export default function CertificatesPage() {
@@ -25,10 +21,22 @@ export default function CertificatesPage() {
   useEffect(() => {
     async function loadCertificates() {
       try {
-        const res = await apiClient.get<Certificate[]>('/certificates/')
-        setCertificates(res.data)
-      } catch (err) {
-        console.error('Error loading certificates:', err)
+        const res = await apiClient.get<any>('/certificates/mine/')
+        const certArray = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+        setCertificates(certArray)
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          // If /mine/ doesn't exist, try /certificates/
+          try {
+            const res = await apiClient.get<any>('/certificates/')
+            const certArray = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+            setCertificates(certArray)
+          } catch (e) {
+            console.error('Error fallback loading certificates:', e)
+          }
+        } else {
+          console.error('Error loading certificates:', err)
+        }
       } finally {
         setIsLoading(false)
       }
@@ -43,6 +51,9 @@ export default function CertificatesPage() {
       </div>
     )
   }
+
+  // Only show issued certificates for the student, or pending if you want them to know
+  const visibleCerts = certificates.filter(c => c.status === 'issued')
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -71,9 +82,9 @@ export default function CertificatesPage() {
 
       {/* LISTING */}
       <div className="px-8 md:px-12 py-12 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
-        {certificates.length > 0 ? (
+        {visibleCerts.length > 0 ? (
           <div className="grid gap-px md:grid-cols-2 lg:grid-cols-3 bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10 shadow-xl shadow-slate-200/50 dark:shadow-none">
-            {certificates.map((cert) => (
+            {visibleCerts.map((cert) => (
               <div key={cert.id} className="p-10 bg-white dark:bg-[#0a0a0b] hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group flex flex-col justify-between h-full">
                 <div>
                   <div className="flex items-center justify-between mb-8">
@@ -81,31 +92,31 @@ export default function CertificatesPage() {
                       <Award className="h-6 w-6" />
                     </div>
                     <span className="label-micro font-black border border-sky-500/20 px-3 py-1 text-sky-600 bg-sky-500/5 tracking-[0.2em]">
-                      NIVEL {cert.difficulty_level.toUpperCase()}
+                      NIVEL {(cert.level || '').toUpperCase()}
                     </span>
                   </div>
 
                   <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight uppercase leading-tight mb-8 min-h-[3rem] group-hover:text-sky-500 transition-colors">
-                    {cert.course_info?.title || 'CURSO TÉCNICO CERTIFICADO'}
+                    {cert.title || 'CURSO TÉCNICO CERTIFICADO'}
                   </h3>
 
                   <div className="space-y-4 pt-8 border-t border-slate-900/5 dark:border-white/5">
                     <div className="flex justify-between items-center py-1">
                       <span className="label-micro text-slate-400 tracking-widest font-bold">CÓDIGO VERIF.</span>
-                      <span className="font-mono text-xs text-slate-950 dark:text-white font-black tracking-wider bg-slate-50 dark:bg-white/5 px-2 py-0.5">{cert.code}</span>
+                      <span className="font-mono text-xs text-slate-950 dark:text-white font-black tracking-wider bg-slate-50 dark:bg-white/5 px-2 py-0.5">{cert.certificate_code}</span>
                     </div>
 
                     <div className="flex justify-between items-center py-1">
                       <span className="label-micro text-slate-400 tracking-widest font-bold">EMITIDO</span>
                       <span className="label-micro font-black text-slate-700 dark:text-slate-300">
-                        {new Date(cert.issued_date).toLocaleDateString('es-ES').toUpperCase()}
+                        {cert.issued_at ? new Date(cert.issued_at).toLocaleDateString('es-ES').toUpperCase() : 'N/A'}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center py-1">
                       <span className="label-micro text-slate-400 tracking-widest font-bold">AUTORIZADO POR</span>
                       <span className="label-micro font-black text-slate-700 dark:text-slate-300 uppercase truncate max-w-[150px]">
-                        {cert.teacher_info?.username || 'SYSTEM_VALIDATOR'}
+                        {cert.issued_by_email || 'SYSTEM_VALIDATOR'}
                       </span>
                     </div>
                   </div>
@@ -117,7 +128,7 @@ export default function CertificatesPage() {
                   asChild
                 >
                   <a
-                    href={`http://localhost:8000/api/certificates/verify/${cert.code}/`}
+                    href={`/verify/${cert.certificate_code}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >

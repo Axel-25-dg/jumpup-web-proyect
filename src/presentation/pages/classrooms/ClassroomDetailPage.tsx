@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import {
-  BookOpen, Video, Users, ArrowLeft, Loader2, PlayCircle, CheckCircle2, ChevronRight, Sparkles, AlertCircle
+  BookOpen, Video, Users, ArrowLeft, Loader2, PlayCircle, CheckCircle2, Sparkles, AlertCircle, Download, FileText
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 
@@ -30,6 +30,7 @@ interface Module {
   description: string
   position: number
   lessons?: Lesson[]
+  resources?: any[]
 }
 
 interface Lesson {
@@ -54,9 +55,25 @@ export default function ClassroomDetailPage() {
     async function loadData() {
       if (!id) return
       try {
-        // Fetch classroom details
-        const classRes = await apiClient.get<ClassroomDetail>(`/classrooms/${id}/`)
-        setClassroom(classRes.data)
+        let classroomData = null;
+        try {
+          const classRes = await apiClient.get<ClassroomDetail>(`/classrooms/${id}/`)
+          classroomData = classRes.data;
+        } catch (err: any) {
+          if (err.response?.status === 404 || err.response?.status === 403) {
+            const mineRes = await apiClient.get<any>('/classrooms/mine/')
+            const classArray = Array.isArray(mineRes.data) ? mineRes.data : (mineRes.data?.results || mineRes.data?.data || [])
+            const found = classArray.find((c: any) => c.id === Number(id))
+            if (found) {
+              classroomData = found;
+            } else {
+              throw err;
+            }
+          } else {
+            throw err;
+          }
+        }
+        setClassroom(classroomData)
 
         // Fetch live sessions
         const liveRes = await apiClient.get<any>('/live-sessions/')
@@ -74,15 +91,25 @@ export default function ClassroomDetailPage() {
         }
 
         // Fetch course modules if assigned
-        if (classRes.data.course) {
-          const modulesRes = await apiClient.get<any>(`/modules/?course=${classRes.data.course}`)
+        if (classroomData?.course) {
+          const modulesRes = await apiClient.get<any>(`/modules/?course=${classroomData.course}`)
           const modulesData = Array.isArray(modulesRes.data) ? modulesRes.data : (modulesRes.data?.results || [])
           
           const modulesWithLessons = await Promise.all(
             modulesData.map(async (mod: any) => {
               const lessonsRes = await apiClient.get<any>(`/lessons/?module=${mod.id}`)
               const lessonsData = Array.isArray(lessonsRes.data) ? lessonsRes.data : (lessonsRes.data?.results || [])
-              return { ...mod, lessons: lessonsData }
+              
+              // Fetch resources for this module
+              let resourcesData = []
+              try {
+                const resRes = await apiClient.get<any>(`/resources/?module=${mod.id}`)
+                resourcesData = Array.isArray(resRes.data) ? resRes.data : (resRes.data?.results || [])
+              } catch (e) {
+                console.error("Error fetching resources", e)
+              }
+
+              return { ...mod, lessons: lessonsData, resources: resourcesData }
             })
           )
           setModules(modulesWithLessons.sort((a, b) => a.position - b.position))
@@ -233,6 +260,36 @@ export default function ClassroomDetailPage() {
                           </div>
                          )
                       })}
+
+                      {mod.resources && mod.resources.length > 0 && (
+                        <div className="bg-slate-50 dark:bg-white/[0.02] p-5 border-t border-slate-900/10 dark:border-white/10">
+                          <h4 className="label-caps text-slate-400 mb-4">Recursos del Módulo</h4>
+                          <div className="grid gap-2">
+                            {mod.resources.map((res: any) => (
+                              <a
+                                key={res.id}
+                                href={res.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center justify-between p-3 border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] hover:border-sky-500/30 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-900/10 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-sky-500">
+                                    <FileText className="h-4 w-4" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-bold text-xs text-slate-900 dark:text-white truncate uppercase">{res.title}</p>
+                                    <p className="label-micro text-slate-400 mt-0.5">{res.file_type || 'DOCUMENTO'}</p>
+                                  </div>
+                                </div>
+                                <div className="h-8 w-8 flex items-center justify-center border border-slate-900/10 dark:border-white/10 text-slate-400 group-hover:bg-sky-500 group-hover:text-white group-hover:border-sky-500 transition-all shrink-0">
+                                  <Download className="h-3 w-3" />
+                                </div>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

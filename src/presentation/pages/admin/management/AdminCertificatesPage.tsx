@@ -249,7 +249,7 @@ export default function AdminCertificatesPage() {
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem
-                        onSelect={() => window.open(`http://localhost:8000/api/certificates/verify/${cert.certificate_code}/`, '_blank')}
+                        onSelect={() => window.open(`/verify/${cert.certificate_code}`, '_blank')}
                         className="gap-2"
                       >
                         <ExternalLink className="h-4 w-4" /> Verificar en portal

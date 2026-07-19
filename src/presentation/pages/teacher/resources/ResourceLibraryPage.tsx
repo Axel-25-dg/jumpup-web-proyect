@@ -345,7 +345,7 @@ export default function ResourceLibraryPage() {
                   setSelectedCourse(e.target.value)
                   setSelectedModule('')
                 }}
-                className="w-full h-12 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold appearance-none cursor-pointer focus:border-sky-500"
+                className="w-full h-12 bg-white dark:bg-slate-950 text-slate-900 dark:text-white border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold cursor-pointer focus:border-sky-500"
               >
                 <option value="">SELECCIONA UN CURSO</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title.toUpperCase()}</option>)}
@@ -358,7 +358,7 @@ export default function ResourceLibraryPage() {
                 value={selectedModule}
                 onChange={(e) => setSelectedModule(e.target.value)}
                 disabled={!selectedCourse || modules.length === 0}
-                className="w-full h-12 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold appearance-none cursor-pointer focus:border-sky-500 disabled:opacity-30"
+                className="w-full h-12 bg-white dark:bg-slate-950 text-slate-900 dark:text-white border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold cursor-pointer focus:border-sky-500 disabled:opacity-30"
               >
                 <option value="">SELECCIONA UN MÓDULO</option>
                 {modules.map(m => <option key={m.id} value={m.id}>{m.title.toUpperCase()}</option>)}
@@ -380,7 +380,7 @@ export default function ResourceLibraryPage() {
               <select
                 value={newLinkType}
                 onChange={(e) => setNewLinkType(e.target.value)}
-                className="w-full h-12 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold appearance-none cursor-pointer focus:border-sky-500"
+                className="w-full h-12 bg-white dark:bg-slate-950 text-slate-900 dark:text-white border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold cursor-pointer focus:border-sky-500"
               >
                 <option value="pdf">PDF / DOCUMENTO</option>
                 <option value="video">VIDEO</option>

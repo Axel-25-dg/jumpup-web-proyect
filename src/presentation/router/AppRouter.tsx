@@ -30,6 +30,7 @@ const ClassroomsPage = lazy(() => import('../pages/classrooms/ClassroomsPage'))
 const ClassroomDetailPage = lazy(() => import('../pages/classrooms/ClassroomDetailPage'))
 const LiveSessionPage = lazy(() => import('../pages/live/LiveSessionPage'))
 const CertificatesPage = lazy(() => import('../pages/certificates/CertificatesPage'))
+const VerifyCertificatePage = lazy(() => import('../pages/certificates/VerifyCertificatePage'))
 const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
 
 // Admin & Teacher
@@ -137,6 +138,8 @@ export default function AppRouter() {
           {/* Rutas que NO deben verse si ya estás logueado */}
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          <Route path="/verify" element={<VerifyCertificatePage />} />
+          <Route path="/verify/:code" element={<VerifyCertificatePage />} />
 
           <Route element={<AppShell />}>
             <Route path="/" element={<PublicRoute><HomePage /></PublicRoute>} />
