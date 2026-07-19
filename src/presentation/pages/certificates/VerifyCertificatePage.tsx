@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
-import { Award, ShieldCheck, ShieldAlert, Loader2, ArrowLeft, CheckCircle2, Search } from 'lucide-react'
+import { Award, ShieldCheck, ShieldAlert, Loader2, ArrowLeft, CheckCircle2, Search, Download } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import type { Certificate } from '@/domain/entities/certificate.entity'
 
@@ -157,9 +157,26 @@ export default function VerifyCertificatePage() {
 
                 <div className="pt-2 flex flex-col items-center">
                   <Award className="h-10 w-10 text-slate-300 dark:text-slate-700 mb-3" />
-                  <p className="text-xs text-slate-500 max-w-sm font-medium">
+                  <p className="text-xs text-slate-500 max-w-sm font-medium text-center mb-6">
                     Este documento certifica electrónicamente que la persona mencionada ha completado exitosamente los requisitos del programa.
                   </p>
+                  
+                  {certificate.certificate_file && (
+                    <Button
+                      variant="default"
+                      className="w-full max-w-sm rounded-none font-black uppercase text-[10px] tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white h-12 gap-3"
+                      asChild
+                    >
+                      <a
+                        href={certificate.certificate_file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={`Certificado_${certificate.level}.pdf`}
+                      >
+                        <Download className="h-3.5 w-3.5" /> DESCARGAR PDF OFICIAL
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

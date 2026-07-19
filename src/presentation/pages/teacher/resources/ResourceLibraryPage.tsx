@@ -128,6 +128,18 @@ export default function ResourceLibraryPage() {
     return true
   })
 
+  const getResourceUrl = (res: any) => {
+    if (res.file) return res.file;
+    if (res.file_url) return res.file_url;
+    if (res.external_url) return res.external_url;
+    if (res.media_file) {
+      if (typeof res.media_file === 'string') return res.media_file;
+      if (res.media_file.file) return res.media_file.file;
+      if (res.media_file.url) return res.media_file.url;
+    }
+    return null;
+  }
+
   const handleAddResource = async () => {
     if (!user?.user_id) return
     
@@ -303,9 +315,9 @@ export default function ResourceLibraryPage() {
                     </td>
                     <td className="px-8 py-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {resource.file_url && (
+                        {getResourceUrl(resource) && (
                           <a
-                            href={resource.file_url}
+                            href={getResourceUrl(resource)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="h-10 w-10 flex items-center justify-center border border-slate-900/10 dark:border-white/10 hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-950 transition-all"
