@@ -36,6 +36,13 @@ export default function LiveSessionPage() {
   const [showChat, setShowChat] = useState(false)
 
   const socketRef = useRef<WebSocket | null>(null)
+  
+  // WebRTC Refs
+  const localStreamRef = useRef<MediaStream | null>(null)
+  const localVideoRef = useRef<HTMLVideoElement>(null)
+  const peerConnections = useRef<Record<number, RTCPeerConnection>>({})
+  const [remoteStreams, setRemoteStreams] = useState<Record<number, MediaStream>>({})
+  const remoteVideoRefs = useRef<Record<number, HTMLVideoElement | null>>({})
 
   useEffect(() => {
     async function loadSession() {
@@ -52,10 +59,41 @@ export default function LiveSessionPage() {
     loadSession()
   }, [id])
 
+  // Get User Media ON MOUNT
+  useEffect(() => {
+    async function initMedia() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        localStreamRef.current = stream
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream
+        }
+      } catch (err) {
+        console.error('Error accessing media devices.', err)
+      }
+    }
+    initMedia()
+
+    return () => {
+      localStreamRef.current?.getTracks().forEach(track => track.stop())
+    }
+  }, [])
+
+  useEffect(() => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTracks().forEach(track => track.enabled = micEnabled)
+    }
+  }, [micEnabled])
+
+  useEffect(() => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getVideoTracks().forEach(track => track.enabled = videoEnabled)
+    }
+  }, [videoEnabled])
+
   useEffect(() => {
     if (!session) return
     if (sessionStorage.getItem('ws_livesession_disabled') === 'true') return
-    if (window.location.hostname.includes('guaman-idiomas-ute.online')) return
 
     const token = localTokenStorage.getAccessToken()
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
@@ -65,6 +103,44 @@ export default function LiveSessionPage() {
 
     let ws: WebSocket | null = null
     let hasOpenedOnce = false
+
+    const rtcConfig = {
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    }
+
+    const createPeerConnection = (targetUserId: number) => {
+      if (peerConnections.current[targetUserId]) return peerConnections.current[targetUserId]
+
+      const pc = new RTCPeerConnection(rtcConfig)
+      peerConnections.current[targetUserId] = pc
+
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => {
+          pc.addTrack(track, localStreamRef.current!)
+        })
+      }
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'webrtc_signal',
+            target_user_id: targetUserId,
+            signal: { type: 'ice_candidate', candidate: event.candidate }
+          }))
+        }
+      }
+
+      pc.ontrack = (event) => {
+        const stream = event.streams[0]
+        setRemoteStreams(prev => {
+          const next = { ...prev, [targetUserId]: stream }
+          return next
+        })
+      }
+
+      return pc
+    }
+
     try {
       ws = new WebSocket(wsUrl)
       socketRef.current = ws
@@ -73,21 +149,68 @@ export default function LiveSessionPage() {
         setIsConnected(true)
         hasOpenedOnce = true
       }
-      ws.onmessage = (event) => {
+      ws.onmessage = async (event) => {
         try {
           const data = JSON.parse(event.data)
           if (data.type === 'participants') {
             setParticipants(data.users || [])
+            // Optionally: Initiate connection with already present participants
+            // but usually we rely on user_joined or existing participants sending offers
           } else if (data.type === 'user_joined') {
             setParticipants((prev) => {
               if (prev.some((p) => p.user_id === data.user_id)) return prev
               return [...prev, { user_id: data.user_id, username: data.username }]
             })
+            // We initiate the offer to the newly joined user
+            const pc = createPeerConnection(data.user_id)
+            const offer = await pc.createOffer()
+            await pc.setLocalDescription(offer)
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'webrtc_signal',
+                target_user_id: data.user_id,
+                signal: offer
+              }))
+            }
           } else if (data.type === 'user_left') {
             setParticipants((prev) => prev.filter((p) => p.user_id !== data.user_id))
+            const pc = peerConnections.current[data.user_id]
+            if (pc) pc.close()
+            delete peerConnections.current[data.user_id]
+            setRemoteStreams(prev => {
+              const next = { ...prev }
+              delete next[data.user_id]
+              return next
+            })
+          } else if (data.type === 'webrtc_signal') {
+            const senderId = data.sender_id
+            const signal = data.signal
+            if (!senderId || !signal) return
+
+            let pc = peerConnections.current[senderId]
+            if (!pc) {
+              pc = createPeerConnection(senderId)
+            }
+
+            if (signal.type === 'offer') {
+              await pc.setRemoteDescription(new RTCSessionDescription(signal))
+              const answer = await pc.createAnswer()
+              await pc.setLocalDescription(answer)
+              if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                  type: 'webrtc_signal',
+                  target_user_id: senderId,
+                  signal: answer
+                }))
+              }
+            } else if (signal.type === 'answer') {
+              await pc.setRemoteDescription(new RTCSessionDescription(signal))
+            } else if (signal.type === 'ice_candidate') {
+              await pc.addIceCandidate(new RTCIceCandidate(signal.candidate))
+            }
           }
         } catch (e) {
-          console.error('Error parsing live session message:', e)
+          console.error('Error processing live session message:', e)
         }
       }
       ws.onclose = () => {
@@ -110,8 +233,20 @@ export default function LiveSessionPage() {
 
     return () => {
       if (ws) ws.close()
+      Object.values(peerConnections.current).forEach(pc => pc.close())
+      peerConnections.current = {}
     }
   }, [session, id])
+
+  // Bind remote streams to video elements whenever remoteStreams state changes
+  useEffect(() => {
+    Object.entries(remoteStreams).forEach(([userId, stream]) => {
+      const videoEl = remoteVideoRefs.current[Number(userId)]
+      if (videoEl && videoEl.srcObject !== stream) {
+        videoEl.srcObject = stream
+      }
+    })
+  }, [remoteStreams])
 
   const handleLeaveSession = () => {
     if (socketRef.current) socketRef.current.close()
@@ -169,7 +304,7 @@ export default function LiveSessionPage() {
             <div className="flex items-center gap-2 mb-0.5">
               <span className="chip px-1.5 py-0.5 text-[9px]">En vivo</span>
               <span className={`label-micro font-bold ${isConnected ? 'text-emerald-500' : 'text-amber-500 animate-pulse'}`}>
-                {isConnected ? 'Conectado' : 'Conectando / Solo Visualización'}
+                {isConnected ? 'Conectado' : 'Conectando'}
               </span>
             </div>
             <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white">
@@ -186,7 +321,7 @@ export default function LiveSessionPage() {
           <div className="flex flex-col">
             <span className="label-micro text-slate-400">Red</span>
             <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-              <Signal size={10} /> {isConnected ? '24ms — Estable' : 'Inestable'}
+              <Signal size={10} /> {isConnected ? 'WebRTC Estable' : 'Inestable'}
             </span>
           </div>
           <div className="flex flex-col">
@@ -214,69 +349,68 @@ export default function LiveSessionPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Central Stage */}
         <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-900/10 dark:border-white/10">
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-px bg-slate-900/10 dark:bg-white/10 min-h-0">
-            {/* Primary Feed: Professor */}
-            <div className="relative group overflow-hidden bg-white dark:bg-white/[0.02]">
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-px bg-slate-900/10 dark:bg-white/10 min-h-0 overflow-y-auto">
+            
+            {/* Primary Feed: Local User */}
+            <div className="relative group overflow-hidden bg-black min-h-[300px]">
               <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                <span className="chip text-[9px] px-1.5 py-0.5 border border-sky-500/20 text-sky-500 bg-sky-500/5">
-                  Profesor (Presentando)
-                </span>
-              </div>
-
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-48 border border-slate-900/5 dark:border-white/5 flex flex-col items-center justify-center space-y-4">
-                  <div className="w-20 h-20 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-sky-500 bg-slate-50 dark:bg-white/5">
-                    <GraduationCap size={36} />
-                  </div>
-                  <div className="text-center space-y-1">
-                    <p className="label-micro text-slate-400">Sincronizando video...</p>
-                    <div className="flex gap-1 justify-center">
-                      {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-sky-500 animate-pulse" />)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2">
-                <div className="h-2 w-2 bg-emerald-500 animate-pulse" />
-                <p className="label-micro text-slate-400">Audio: Activo</p>
-              </div>
-            </div>
-
-            {/* Secondary Feed: Student (YOU) */}
-            <div className="relative group overflow-hidden bg-white dark:bg-white/[0.02]">
-              <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                <span className="chip text-[9px] px-1.5 py-0.5">
+                <span className="chip text-[9px] px-1.5 py-0.5 border border-sky-500/20 text-sky-500 bg-sky-500/20">
                   Tú ({user?.username})
                 </span>
               </div>
+              
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted // local video MUST be muted to prevent feedback loop
+                className={`w-full h-full object-cover transition-opacity ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
+              />
 
-              <div className="absolute inset-0 flex items-center justify-center">
-                {videoEnabled ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-24 h-24 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-xl font-black text-sky-500 bg-slate-50 dark:bg-white/5">
-                      {user?.username.slice(0, 2).toUpperCase()}
+              {!videoEnabled && (
+                 <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-16 h-16 border border-white/10 rounded-full flex items-center justify-center text-white bg-white/5">
+                        <VideoOff size={24} />
+                      </div>
+                      <p className="label-micro text-white">Cámara inactiva</p>
                     </div>
-                    <div className="text-center space-y-1">
-                      <p className="label-micro text-slate-400">Cámara local activa</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-slate-400 bg-slate-50 dark:bg-white/5">
-                      <VideoOff size={20} />
-                    </div>
-                    <p className="label-micro text-slate-400">Cámara inactiva</p>
-                  </div>
-                )}
-              </div>
+                 </div>
+              )}
 
               {!micEnabled && (
-                <div className="absolute top-4 right-4 bg-red-600 text-white p-2">
+                <div className="absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full">
                   <MicOff size={16} />
                 </div>
               )}
             </div>
+
+            {/* Remote Feeds */}
+            {participants.filter(p => p.user_id !== user?.user_id && p.user_id !== (user as any)?.id).map((part) => (
+              <div key={part.user_id} className="relative group overflow-hidden bg-black min-h-[300px]">
+                <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                  <span className="chip text-[9px] px-1.5 py-0.5 bg-black/50 text-white backdrop-blur-md">
+                    {part.username} {part.is_teacher && '(Profesor)'}
+                  </span>
+                </div>
+
+                <video
+                  ref={(el) => { remoteVideoRefs.current[part.user_id] = el }}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+
+                {!remoteStreams[part.user_id] && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
+                      <p className="label-micro text-white">Conectando video...</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Action Control Bar */}
@@ -345,17 +479,6 @@ export default function LiveSessionPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Host / Teacher */}
-            <div className="p-3 border border-sky-500/20 bg-sky-500/[0.04] flex items-center gap-3">
-              <div className="h-8 w-8 bg-sky-500 text-white flex items-center justify-center">
-                <GraduationCap size={16} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">Profesor JumpUp</p>
-                <p className="label-micro text-sky-500 mt-0.5">Anfitrión</p>
-              </div>
-            </div>
-
             {/* Current user */}
             <div className="p-3 border border-slate-900/10 dark:border-white/10 flex items-center gap-3 bg-slate-50 dark:bg-white/5">
               <div className="h-8 w-8 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-xs font-bold text-sky-500 bg-white dark:bg-transparent">
@@ -363,12 +486,12 @@ export default function LiveSessionPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user?.username}</p>
-                <p className="label-micro text-slate-400 mt-0.5">Estudiante</p>
+                <p className="label-micro text-slate-400 mt-0.5">Tú</p>
               </div>
             </div>
 
-            {/* Other students */}
-            {participants.filter(p => p.username !== user?.username).map((part, idx) => (
+            {/* Other participants */}
+            {participants.filter(p => p.user_id !== user?.user_id && p.user_id !== (user as any)?.id).map((part, idx) => (
               <div key={idx} className="p-3 border border-slate-900/10 dark:border-white/10 flex items-center justify-between hover:border-sky-500/30 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-xs font-bold text-sky-500">
@@ -376,7 +499,7 @@ export default function LiveSessionPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{part.username}</p>
-                    <p className="label-micro text-slate-400 mt-0.5">Estudiante</p>
+                    <p className="label-micro text-slate-400 mt-0.5">{part.is_teacher ? 'Profesor' : 'Estudiante'}</p>
                   </div>
                 </div>
               </div>
@@ -394,11 +517,11 @@ export default function LiveSessionPage() {
           <div className="p-4 border-t border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
             <div className="flex items-center gap-2 mb-2">
               <Signal size={12} className="text-sky-500" />
-              <span className="label-micro text-slate-650">Consola de Red</span>
+              <span className="label-micro text-slate-650">Consola WebRTC</span>
             </div>
             <div className="space-y-1 font-mono text-[9px] text-slate-500">
-              <div className="flex justify-between"><span>[Init] WebRTC</span> <span className="text-emerald-500">Estable</span></div>
-              <div className="flex justify-between"><span>[Protocol] WSS</span> <span className={isConnected ? 'text-emerald-500' : 'text-amber-500'}>{isConnected ? 'Conectado' : 'Fallo/Offline'}</span></div>
+              <div className="flex justify-between"><span>[Local]</span> <span className="text-emerald-500">Activo</span></div>
+              <div className="flex justify-between"><span>[Peers]</span> <span>{Object.keys(remoteStreams).length} conectados</span></div>
             </div>
           </div>
         </aside>

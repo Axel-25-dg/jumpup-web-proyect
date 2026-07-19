@@ -4,11 +4,12 @@ import { apiClient } from '@/infrastructure/http/axios-client'
 import { Button } from '@/presentation/components/ui/button'
 
 export default function ProfilePage() {
-  const { user, logout } = useAuthStore()
+  const { user, logout, loadSession } = useAuthStore()
   const [stats, setStats] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+  const [firstName, setFirstName] = useState(user?.first_name || '')
+  const [lastName, setLastName] = useState(user?.last_name || '')
 
   useEffect(() => {
     async function fetchStats() {
@@ -27,10 +28,29 @@ export default function ProfilePage() {
   }, [user])
 
   const handleSave = async () => {
+    setIsSaving(true)
     try {
+      await apiClient.patch('/auth/me/', {
+        first_name: firstName,
+        last_name: lastName
+      })
+      await loadSession() // Reload user data in the store
       setIsEditing(false)
     } catch (err: any) {
       console.error('Error saving profile:', err)
+      // fallback to users/me if /auth/me/ is just a view and not updatable
+      try {
+        await apiClient.patch('/auth/users/me/', {
+          first_name: firstName,
+          last_name: lastName
+        })
+        await loadSession()
+        setIsEditing(false)
+      } catch (fallbackErr) {
+        console.error('Error on fallback profile save:', fallbackErr)
+      }
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -55,8 +75,8 @@ export default function ProfilePage() {
               <p className="label-micro text-slate-400 mt-1">{user?.email}</p>
             </div>
           </div>
-          <Button onClick={() => isEditing ? handleSave() : setIsEditing(true)} className="rounded-none gap-2">
-            {isEditing ? 'Confirmar' : 'Editar'}
+          <Button disabled={isSaving} onClick={() => isEditing ? handleSave() : setIsEditing(true)} className="rounded-none gap-2">
+            {isEditing ? (isSaving ? 'Guardando...' : 'Confirmar') : 'Editar'}
           </Button>
         </div>
       </section>
