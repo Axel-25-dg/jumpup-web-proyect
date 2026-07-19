@@ -171,6 +171,7 @@ export default function ResourceLibraryPage() {
     resourcePayload.append('module', selectedModule)
     resourcePayload.append('resource_type', newLinkType)
     resourcePayload.append('content_type', uploadType)
+    resourcePayload.append('is_public', 'true')
     
     if (uploadType === 'url') {
       resourcePayload.append('external_url', newLinkUrl)
