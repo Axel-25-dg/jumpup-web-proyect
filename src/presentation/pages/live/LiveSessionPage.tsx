@@ -93,7 +93,6 @@ export default function LiveSessionPage() {
 
   useEffect(() => {
     if (!session) return
-    if (sessionStorage.getItem('ws_livesession_disabled') === 'true') return
 
     const token = localTokenStorage.getAccessToken()
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
@@ -215,16 +214,10 @@ export default function LiveSessionPage() {
       }
       ws.onclose = () => {
         setIsConnected(false)
-        if (!hasOpenedOnce) {
-          sessionStorage.setItem('ws_livesession_disabled', 'true')
-        }
       }
       ws.onerror = (err) => {
         console.error('WebSocket connection error:', err)
         setIsConnected(false)
-        if (!hasOpenedOnce) {
-          sessionStorage.setItem('ws_livesession_disabled', 'true')
-        }
       }
     } catch (e) {
       console.error('Failed to establish WebSocket:', e)

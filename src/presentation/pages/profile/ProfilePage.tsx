@@ -84,8 +84,8 @@ export default function ProfilePage() {
       <div className="grid gap-px lg:grid-cols-2 border-b border-slate-900/10 dark:border-white/10 bg-slate-900/10">
         <div className="bg-white dark:bg-[#0a0a0b] p-8">
           <h2 className="text-sm font-bold uppercase mb-4">Información Personal</h2>
-          <input disabled={!isEditing} value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border-b py-2 mb-4" placeholder="Nombre" />
-          <input disabled={!isEditing} value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border-b py-2" placeholder="Apellido" />
+          <input disabled={!isEditing} value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border-b py-2 mb-4 bg-transparent outline-none text-slate-900 dark:text-white disabled:opacity-50" placeholder="Nombre" />
+          <input disabled={!isEditing} value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border-b py-2 bg-transparent outline-none text-slate-900 dark:text-white disabled:opacity-50" placeholder="Apellido" />
         </div>
 
         <div className="bg-white dark:bg-[#0a0a0b] p-8">

@@ -65,8 +65,10 @@ export default function ResourceLibraryPage() {
 
   // New Link states
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [uploadType, setUploadType] = useState<'url' | 'file'>('url')
   const [newLinkTitle, setNewLinkTitle] = useState('')
   const [newLinkUrl, setNewLinkUrl] = useState('')
+  const [newFile, setNewFile] = useState<File | null>(null)
   const [newLinkType, setNewLinkType] = useState('pdf')
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export default function ResourceLibraryPage() {
     return true
   })
 
-  const handleAddLink = async () => {
+  const handleAddResource = async () => {
     if (!user?.user_id) return
     
     if (!selectedCourse || !selectedModule) {
@@ -134,8 +136,18 @@ export default function ResourceLibraryPage() {
       return
     }
 
-    if (!newLinkTitle.trim() || !newLinkUrl.trim()) {
-      toast.error('Por favor, ingresa el título y el enlace')
+    if (!newLinkTitle.trim()) {
+      toast.error('Por favor, ingresa el título')
+      return
+    }
+
+    if (uploadType === 'url' && !newLinkUrl.trim()) {
+      toast.error('Por favor, ingresa el enlace')
+      return
+    }
+
+    if (uploadType === 'file' && !newFile) {
+      toast.error('Por favor, selecciona un archivo')
       return
     }
 
@@ -146,15 +158,22 @@ export default function ResourceLibraryPage() {
     resourcePayload.append('course', selectedCourse)
     resourcePayload.append('module', selectedModule)
     resourcePayload.append('resource_type', newLinkType)
-    resourcePayload.append('file_url', newLinkUrl)
+    resourcePayload.append('content_type', uploadType)
+    
+    if (uploadType === 'url') {
+      resourcePayload.append('external_url', newLinkUrl)
+    } else if (uploadType === 'file' && newFile) {
+      resourcePayload.append('file', newFile)
+    }
 
     try {
       const created = await uploadResourceUseCase.execute(resourcePayload)
       setResources(prev => [created, ...prev])
-      toast.success(`Enlace "${newLinkTitle}" subido correctamente`)
+      toast.success(`Recurso "${newLinkTitle}" subido correctamente`)
       setIsAddDialogOpen(false)
       setNewLinkTitle('')
       setNewLinkUrl('')
+      setNewFile(null)
       setSelectedCourse('')
       setSelectedModule('')
     } catch (error) {
@@ -365,6 +384,23 @@ export default function ResourceLibraryPage() {
               </select>
             </div>
 
+            <div className="flex bg-slate-100 dark:bg-white/5 p-1 gap-1">
+              <button
+                type="button"
+                className={`flex-1 h-10 label-caps transition-colors ${uploadType === 'url' ? 'bg-white dark:bg-slate-900 shadow-sm text-sky-500' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                onClick={() => setUploadType('url')}
+              >
+                Vincular Enlace
+              </button>
+              <button
+                type="button"
+                className={`flex-1 h-10 label-caps transition-colors ${uploadType === 'file' ? 'bg-white dark:bg-slate-900 shadow-sm text-sky-500' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                onClick={() => setUploadType('file')}
+              >
+                Subir Archivo
+              </button>
+            </div>
+
             <div className="space-y-2">
               <label className="label-caps text-slate-400">Título</label>
               <input
@@ -389,20 +425,31 @@ export default function ResourceLibraryPage() {
               </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="label-caps text-slate-400">URL del Recurso</label>
-              <input
-                value={newLinkUrl}
-                onChange={(e) => setNewLinkUrl(e.target.value)}
-                placeholder="HTTPS://..."
-                className="w-full h-12 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold focus:border-sky-500 placeholder:text-slate-200"
-              />
-            </div>
+            {uploadType === 'url' ? (
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400">URL del Recurso</label>
+                <input
+                  value={newLinkUrl}
+                  onChange={(e) => setNewLinkUrl(e.target.value)}
+                  placeholder="HTTPS://..."
+                  className="w-full h-12 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 outline-none font-bold focus:border-sky-500 placeholder:text-slate-200"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="label-caps text-slate-400">Archivo</label>
+                <input
+                  type="file"
+                  onChange={(e) => setNewFile(e.target.files?.[0] || null)}
+                  className="w-full h-12 py-2 bg-transparent border-b-2 border-slate-900/10 dark:border-white/10 outline-none text-slate-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:border-0 file:bg-slate-900 file:text-white dark:file:bg-white dark:file:text-slate-900 file:font-bold file:uppercase file:text-xs file:tracking-widest hover:file:bg-sky-500 transition-colors"
+                />
+              </div>
+            )}
           </div>
           <DialogFooter className="mt-8">
             <Button
-              onClick={handleAddLink}
-              disabled={isUploading || !selectedCourse || !selectedModule || !newLinkTitle || !newLinkUrl}
+              onClick={handleAddResource}
+              disabled={isUploading || !selectedCourse || !selectedModule || !newLinkTitle || (uploadType === 'url' ? !newLinkUrl : !newFile)}
               className="w-full h-14 rounded-none font-black text-lg gap-2"
             >
               {isUploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
