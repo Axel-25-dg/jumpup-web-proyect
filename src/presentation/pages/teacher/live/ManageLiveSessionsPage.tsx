@@ -216,11 +216,11 @@ export default function ManageLiveSessionsPage() {
                       </Button>
                     ) : session.status === 'upcoming' ? (
                       <Button
-                        onClick={() => session.join_url && window.open(session.join_url, '_blank')}
+                        asChild
                         variant="outline"
                         className="w-full h-12 rounded-none border-2 border-slate-900 dark:border-white font-black hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-950 transition-all"
                       >
-                        INICIAR SALA
+                        <Link to={`/live/${session.id}`}>INICIAR SALA</Link>
                       </Button>
                     ) : (
                       <div className="w-full h-12 flex items-center justify-center border border-slate-900/10 dark:border-white/10 label-caps text-slate-400">

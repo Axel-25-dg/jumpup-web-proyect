@@ -52,6 +52,18 @@ export default function ClassroomDetailPage() {
   const [completedLessonIds, setCompletedLessonIds] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  const getResourceUrl = (res: any) => {
+    if (res.file) return res.file;
+    if (res.file_url) return res.file_url;
+    if (res.external_url) return res.external_url;
+    if (res.media_file) {
+      if (typeof res.media_file === 'string') return res.media_file;
+      if (res.media_file.file) return res.media_file.file;
+      if (res.media_file.url) return res.media_file.url;
+    }
+    return null;
+  }
+
   useEffect(() => {
     async function loadData() {
       if (!id) return
@@ -278,7 +290,7 @@ export default function ClassroomDetailPage() {
                             {mod.resources.map((res: any) => (
                               <a
                                 key={res.id}
-                                href={res.file_url}
+                                href={getResourceUrl(res) || '#'}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="group flex items-center justify-between p-3 border border-slate-900/10 dark:border-white/10 bg-white dark:bg-[#0a0a0b] hover:border-sky-500/30 transition-colors"

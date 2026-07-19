@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Users,
   MessageSquare,
-  Settings,
   UserX,
   UserCheck,
   Search,

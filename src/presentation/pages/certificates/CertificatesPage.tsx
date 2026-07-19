@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiClient } from '@/infrastructure/http/axios-client'
-import { Award, ShieldCheck, ExternalLink, Loader2, ArrowLeft } from 'lucide-react'
+import { Award, ShieldCheck, ExternalLink, Loader2, ArrowLeft, Download } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import { Link } from 'react-router-dom'
 
@@ -12,6 +12,7 @@ interface Certificate {
   status: 'pending' | 'issued' | 'revoked'
   title: string
   issued_by_email: string | null
+  certificate_file?: string | null
 }
 
 export default function CertificatesPage() {
@@ -122,19 +123,51 @@ export default function CertificatesPage() {
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full mt-10 rounded-none border-slate-900/10 font-black uppercase text-[10px] tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all h-12 gap-3"
-                  asChild
-                >
-                  <a
-                    href={`/verify/${cert.certificate_code}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <div className="mt-10 space-y-2">
+                  {cert.certificate_file ? (
+                    <Button
+                      variant="default"
+                      className="w-full rounded-none font-black uppercase text-[10px] tracking-widest bg-emerald-600 hover:bg-emerald-700 text-white h-12 gap-3"
+                      asChild
+                    >
+                      <a
+                        href={cert.certificate_file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={`Certificado_${cert.level}.pdf`}
+                      >
+                        <Download className="h-3.5 w-3.5" /> DESCARGAR PDF
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      className="w-full rounded-none font-black uppercase text-[10px] tracking-widest bg-sky-600 hover:bg-sky-700 text-white h-12 gap-3"
+                      asChild
+                    >
+                      <a
+                        href={`/verify/${cert.certificate_code}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Download className="h-3.5 w-3.5" /> DESCARGAR PDF
+                      </a>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-none border-slate-900/10 font-black uppercase text-[10px] tracking-widest hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all h-12 gap-3"
+                    asChild
                   >
-                    VERIFICACIÓN PÚBLICA <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                </Button>
+                    <a
+                      href={`/verify/${cert.certificate_code}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      VERIFICACIÓN PÚBLICA <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

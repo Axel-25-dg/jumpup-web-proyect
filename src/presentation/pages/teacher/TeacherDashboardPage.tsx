@@ -178,7 +178,7 @@ export default function TeacherDashboardPage() {
                     </p>
                   </div>
                   <Button asChild variant="outline" size="sm" className="shrink-0">
-                    <Link to={`/teacher/live/${session.id}`}>Entrar</Link>
+                    <Link to={`/live/${session.id}`}>Entrar</Link>
                   </Button>
                 </div>
               ))

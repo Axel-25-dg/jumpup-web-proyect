@@ -92,7 +92,7 @@ export default function EditCoursePage() {
       formData.append('title', data.title)
       formData.append('description', data.description)
       formData.append('difficulty_level', data.difficulty_level)
-      formData.append('is_active', String(data.is_active))
+      formData.append('is_active', data.is_active ? 'True' : 'False')
       formData.append('status', data.is_active ? 'published' : 'draft')
       
       if (fileInputRef.current?.files?.[0]) {
