@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Save,
@@ -9,11 +9,15 @@ import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
 import { Textarea } from '@/presentation/components/ui/textarea'
+import { Skeleton } from '@/presentation/components/ui/skeleton'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { createCertificateUseCase } from '@/infrastructure/factories/admin-certificate.factory'
+import {
+  getCertificateByIdUseCase,
+  updateCertificateUseCase,
+} from '@/infrastructure/factories/admin-certificate.factory'
 import { getAdminUsersUseCase } from '@/infrastructure/factories/admin.factory'
 import type { AdminUser } from '@/domain/entities/admin-user.entity'
 
@@ -22,69 +26,88 @@ const formSchema = z.object({
   level: z.string().min(1, 'Selecciona un nivel'),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
   description: z.string().optional(),
-  status: z.enum(['pending', 'issued']),
 })
 
 type FormData = z.infer<typeof formSchema>
 
 const LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
 
-export default function AdminIssueCertificatePage() {
+export default function AdminCertificateEditPage() {
+  const { id } = useParams()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingData, setIsLoadingData] = useState(true)
   const [students, setStudents] = useState<AdminUser[]>([])
   const [isLoadingStudents, setIsLoadingStudents] = useState(true)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      student: '',
-      level: '',
-      title: '',
-      description: '',
-      status: 'pending',
-    }
   })
 
+  // Cargar certificado y estudiantes
   useEffect(() => {
-    const fetchStudents = async () => {
+    const loadData = async () => {
+      if (!id) return
       try {
-        const result = await getAdminUsersUseCase.execute()
-        // Filtrar solo estudiantes (role.name === 'student' o sin rol)
-        const allUsers = result.results || []
+        const [certData, usersResult] = await Promise.all([
+          getCertificateByIdUseCase.execute(Number(id)),
+          getAdminUsersUseCase.execute(),
+        ])
+
+        // Cargar estudiantes
+        const allUsers = usersResult.results || []
         const filteredStudents = allUsers.filter(u => {
           const roleName = u.role?.name?.toLowerCase() || ''
           return roleName === '' || roleName === 'student'
         })
         setStudents(filteredStudents)
+
+        // Poblar formulario
+        reset({
+          student: String(certData.student),
+          level: certData.level,
+          title: certData.title,
+          description: certData.description,
+        })
       } catch (error) {
-        console.error('Error fetching students:', error)
-        toast.error('No se pudieron cargar los estudiantes')
+        console.error('Error loading certificate:', error)
+        toast.error('No se pudo cargar el certificado')
+        navigate('/admin/certificates')
       } finally {
+        setIsLoadingData(false)
         setIsLoadingStudents(false)
       }
     }
-    fetchStudents()
-  }, [])
+    loadData()
+  }, [id])
 
   const onSubmit = async (data: FormData) => {
+    if (!id) return
     setIsSubmitting(true)
     try {
-      await createCertificateUseCase.execute({
+      await updateCertificateUseCase.execute(Number(id), {
         student: Number(data.student),
         level: data.level,
         title: data.title,
         description: data.description || '',
-        status: data.status,
       })
-      toast.success('Certificado creado con éxito')
-      navigate('/admin/certificates')
+      toast.success('Certificado actualizado con éxito')
+      navigate(`/admin/certificates/${id}`)
     } catch (error: any) {
-      console.error('Error creating certificate:', error)
-      toast.error(error.message || 'Error al crear el certificado')
+      console.error('Error updating certificate:', error)
+      toast.error(error.message || 'Error al actualizar el certificado')
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (isLoadingData) {
+    return (
+      <div className="animate-in fade-in duration-500 max-w-4xl mx-auto p-8 space-y-8">
+        <Skeleton className="h-12 w-48" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
   }
 
   return (
@@ -92,20 +115,20 @@ export default function AdminIssueCertificatePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/admin/certificates"><ArrowLeft className="h-5 w-5" /></Link>
+            <Link to={`/admin/certificates/${id}`}><ArrowLeft className="h-5 w-5" /></Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Emitir Certificado</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Crea un nuevo certificado para un estudiante</p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Editar Certificado</h1>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Modifica los datos del certificado</p>
           </div>
         </div>
         <div className="flex gap-3">
-          <Button type="button" variant="outline" className="h-12 rounded-xl font-bold" onClick={() => navigate('/admin/certificates')} disabled={isSubmitting}>
+          <Button type="button" variant="outline" className="h-12 rounded-xl font-bold" onClick={() => navigate(`/admin/certificates/${id}`)} disabled={isSubmitting}>
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting || isLoadingStudents} className="h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6">
             {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-            Crear Certificado
+            Guardar Cambios
           </Button>
         </div>
       </div>
@@ -139,9 +162,6 @@ export default function AdminIssueCertificatePage() {
                 </select>
               )}
               {errors.student && <span className="text-red-500 text-xs font-bold">{errors.student.message}</span>}
-              {!isLoadingStudents && students.length === 0 && (
-                <p className="text-amber-600 text-xs font-bold mt-1">No hay estudiantes disponibles</p>
-              )}
             </div>
 
             <div className="space-y-2">
@@ -181,31 +201,6 @@ export default function AdminIssueCertificatePage() {
               className={`min-h-[120px] rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium resize-none p-4 ${errors.description ? 'border-red-500' : ''}`}
             />
             {errors.description && <span className="text-red-500 text-xs font-bold">{errors.description.message}</span>}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 dark:text-white">Estado inicial</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="pending"
-                  {...register('status')}
-                  defaultChecked
-                  className="text-sky-600 focus:ring-sky-500"
-                />
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Pendiente (requiere aprobación)</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="issued"
-                  {...register('status')}
-                  className="text-sky-600 focus:ring-sky-500"
-                />
-                <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Emitido directamente</span>
-              </label>
-            </div>
           </div>
         </CardContent>
       </Card>

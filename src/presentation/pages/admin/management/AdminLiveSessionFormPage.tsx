@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { adminLiveSessionUseCase } from '@/infrastructure/factories/admin-live-session.factory'
+import { adminLiveSessionRepo } from '@/infrastructure/factories/admin-live-session.factory'
 import { getCoursesUseCase } from '@/infrastructure/factories/course.factory'
 import type { CreateAdminLiveSessionDto } from '@/application/dtos/admin-live-session.dto'
 import type { Course } from '@/domain/entities/course.entity'
@@ -65,7 +65,7 @@ export default function AdminLiveSessionFormPage() {
 
       if (isEdit && id) {
         try {
-          const session = await adminLiveSessionUseCase.getById(Number(id))
+          const session = await adminLiveSessionRepo.getById(Number(id))
           const scheduledDate = session.scheduled_at.slice(0, 16)
           reset({
             title: session.title,
@@ -104,10 +104,10 @@ export default function AdminLiveSessionFormPage() {
       if (data.course && data.course !== 0) payload.course = Number(data.course)
 
       if (isEdit && id) {
-        await adminLiveSessionUseCase.update(Number(id), payload)
+        await adminLiveSessionRepo.update(Number(id), payload)
         toast.success('Sesión actualizada con éxito')
       } else {
-        await adminLiveSessionUseCase.create(payload)
+        await adminLiveSessionRepo.create(payload)
         toast.success('Sesión creada con éxito')
       }
       navigate('/admin/live-sessions')

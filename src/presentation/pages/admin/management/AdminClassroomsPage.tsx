@@ -30,8 +30,14 @@ import {
   AlertDialogTitle,
 } from '@/presentation/components/ui/alert-dialog'
 import { toast } from 'sonner'
-import { getAdminClassroomsUseCase, deleteAdminClassroomUseCase } from '@/infrastructure/factories/admin.factory'
+import {
+  getAdminClassroomsUseCase,
+  deleteAdminClassroomUseCase,
+} from '@/infrastructure/factories/admin.factory'
 import type { Classroom } from '@/domain/entities/classroom.entity'
+
+// El backend hace soft-delete (is_active=false). undefined se trata como activo.
+const isActive = (c: Classroom): boolean => c.is_active !== false
 
 export default function AdminClassroomsPage() {
   const navigate = useNavigate()
@@ -40,6 +46,11 @@ export default function AdminClassroomsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [classroomToDelete, setClassroomToDelete] = useState<Classroom | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const activeClassrooms = classrooms.filter(isActive)
+  const filteredClassrooms = activeClassrooms.filter(c =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   useEffect(() => {
     const fetchClassrooms = async () => {
@@ -61,20 +72,16 @@ export default function AdminClassroomsPage() {
     setIsDeleting(true)
     try {
       await deleteAdminClassroomUseCase.execute(classroomToDelete.id)
+      toast.success(`Aula "${classroomToDelete.name}" desactivada correctamente`)
       setClassrooms(prev => prev.filter(c => c.id !== classroomToDelete.id))
-      toast.success(`Aula "${classroomToDelete.name}" eliminada correctamente`)
     } catch (error) {
       console.error('Error deleting classroom:', error)
-      toast.error('Ocurrió un error al eliminar el aula')
+      toast.error('Ocurrio un error al desactivar el aula')
     } finally {
       setIsDeleting(false)
       setClassroomToDelete(null)
     }
   }
-
-  const filteredClassrooms = classrooms.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -88,14 +95,14 @@ export default function AdminClassroomsPage() {
               </Button>
               <div className="chip">
                 <School className="h-3.5 w-3.5 text-sky-500" />
-                Gestión
+                Gestion
               </div>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
               Control de <span className="text-sky-500">Aulas</span>.
             </h1>
             <p className="text-base text-slate-500 dark:text-slate-400 max-w-xl font-medium">
-              Administración de espacios virtuales, asignación de instructores y monitoreo de participación estudiantil.
+              Administracion de espacios virtuales, asignacion de instructores y monitoreo de participacion estudiantil.
             </p>
           </div>
           <Button
@@ -119,7 +126,7 @@ export default function AdminClassroomsPage() {
           />
         </div>
         <div className="label-caps px-6 py-3 border border-slate-900/10 dark:border-white/10 text-slate-500 font-black tracking-widest bg-slate-50 dark:bg-white/5">
-          {classrooms.length} REGISTROS ACTIVOS
+          {activeClassrooms.length} REGISTROS ACTIVOS
         </div>
       </div>
 
@@ -128,7 +135,7 @@ export default function AdminClassroomsPage() {
         <table className="w-full min-w-[1000px] text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
-              <th className="px-8 py-5 label-caps text-slate-400">Aula / Descripción</th>
+              <th className="px-8 py-5 label-caps text-slate-400">Aula / Descripcion</th>
               <th className="px-8 py-5 label-caps text-slate-400">Curso Vinculado</th>
               <th className="px-8 py-5 label-caps text-slate-400">Instructor / Estudiantes</th>
               <th className="px-8 py-5 label-caps text-slate-400 text-right">Acciones</th>
@@ -209,7 +216,7 @@ export default function AdminClassroomsPage() {
                             onSelect={() => setClassroomToDelete(classroom)}
                             className="label-micro py-3 text-rose-600 focus:text-rose-600"
                           >
-                            <Trash2 className="h-4 w-4 mr-2" /> Eliminar Aula
+                            <Trash2 className="h-4 w-4 mr-2" /> Desactivar Aula
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -223,7 +230,7 @@ export default function AdminClassroomsPage() {
                   <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
                     <School className="h-6 w-6 text-slate-200" />
                   </div>
-                  <p className="label-caps text-slate-400">No se encontraron aulas en los registros</p>
+                  <p className="label-caps text-slate-400">No se encontraron aulas activas</p>
                 </td>
               </tr>
             )}
@@ -238,9 +245,9 @@ export default function AdminClassroomsPage() {
             <div className="flex h-16 w-16 items-center justify-center border border-rose-500/20 bg-rose-500/5 mx-auto mb-6">
               <AlertCircle className="h-8 w-8 text-rose-500" />
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Eliminar Aula</AlertDialogTitle>
+            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Desactivar Aula</AlertDialogTitle>
             <AlertDialogDescription className="text-center text-sm font-medium py-4">
-              Esta acción es permanente e irreversible. Se eliminará el aula <span className="text-slate-900 dark:text-white font-bold">"{classroomToDelete?.name?.toUpperCase()}"</span> y todas sus inscripciones asociadas.
+              Se desactivara el aula <span className="text-slate-900 dark:text-white font-bold">"{classroomToDelete?.name?.toUpperCase()}"</span>. Los estudiantes ya no podran acceder. Puedes activarla nuevamente desde el menu de acciones.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
@@ -250,7 +257,7 @@ export default function AdminClassroomsPage() {
               onClick={handleDelete}
               className="rounded-none bg-rose-600 hover:bg-rose-700 font-bold uppercase text-[10px] tracking-[0.2em]"
             >
-              {isDeleting ? 'ELIMINANDO...' : 'CONFIRMAR ELIMINACIÓN'}
+              {isDeleting ? 'DESACTIVANDO...' : 'CONFIRMAR DESACTIVACION'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
