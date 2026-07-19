@@ -142,13 +142,14 @@ export default function FeaturesPage() {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <a
-                href="/download/app-release.apk"
-                download
+                href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/download/v1.0.1/app-release.apk"
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 ${t.accentBg}`}
               >
                 <Download className="h-4 w-4" />
                 Descargar APK
-                <span className="opacity-70">v2.1.0</span>
+                <span className="opacity-70">v1.0.1</span>
               </a>
               <a
                 href="#"
@@ -339,8 +340,9 @@ export default function FeaturesPage() {
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <a
-              href="/download/app-release.apk"
-              download
+              href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/download/v1.0.1/app-release.apk"
+              target="_blank"
+              rel="noopener noreferrer"
               className={`group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 ${t.accentBg}`}
             >
               <Download className="h-4 w-4" />
