@@ -142,7 +142,8 @@ export default function FeaturesPage() {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <a
-                href="#"
+                href="/download/app-release.apk"
+                download
                 className={`group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 ${t.accentBg}`}
               >
                 <Download className="h-4 w-4" />
@@ -338,7 +339,8 @@ export default function FeaturesPage() {
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <a
-              href="#"
+              href="/download/app-release.apk"
+              download
               className={`group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 ${t.accentBg}`}
             >
               <Download className="h-4 w-4" />
