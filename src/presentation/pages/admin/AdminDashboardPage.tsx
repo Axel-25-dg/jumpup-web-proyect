@@ -2,27 +2,47 @@ import { useState, useEffect } from 'react'
 import {
   Users,
   BookOpen,
-  Package,
   Tags,
-  ArrowUpRight,
-  ArrowDownRight,
-  Search,
   Plus,
-  ArrowRight,
   ShieldCheck,
   Activity,
-  Zap,
   LayoutGrid,
-  Bell,
   Award,
   MessageSquare,
   Video,
+  ShoppingBag,
+  Receipt,
+  GraduationCap,
+  DollarSign,
+  UserCheck,
+  FileText,
+  Layers,
+  Puzzle,
+  Megaphone,
+  FolderOpen,
+  Building2,
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import { Skeleton } from '@/presentation/components/ui/skeleton'
 import { Link } from 'react-router-dom'
 import { getAdminDashboardUseCase } from '@/infrastructure/factories/dashboard.factory'
 import type { AdminDashboardData } from '@/domain/ports/dashboard.repository'
+
+type Stat = {
+  label: string
+  value: number
+  icon: any
+  color: string
+  bg: string
+  to?: string
+}
+
+type Shortcut = {
+  to: string
+  label: string
+  icon: any
+  badge: string
+}
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<AdminDashboardData | null>(null)
@@ -46,10 +66,18 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse">
-        <Skeleton className="h-[220px] w-full" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 border-l border-slate-900/10 dark:border-white/10">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-40 w-full border-b border-r border-slate-900/10 dark:border-white/10" />)}
+      <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <Skeleton className="h-12 w-40 rounded-2xl" />
+        </div>
+        <Skeleton className="h-32 w-full rounded-3xl" />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Skeleton className="h-80 rounded-3xl lg:col-span-2" />
+          <Skeleton className="h-80 rounded-3xl" />
         </div>
       </div>
     )
@@ -57,73 +85,90 @@ export default function AdminDashboardPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center p-10 border border-dashed border-slate-900/10 dark:border-white/10">
-        <div className="flex h-16 w-16 items-center justify-center border border-rose-200 dark:border-rose-900/30 mb-6">
-          <ShieldCheck className="h-6 w-6 text-rose-500" />
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="text-center">
+          <ShieldCheck className="h-16 w-16 text-red-300 mx-auto mb-4" />
+          <p className="text-red-500 font-bold text-lg">{error}</p>
+          <Button
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="mt-4 rounded-xl"
+          >
+            Reintentar
+          </Button>
         </div>
-        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{error}</p>
       </div>
     )
   }
 
-  const stats = [
-    { label: 'Total Usuarios', value: data?.users ?? 0, trend: '+12%', up: true, icon: Users },
-    { label: 'Nuevos Registros', value: '24', trend: '+18.2%', up: true, icon: Zap },
-    { label: 'Aulas', value: data?.classrooms ?? 0, trend: '-5%', up: false, icon: Package },
-    { label: 'Cursos Activos', value: data?.courses ?? 0, trend: '+2%', up: true, icon: BookOpen },
+  const stats: Stat[] = [
+    { label: 'Usuarios', value: data?.users ?? 0, icon: Users, color: 'text-sky-600', bg: 'bg-sky-50', to: '/admin/users' },
+    { label: 'Profesores', value: data?.teachers ?? 0, icon: UserCheck, color: 'text-indigo-600', bg: 'bg-indigo-50', to: '/admin/users' },
+    { label: 'Estudiantes', value: data?.students ?? 0, icon: GraduationCap, color: 'text-emerald-600', bg: 'bg-emerald-50', to: '/admin/users' },
+    { label: 'Cursos', value: data?.courses ?? 0, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', to: '/admin/management/courses' },
+    { label: 'Aulas', value: data?.classrooms ?? 0, icon: Building2, color: 'text-amber-600', bg: 'bg-amber-50', to: '/admin/classrooms' },
+    { label: 'Ventas', value: data?.ventas_directas ?? 0, icon: DollarSign, color: 'text-rose-600', bg: 'bg-rose-50', to: '/admin/ordenes-compra' },
+    { label: 'Certificados', value: data?.certificates ?? 0, icon: Award, color: 'text-purple-600', bg: 'bg-purple-50', to: '/admin/certificates' },
   ]
 
-  const navItems = [
-    { to: '/admin/users', label: 'Usuarios', icon: Users },
-    { to: '/admin/classrooms', label: 'Aulas Virtuales', icon: Users },
-    { to: '/admin/certificates', label: 'Certificados', icon: Award },
-    { to: '/admin/management/courses', label: 'Cursos', icon: BookOpen },
-    { to: '/admin/management/modules', label: 'Módulos', icon: BookOpen },
-    { to: '/admin/management/lessons', label: 'Lecciones', icon: BookOpen },
-    { to: '/admin/management/exercises', label: 'Ejercicios', icon: BookOpen },
-    { to: '/admin/announcements', label: 'Anuncios', icon: Bell },
-    { to: '/admin/forum-categories', label: 'Foro Categorías', icon: MessageSquare },
-    { to: '/admin/resources', label: 'Recursos', icon: BookOpen },
-    { to: '/admin/live-sessions', label: 'Sesiones en Vivo', icon: Video },
-    { to: '/admin/management/languages', label: 'Idiomas', icon: Tags },
-  ]
-
-  const recentUsers = [
-    { name: 'Ana Garcia', email: 'ana@example.com', role: 'Estudiante', time: 'Hace 5 min' },
-    { name: 'Carlos Ruiz', email: 'carlos@example.com', role: 'Estudiante', time: 'Hace 12 min' },
-    { name: 'Elena Beltran', email: 'elena@example.com', role: 'Profesor', time: 'Hace 45 min' },
-    { name: 'Juan Perez', email: 'juan@example.com', role: 'Estudiante', time: 'Hace 1h' },
+  const shortcutGroups: { title: string; items: Shortcut[] }[] = [
+    {
+      title: 'Académico',
+      items: [
+        { to: '/admin/management/courses', label: 'Cursos', icon: BookOpen, badge: 'CRUD' },
+        { to: '/admin/management/modules', label: 'Módulos', icon: Layers, badge: 'CRUD' },
+        { to: '/admin/management/lessons', label: 'Lecciones', icon: FileText, badge: 'CRUD' },
+        { to: '/admin/management/exercises', label: 'Ejercicios', icon: Puzzle, badge: 'CRUD' },
+        { to: '/admin/management/languages', label: 'Idiomas', icon: Tags, badge: 'CRUD' },
+      ],
+    },
+    {
+      title: 'Usuarios',
+      items: [
+        { to: '/admin/users', label: 'Usuarios', icon: Users, badge: 'RBAC' },
+        { to: '/admin/classrooms', label: 'Aulas', icon: Building2, badge: 'CRUD' },
+        { to: '/admin/certificates', label: 'Certificados', icon: Award, badge: 'Emitir' },
+      ],
+    },
+    {
+      title: 'E-Commerce',
+      items: [
+        { to: '/admin/catalogo', label: 'Catálogo', icon: ShoppingBag, badge: 'CRUD' },
+        { to: '/admin/ordenes-compra', label: 'Órdenes', icon: Receipt, badge: 'Read' },
+      ],
+    },
+    {
+      title: 'Comunicación',
+      items: [
+        { to: '/admin/announcements', label: 'Anuncios', icon: Megaphone, badge: 'CRUD' },
+        { to: '/admin/forum-categories', label: 'Foro', icon: MessageSquare, badge: 'CRUD' },
+        { to: '/admin/resources', label: 'Recursos', icon: FolderOpen, badge: 'CRUD' },
+        { to: '/admin/live-sessions', label: 'Sesiones', icon: Video, badge: 'CRUD' },
+      ],
+    },
   ]
 
   return (
-    <div className="animate-in fade-in duration-500">
-      {/* HERO — editorial */}
-      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-20">
-        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
-          <div className="space-y-6">
-            <div className="chip">
-              <ShieldCheck className="h-3.5 w-3.5 text-sky-500" />
-              Acceso Administrativo
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-slate-900 dark:text-white">
-              Central de <span className="text-sky-500">Control</span>.
-            </h1>
-            <p className="text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300 max-w-lg">
-              Monitorea el crecimiento, gestiona usuarios y supervisa las operaciones de JumpUp en tiempo real.
-            </p>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+      {/* ===== HEADER ===== */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-sky-600 mb-1">
+            <ShieldCheck size={16} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Acceso Administrativo</span>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <Button variant="outline" size="lg" className="gap-2">
-              <Bell className="h-4 w-4" />
-              Notificaciones
-            </Button>
-            <Button asChild size="lg" className="gap-2 group">
-              <Link to="/admin/management/courses/new">
-                <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
-                Nuevo Curso
-              </Link>
-            </Button>
-          </div>
+          <h1 className="text-4xl font-black tracking-tighter text-slate-900">Panel de Control</h1>
+          <p className="text-slate-500 font-medium max-w-lg">
+            {data?.users ?? 0} usuarios · {data?.courses ?? 0} cursos · {data?.ventas_directas ?? 0} ventas
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button asChild size="lg" className="rounded-xl h-12 bg-sky-600 hover:bg-sky-700 font-black shadow-lg shadow-sky-200 px-6">
+            <Link to="/admin/management/courses/new">
+              <Plus className="mr-2 h-5 w-5" />
+              Nuevo Curso
+            </Link>
+          </Button>
         </div>
       </section>
 

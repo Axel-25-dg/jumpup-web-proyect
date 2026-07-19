@@ -18,8 +18,11 @@ import {
   X,
   Menu,
   ArrowRight,
+  Tags,
   Bell,
-  Radio,
+  ShoppingBag,
+  Receipt,
+  Video,
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 
@@ -130,9 +133,22 @@ export default function AppShell() {
     }
     if (role === 'admin' || role === 'administrador') {
       return [
-        { to: '/admin', label: 'Panel Admin', icon: LayoutDashboard, protected: true },
+        { to: '/admin', label: 'Panel de Control', icon: LayoutDashboard, protected: true },
+        { to: '/admin/management/courses', label: 'Cursos', icon: BookOpen, protected: true },
+        { to: '/admin/management/modules', label: 'Módulos', icon: BookOpen, protected: true },
+        { to: '/admin/management/lessons', label: 'Lecciones', icon: BookOpen, protected: true },
+        { to: '/admin/management/exercises', label: 'Ejercicios', icon: BookOpen, protected: true },
+        { to: '/admin/management/languages', label: 'Idiomas', icon: Tags, protected: true },
         { to: '/admin/users', label: 'Usuarios', icon: Users, protected: true },
-        { to: '/admin/categories', label: 'Categorías', icon: BookOpen, protected: true },
+        { to: '/admin/classrooms', label: 'Aulas', icon: Users, protected: true },
+        { to: '/admin/certificates', label: 'Certificados', icon: Award, protected: true },
+        { to: '/admin/categories', label: 'Categorías', icon: Tags, protected: true },
+        { to: '/admin/announcements', label: 'Anuncios', icon: Bell, protected: true },
+        { to: '/admin/forum-categories', label: 'Foro', icon: MessageSquare, protected: true },
+        { to: '/admin/resources', label: 'Recursos', icon: FolderOpen, protected: true },
+        { to: '/admin/catalogo', label: 'Catálogo', icon: ShoppingBag, protected: true },
+        { to: '/admin/ordenes-compra', label: 'Órdenes', icon: Receipt, protected: true },
+        { to: '/admin/live-sessions', label: 'Sesiones', icon: Video, protected: true },
       ]
     }
     return [

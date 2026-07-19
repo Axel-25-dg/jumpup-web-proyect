@@ -10,10 +10,11 @@ export default function ProfilePage() {
   const { user, logout } = useAuthStore()
   const [stats, setStats] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
-  const [firstName, setFirstName] = useState(user?.username || '')
+  const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
+  // Cargar perfil completo al montar
   useEffect(() => {
     async function fetchStats() {
       if (user?.role === 'student') {
@@ -23,16 +24,18 @@ export default function ProfilePage() {
         } catch (err) {
           console.error('Error fetching student stats:', err)
         }
+      } catch {
+        // stats no crítico
       }
     }
-    fetchStats()
+    loadProfile()
   }, [user])
 
   const handleSave = async () => {
     setIsSaving(true)
     try {
       setIsEditing(false)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving profile:', err)
     } finally {
       setIsSaving(false)
@@ -116,14 +119,19 @@ export default function ProfilePage() {
                   className="w-full border-b border-slate-900/10 dark:border-white/10 bg-transparent py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 disabled:opacity-60 transition-colors uppercase tracking-tight"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="label-caps text-slate-400">Apellido</label>
-                <input
-                  disabled={!isEditing}
-                  value={lastName}
-                  onChange={e => setLastName(e.target.value)}
-                  className="w-full border-b border-slate-900/10 dark:border-white/10 bg-transparent py-2.5 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 disabled:opacity-60 transition-colors uppercase tracking-tight"
-                />
+              <div className="text-center sm:text-left mt-4 sm:mt-16">
+                <h1 className="text-3xl font-black text-slate-900 leading-none">{user?.username}</h1>
+                <p className="text-slate-500 font-bold mt-1">{user?.email}</p>
+                <div className="flex items-center justify-center sm:justify-start gap-2 mt-3">
+                  <Badge className="bg-sky-100 text-sky-700 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
+                    {user?.role === 'student' ? 'Estudiante' : user?.role === 'teacher' ? 'Profesor' : 'Administrador'}
+                  </Badge>
+                  {stats && (
+                    <Badge className="bg-amber-100 text-amber-700 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1 rounded-full">
+                      Nivel {stats.level}
+                    </Badge>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -149,18 +157,36 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {stats ? (
-            <div className="px-8 md:px-10 py-8 space-y-8">
-              <div className="grid grid-cols-2 gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
-                {[
-                  { label: 'Racha Actual', value: `${stats.current_streak} DÍAS`, icon: Flame },
-                  { label: 'Experiencia', value: stats.total_xp?.toLocaleString() ?? 0, icon: Zap },
-                  { label: 'Rango MCER', value: stats.level ?? 1, icon: Award },
-                  { label: 'Eficiencia', value: `${xpPercent}%`, icon: CheckCircle2 },
-                ].map((s, i) => (
-                  <div key={i} className="p-6 bg-white dark:bg-[#0a0a0b] card-hover">
-                    <p className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white">{s.value}</p>
-                    <p className="label-caps text-slate-400 mt-1">{s.label}</p>
+            {/* Estadísticas (Solo Estudiantes) */}
+            {stats && user?.role === 'student' && (
+              <div className="space-y-6 bg-gradient-to-br from-slate-900 to-slate-800 p-6 rounded-[2rem] text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-10">
+                  <Award className="h-32 w-32" />
+                </div>
+                <div className="relative z-10">
+                  <h3 className="font-black text-lg text-white flex items-center gap-2 mb-6">
+                    <Bolt className="h-5 w-5 text-amber-400" /> Rendimiento
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/10 rounded-2xl p-4 border border-white/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-amber-400/20 p-1.5 rounded-lg">
+                          <Flame className="h-4 w-4 text-amber-400" />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-300">Racha</span>
+                      </div>
+                      <p className="text-2xl font-black">{stats.current_streak} Días</p>
+                    </div>
+                    <div className="bg-white/10 rounded-2xl p-4 border border-white/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="bg-sky-400/20 p-1.5 rounded-lg">
+                          <Bolt className="h-4 w-4 text-sky-400" />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-300">Total XP</span>
+                      </div>
+                      <p className="text-2xl font-black">{stats.total_xp}</p>
+                    </div>
                   </div>
                 ))}
               </div>
