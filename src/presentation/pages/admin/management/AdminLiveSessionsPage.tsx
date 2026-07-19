@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus,
@@ -12,8 +12,9 @@ import {
   Search,
   MoreVertical,
   Play,
-  Clock,
-  AlertCircle
+  Square,
+  AlertCircle,
+  Eye,
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import {
@@ -33,7 +34,7 @@ import {
   AlertDialogTitle,
 } from '@/presentation/components/ui/alert-dialog'
 import { toast } from 'sonner'
-import { adminLiveSessionUseCase } from '@/infrastructure/factories/admin-live-session.factory'
+import { adminLiveSessionRepo } from '@/infrastructure/factories/admin-live-session.factory'
 import type { AdminLiveSession } from '@/domain/entities/admin-live-session.entity'
 
 const STATUS_STYLES: Record<string, string> = {
@@ -57,11 +58,12 @@ export default function AdminLiveSessionsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [sessionToDelete, setSessionToDelete] = useState<AdminLiveSession | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [actionLoading, setActionLoading] = useState<number | null>(null)
 
   const loadSessions = async () => {
     try {
       setIsLoading(true)
-      const result = await adminLiveSessionUseCase.getAll()
+      const result = await adminLiveSessionRepo.getAll()
       setSessions(result.results || [])
     } catch (err) {
       console.error('Error fetching sessions:', err)
@@ -73,11 +75,37 @@ export default function AdminLiveSessionsPage() {
 
   useEffect(() => { loadSessions() }, [])
 
+  const handleStartSession = async (session: AdminLiveSession) => {
+    setActionLoading(session.id)
+    try {
+      await adminLiveSessionRepo.start(session.id)
+      toast.success(`Sesión "${session.title}" iniciada`)
+      loadSessions()
+    } catch {
+      toast.error('Error al iniciar la sesión')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleEndSession = async (session: AdminLiveSession) => {
+    setActionLoading(session.id)
+    try {
+      await adminLiveSessionRepo.end(session.id)
+      toast.success(`Sesión "${session.title}" finalizada`)
+      loadSessions()
+    } catch {
+      toast.error('Error al finalizar la sesión')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const handleDeleteSession = async () => {
     if (!sessionToDelete) return
     setIsDeleting(true)
     try {
-      await adminLiveSessionUseCase.delete(sessionToDelete.id)
+      await adminLiveSessionRepo.delete(sessionToDelete.id)
       setSessions(prev => prev.filter(s => s.id !== sessionToDelete.id))
       toast.success(`Sesión "${sessionToDelete.title}" cancelada con éxito`)
     } catch (error) {
@@ -235,9 +263,19 @@ export default function AdminLiveSessionsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="rounded-none border-slate-900/10 dark:border-white/10">
-                          <DropdownMenuItem className="label-micro py-3">
-                            <Clock className="h-4 w-4 mr-2" /> Ver Bitácora
+                          <DropdownMenuItem onSelect={() => navigate(`/admin/live-sessions/${session.id}`)} className="label-micro py-3">
+                            <Eye className="h-4 w-4 mr-2" /> Ver Detalle
                           </DropdownMenuItem>
+                          {session.status === 'scheduled' && (
+                            <DropdownMenuItem onSelect={() => handleStartSession(session)} disabled={actionLoading === session.id} className="label-micro py-3 text-emerald-600 focus:text-emerald-600">
+                              <Play className="h-4 w-4 mr-2" /> Iniciar Sesión
+                            </DropdownMenuItem>
+                          )}
+                          {session.status === 'live' && (
+                            <DropdownMenuItem onSelect={() => handleEndSession(session)} disabled={actionLoading === session.id} className="label-micro py-3 text-rose-600 focus:text-rose-600">
+                              <Square className="h-4 w-4 mr-2" /> Finalizar Sesión
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onSelect={() => setSessionToDelete(session)} className="label-micro py-3 text-rose-500 focus:text-rose-500">
                             <Trash2 className="h-4 w-4 mr-2" /> Cancelar Sesión
                           </DropdownMenuItem>

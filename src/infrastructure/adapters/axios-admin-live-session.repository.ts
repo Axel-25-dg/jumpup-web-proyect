@@ -1,11 +1,10 @@
 import { apiClient } from '../http/axios-client'
-import type { AdminLiveSessionRepository } from '@/domain/ports/admin-live-session.repository'
 import type { AdminLiveSession } from '@/domain/entities/admin-live-session.entity'
 import type { CreateAdminLiveSessionDto, UpdateAdminLiveSessionDto } from '@/application/dtos/admin-live-session.dto'
 import type { PaginatedResult } from '@/domain/entities/paginated-result.entity'
 import { parseApiError } from '../http/parse-api-error'
 
-export class AxiosAdminLiveSessionRepository implements AdminLiveSessionRepository {
+export class AxiosAdminLiveSessionRepository {
   async getAll(params?: Record<string, any>): Promise<PaginatedResult<AdminLiveSession>> {
     try {
       const { data } = await apiClient.get<PaginatedResult<AdminLiveSession>>('/live-sessions/', { params })
@@ -45,6 +44,33 @@ export class AxiosAdminLiveSessionRepository implements AdminLiveSessionReposito
   async delete(id: number): Promise<void> {
     try {
       await apiClient.delete(`/live-sessions/${id}/`)
+    } catch (err) {
+      throw parseApiError(err)
+    }
+  }
+
+  async start(id: number): Promise<{ detail: string; status: string }> {
+    try {
+      const { data } = await apiClient.post<{ detail: string; status: string }>(`/live-sessions/${id}/start/`)
+      return data
+    } catch (err) {
+      throw parseApiError(err)
+    }
+  }
+
+  async end(id: number): Promise<{ detail: string; status: string }> {
+    try {
+      const { data } = await apiClient.post<{ detail: string; status: string }>(`/live-sessions/${id}/end/`)
+      return data
+    } catch (err) {
+      throw parseApiError(err)
+    }
+  }
+
+  async getParticipants(id: number): Promise<any[]> {
+    try {
+      const { data } = await apiClient.get<any[]>(`/live-sessions/${id}/participants/`)
+      return data
     } catch (err) {
       throw parseApiError(err)
     }

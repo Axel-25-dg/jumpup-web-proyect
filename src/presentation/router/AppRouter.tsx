@@ -55,6 +55,7 @@ const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminRes
 const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
 const AdminLiveSessionsPage = lazy(() => import('../pages/admin/management/AdminLiveSessionsPage'))
 const AdminLiveSessionFormPage = lazy(() => import('../pages/admin/management/AdminLiveSessionFormPage'))
+const AdminLiveSessionDetailPage = lazy(() => import('../pages/admin/management/AdminLiveSessionDetailPage'))
 
 // E-Commerce - Catalogo
 const AdminCatalogoPage = lazy(() => import('../pages/admin/management/AdminCatalogoPage'))
@@ -240,6 +241,7 @@ export default function AppRouter() {
                 {/* Live Sessions */}
                 <Route path="/admin/live-sessions" element={<AdminLiveSessionsPage />} />
                 <Route path="/admin/live-sessions/new" element={<AdminLiveSessionFormPage />} />
+                <Route path="/admin/live-sessions/:id" element={<AdminLiveSessionDetailPage />} />
                 <Route path="/admin/live-sessions/:id/edit" element={<AdminLiveSessionFormPage />} />
 
                 {/* Admin Management Routes - Courses */}
