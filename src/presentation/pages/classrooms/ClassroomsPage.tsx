@@ -177,29 +177,6 @@ export default function ClassroomsPage() {
               </div>
               <div className="divide-y divide-slate-900/10 dark:divide-white/10">
                 {liveSessions.map((session) => (
-<<<<<<< HEAD
-                  <Card key={session.id} className="border-rose-100 hover:border-rose-300 transition-all shadow-sm">
-                    <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-                      <div>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          {session.title}
-                          {session.status === 'live' && (
-                            <Badge className="bg-rose-500 text-white animate-pulse">EN VIVO</Badge>
-                          )}
-                        </CardTitle>
-                        <CardDescription className="text-xs">
-                          Inicio programado: {new Date(session.scheduled_at).toLocaleString()}
-                        </CardDescription>
-                      </div>
-                      
-                      <Button size="sm" className="bg-rose-500 hover:bg-rose-600 text-white text-xs" asChild>
-                        <Link to={`/live/${session.id}`}>
-                          Entrar a Tutoría
-                        </Link>
-                      </Button>
-                    </CardHeader>
-                  </Card>
-=======
                   <div key={session.id} className="flex items-center gap-6 px-8 md:px-10 py-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                     <div className="flex h-12 w-12 items-center justify-center border border-rose-500/20 bg-rose-500/5 shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-colors">
                       <Video className="h-5 w-5" />
@@ -207,14 +184,13 @@ export default function ClassroomsPage() {
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight truncate">{session.title}</h4>
                       <p className="label-micro text-slate-400 dark:text-slate-500 mt-1 font-mono">
-                        {new Date(session.scheduled_time).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).toUpperCase()}
+                        {new Date(session.scheduled_at).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).toUpperCase()}
                       </p>
                     </div>
                     <Button size="sm" className="rounded-none bg-rose-500 hover:bg-rose-600 font-bold uppercase text-[10px] tracking-widest px-6" asChild>
                       <Link to={`/live/${session.id}`}>ACCEDER</Link>
                     </Button>
                   </div>
->>>>>>> origin/main
                 ))}
               </div>
             </div>
