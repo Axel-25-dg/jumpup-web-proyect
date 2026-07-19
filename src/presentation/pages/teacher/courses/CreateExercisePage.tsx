@@ -130,8 +130,6 @@ export default function CreateExercisePage() {
         questions.map(q => 
           courseRepo.createExercise({
             lesson: data.lesson,
-            title: data.title,
-            max_score: data.max_score,
             exercise_type: 'multiple_choice',
             question_text: q.text,
             options: q.options,
@@ -139,7 +137,7 @@ export default function CreateExercisePage() {
           })
         )
       )
-      toast.success(`Ejercicio "${data.title}" creado con éxito`)
+      toast.success('Ejercicio(s) creado(s) con éxito')
       navigate('/teacher/courses')
     } catch (error: any) {
       console.error('Error creating exercise:', error)

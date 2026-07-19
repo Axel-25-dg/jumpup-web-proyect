@@ -114,9 +114,10 @@ export default function FeaturesPage() {
       direction="up"
       className={`relative w-full overflow-hidden transition-colors duration-300 ${t.bg} ${t.text}`}
     >
-      {/* ===== HERO ===== */}
+      {/* ===== HERO (alineado al diseño editorial) ===== */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className={`grid grid-cols-1 gap-0 border-b lg:grid-cols-12 ${t.line}`}>
+
           {/* Texto */}
           <div className={`flex flex-col justify-center py-16 lg:col-span-6 lg:border-r lg:py-24 lg:pr-12 ${t.line}`}>
             <div className="flex items-center gap-3">
@@ -157,7 +158,7 @@ export default function FeaturesPage() {
               </a>
             </div>
 
-            <div className={`mt-10 flex flex-wrap gap-x-6 gap-y-2`}>
+            <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2">
               {highlights.map((h) => (
                 <span key={h} className={`inline-flex items-center gap-2 text-xs ${t.sub}`}>
                   <Check className={`h-3.5 w-3.5 ${t.accent}`} />
@@ -167,11 +168,11 @@ export default function FeaturesPage() {
             </div>
           </div>
 
-          {/* Imagen hero */}
+          {/* Imagen hero (alineada al estilo original) */}
           <div className="relative lg:col-span-6">
             <div className="group relative h-full min-h-[380px] overflow-hidden">
               <img
-                src="/features/app-hero.png"
+                src="https://guaman-idiomas-ute.online/media/media/f428dd43-eb62-47/acfecaf6e0154ba692b99bad561caee2.png"
                 alt="Aplicación móvil de JumpUp Idiomas"
                 className="h-full w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
               />
@@ -182,9 +183,9 @@ export default function FeaturesPage() {
               </div>
             </div>
           </div>
+
         </div>
       </div>
-
       {/* ===== STATS ===== */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className={`grid grid-cols-2 border-b divide-x md:grid-cols-4 ${t.line} ${t.grid} border-l border-r-0`}>
@@ -241,9 +242,12 @@ export default function FeaturesPage() {
         <div className={`grid grid-cols-1 items-stretch border-b lg:grid-cols-12 ${t.line}`}>
           <div className="relative lg:col-span-7">
             <div className="group relative h-full min-h-[360px] overflow-hidden">
-              <img
-                src="/features/app-screens.png"
-                alt="Pantallas de la aplicación JumpUp"
+              <video
+                src="/app_publicidad.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
                 className="h-full w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
               />
               <div className={`pointer-events-none absolute inset-0 ${isDark ? 'bg-sky-500/10' : 'bg-sky-500/5'} mix-blend-multiply`} />
@@ -302,7 +306,7 @@ export default function FeaturesPage() {
         <div className={`grid grid-cols-1 border-b md:grid-cols-2 ${t.line}`}>
           <figure className={`group relative overflow-hidden border-r ${t.line}`}>
             <img
-              src="/features/community.png"
+              src="https://guaman-idiomas-ute.online/media/media/2ee4ffa8-f984-4b/0fdcb6a5ec5440d79725eee011863236.jpg"
               alt="Comunidad de estudiantes de idiomas"
               className="h-72 w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 md:h-96"
             />
@@ -312,7 +316,7 @@ export default function FeaturesPage() {
           </figure>
           <figure className="group relative overflow-hidden">
             <img
-              src="/features/gamification.png"
+              src="https://guaman-idiomas-ute.online/media/media/12c8316f-077b-47/64462f2b8ae4434ca6726577ee24da9d.png"
               alt="Minijuegos educativos en la app"
               className="h-72 w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 md:h-96"
             />

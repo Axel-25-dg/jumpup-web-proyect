@@ -6,21 +6,12 @@ import {
   Loader2,
   BookOpen,
   AlertCircle,
-  ChevronDown,
-  ChevronRight,
   Plus,
   Trash2,
-  Eye,
   BarChart,
-  Upload,
   Image as ImageIcon
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Textarea } from '@/presentation/components/ui/textarea'
-import { Badge } from '@/presentation/components/ui/badge'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +47,7 @@ export default function EditCoursePage() {
   const [modules, setModules] = useState<Module[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set())
+  const [, setExpandedModules] = useState<Set<number>>(new Set())
   const [moduleToDelete, setModuleToDelete] = useState<Module | null>(null)
   const [isDeletingModule, setIsDeletingModule] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -148,8 +139,8 @@ export default function EditCoursePage() {
   if (isLoading) {
     return (
       <div className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
-        <Skeleton className="h-12 w-64" />
-        <Skeleton className="h-96 rounded-[2.5rem]" />
+        <div className="h-12 w-64 bg-slate-200 dark:bg-white/10 animate-pulse" />
+        <div className="h-96 bg-slate-200 dark:bg-white/10 animate-pulse" />
       </div>
     )
   }
@@ -167,230 +158,238 @@ export default function EditCoursePage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 max-w-4xl mx-auto">
+    <div className="animate-in fade-in duration-700">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/teacher/courses"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white truncate max-w-[300px]">{course.title}</h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Editar curso</p>
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="space-y-4">
+             <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" asChild className="h-10 w-10 rounded-none border border-slate-900/10 dark:border-white/10">
+                  <Link to="/teacher/courses"><ArrowLeft className="h-4 w-4" /></Link>
+                </Button>
+                <div className="chip">
+                   <BookOpen className="h-3.5 w-3.5 text-sky-500" />
+                   Editor de Programa
+                </div>
+             </div>
+             <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase truncate max-w-2xl">
+               {course.title}
+             </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className={`label-caps px-4 py-2 border font-black tracking-widest ${
+               course.is_active
+               ? 'border-emerald-500/20 text-emerald-600 bg-emerald-500/5'
+               : 'border-amber-500/20 text-amber-600 bg-amber-500/5'
+            }`}>
+               {course.is_active ? 'PUBLICADO' : 'BORRADOR'}
+            </span>
+            <Button
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSaving}
+              className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[11px] tracking-widest px-8 h-12 hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all"
+            >
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Guardar Cambios
+            </Button>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Badge className={course.is_active ? 'bg-emerald-100 text-emerald-700 font-bold' : 'bg-amber-100 text-amber-700 font-bold'}>
-            {course.is_active ? 'Publicado' : 'Borrador'}
-          </Badge>
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSaving}
-            className="h-12 rounded-xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6"
-          >
-            {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Save className="mr-2 h-5 w-5" />}
-            Guardar Cambios
-          </Button>
+      </section>
+
+      <div className="px-8 md:px-12 py-12 max-w-6xl">
+        <div className="grid gap-px bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
+          <div className="bg-white dark:bg-[#0a0a0b] p-8 md:p-12 space-y-12">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight border-b-2 border-slate-900 dark:border-white pb-4 w-fit">Información Base</h2>
+
+            <div className="space-y-4">
+              <label className="label-caps text-slate-900 dark:text-white">Título del Programa</label>
+              <input
+                {...register('title')}
+                className={`w-full border-b bg-transparent py-4 text-2xl font-black uppercase tracking-tight outline-none transition-colors ${
+                  errors.title ? 'border-rose-500 text-rose-500' : 'border-slate-900/10 dark:border-white/10 focus:border-sky-500'
+                }`}
+              />
+              {errors.title && <p className="label-micro text-rose-500 font-bold">{String(errors.title.message)}</p>}
+            </div>
+
+            <div className="space-y-4">
+              <label className="label-caps text-slate-900 dark:text-white">Descripción Técnica</label>
+              <textarea
+                {...register('description')}
+                rows={4}
+                className={`w-full border rounded-none bg-transparent p-6 text-[11px] font-bold uppercase tracking-widest outline-none transition-colors resize-none ${
+                  errors.description ? 'border-rose-500' : 'border-slate-900/10 dark:border-white/10 focus:border-sky-500'
+                }`}
+              />
+              {errors.description && <p className="label-micro text-rose-500 font-bold">{String(errors.description.message)}</p>}
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-10">
+              <div className="space-y-4">
+                <label className="label-caps text-slate-900 dark:text-white">Nivel Académico (MCER)</label>
+                <select
+                  {...register('difficulty_level')}
+                  className="w-full h-14 border rounded-none bg-transparent px-4 text-[11px] font-bold uppercase tracking-widest focus:outline-none focus:border-sky-500 transition-colors border-slate-900/10 dark:border-white/10"
+                >
+                  {DIFFICULTY_LEVELS.map(level => (
+                    <option key={level} value={level} className="bg-white dark:bg-slate-900">{level}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-4">
+                <label className="label-caps text-slate-900 dark:text-white">Estado de Acceso</label>
+                <select
+                  {...register('is_active', { setValueAs: (v) => v === 'true' })}
+                  className="w-full h-14 border rounded-none bg-transparent px-4 text-[11px] font-bold uppercase tracking-widest focus:outline-none focus:border-sky-500 transition-colors border-slate-900/10 dark:border-white/10"
+                >
+                  <option value="true" className="bg-white dark:bg-slate-900">PUBLICADO / ACTIVO</option>
+                  <option value="false" className="bg-white dark:bg-slate-900">BORRADOR / INACTIVO</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-6 pt-4">
+              <label className="label-caps text-slate-900 dark:text-white">Gestión de Portada</label>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/png, image/jpeg"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setSelectedFileName(e.target.files[0].name)
+                  }
+                }}
+              />
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-900/10 dark:border-white/10 p-12 text-center hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors cursor-pointer group"
+              >
+                {course.image_url && !selectedFileName ? (
+                  <div className="flex flex-col md:flex-row items-center justify-center gap-10">
+                    <img src={course.image_url} alt={course.title} className="h-40 w-64 object-cover border border-slate-900/10 dark:border-white/10" />
+                    <div className="text-center md:text-left">
+                      <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">PORTADA ACTUAL</p>
+                      <p className="label-micro text-slate-400 mt-1 mb-6">REEMPLAZAR IMAGEN PARA ACTUALIZAR LA ESTÉTICA DEL CURSO.</p>
+                      <span className="label-caps px-6 py-2 border border-slate-900 dark:border-white text-[10px] group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all">
+                        CAMBIAR IMAGEN
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="h-16 w-16 border border-slate-900/10 dark:border-white/10 flex items-center justify-center mx-auto mb-6 group-hover:bg-sky-500 group-hover:text-white transition-all">
+                      <ImageIcon className="h-6 w-6" />
+                    </div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                      {selectedFileName ? selectedFileName : 'Sincronizar nueva portada'}
+                    </h4>
+                    <p className="label-micro text-slate-400 mt-2">PNG, JPG HASTA 5MB</p>
+                    <div className="mt-8">
+                       <span className="label-caps px-6 py-2 border border-slate-900 dark:border-white text-[10px]">
+                         {selectedFileName ? 'ACTUALIZAR SELECCIÓN' : 'ELEGIR ARCHIVO'}
+                       </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Modules Section */}
+        <div className="mt-12 bg-white dark:bg-[#0a0a0b] border border-slate-900/10 dark:border-white/10">
+          <div className="p-8 md:p-10 border-b border-slate-900/10 dark:border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">Estructura Curricular</h2>
+              <p className="label-caps text-slate-400 mt-1 tracking-widest">{modules.length} MÓDULOS REGISTRADOS</p>
+            </div>
+            <Button
+              asChild
+              className="rounded-none bg-sky-500 hover:bg-sky-600 text-white font-black uppercase text-[10px] tracking-widest px-8 h-11"
+            >
+              <Link to={`/teacher/modules/new?course=${courseId}`}>
+                <Plus className="mr-2 h-4 w-4" /> Añadir Módulo
+              </Link>
+            </Button>
+          </div>
+
+          <div>
+            {modules.length === 0 ? (
+              <div className="py-24 text-center border-b border-slate-900/5 dark:border-white/5">
+                <BookOpen className="h-10 w-10 text-slate-100 mx-auto mb-6" />
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Sin Contenido Estructurado</h3>
+                <p className="label-micro text-slate-400 mt-2 mb-8 uppercase">COMIENZA AÑADIENDO EL PRIMER MÓDULO PARA ORGANIZAR LAS LECCIONES.</p>
+                <Button asChild variant="outline" className="rounded-none border-slate-900 dark:border-white font-black uppercase text-[10px] tracking-widest px-10 h-12">
+                   <Link to={`/teacher/modules/new?course=${courseId}`}>CREAR MÓDULO</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid gap-px bg-slate-900/10 dark:bg-white/10">
+                {modules.map((module) => (
+                  <div key={module.id} className="bg-white dark:bg-[#0a0a0b] group">
+                    <div className="p-6 md:p-8 flex items-center justify-between gap-6">
+                      <button
+                        onClick={() => toggleModule(module.id)}
+                        className="flex items-center gap-6 flex-1 text-left min-w-0"
+                      >
+                        <div className="h-12 w-12 shrink-0 border border-slate-900/10 dark:border-white/10 flex items-center justify-center bg-slate-50 dark:bg-white/5 font-black text-xs text-slate-400 group-hover:bg-slate-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all">
+                           {module.order.toString().padStart(2, '0')}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-sky-500 transition-colors truncate">{module.title}</h4>
+                          <p className="label-micro text-slate-400 mt-1 uppercase tracking-widest">Módulo Académico</p>
+                        </div>
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        <Button asChild variant="ghost" className="h-10 px-4 rounded-none label-micro font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 transition-all">
+                           <Link to={`/teacher/lessons/new?module=${module.id}`}>
+                             <Plus className="mr-2 h-3.5 w-3.5" /> Lección
+                           </Link>
+                        </Button>
+                        <Button asChild variant="ghost" className="h-10 px-4 rounded-none label-micro font-black uppercase tracking-widest text-slate-400 hover:text-sky-500 transition-all">
+                           <Link to={`/teacher/modules/${module.id}/exercises`}>
+                             <BarChart className="mr-2 h-3.5 w-3.5" /> Ejercicios
+                           </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-none text-rose-500 hover:bg-rose-500 hover:text-white transition-all border border-transparent hover:border-rose-500"
+                          onClick={() => setModuleToDelete(module)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Course Form */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">Información del Curso</h2>
-
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 dark:text-white">Título del Curso</label>
-            <Input
-              {...register('title')}
-              className={`h-14 rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium text-lg ${errors.title ? 'border-red-500' : ''}`}
-            />
-            {errors.title && <span className="text-red-500 text-xs font-bold">{errors.title.message}</span>}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-black text-slate-900 dark:text-white">Descripción</label>
-            <Textarea
-              {...register('description')}
-              className={`min-h-[120px] rounded-xl border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-medium resize-none p-4 ${errors.description ? 'border-red-500' : ''}`}
-            />
-            {errors.description && <span className="text-red-500 text-xs font-bold">{errors.description.message}</span>}
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Nivel de Dificultad</label>
-              <select
-                {...register('difficulty_level')}
-                className="w-full h-14 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                {DIFFICULTY_LEVELS.map(level => (
-                  <option key={level} value={level}>{level}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-black text-slate-900 dark:text-white">Estado de Publicación</label>
-              <select
-                {...register('is_active', { setValueAs: (v) => v === 'true' })}
-                className="w-full h-14 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-4 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
-              >
-                <option value="true">Publicado</option>
-                <option value="false">Borrador</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-2">
-            <label className="text-sm font-black text-slate-900 dark:text-white">Imagen de Portada (Opcional)</label>
-            
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              accept="image/png, image/jpeg" 
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  setSelectedFileName(e.target.files[0].name)
-                }
-              }} 
-            />
-
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group"
-            >
-              {course.image_url && !selectedFileName ? (
-                <div className="flex items-center justify-center gap-4">
-                  <img src={course.image_url} alt={course.title} className="h-20 w-32 object-cover rounded-xl" />
-                  <div className="text-left">
-                    <p className="font-black text-slate-900 dark:text-white">Imagen actual</p>
-                    <Button type="button" variant="outline" size="sm" className="mt-2 rounded-xl font-bold dark:border-slate-700 pointer-events-none">
-                      <Upload className="mr-2 h-4 w-4" /> Cambiar imagen
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="h-16 w-16 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <ImageIcon className="h-8 w-8" />
-                  </div>
-                  <h4 className="font-black text-slate-900 dark:text-white">
-                    {selectedFileName ? selectedFileName : 'Haz clic para subir una imagen'}
-                  </h4>
-                  <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">PNG, JPG hasta 5MB</p>
-                  <Button type="button" variant="outline" size="sm" className="mt-4 rounded-xl font-bold dark:border-slate-700 pointer-events-none">
-                    <Upload className="mr-2 h-4 w-4" /> {selectedFileName ? 'Cambiar Imagen' : 'Seleccionar Archivo'}
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Modules Section */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">Módulos del Curso</h2>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">{modules.length} módulo{modules.length !== 1 ? 's' : ''}</p>
-          </div>
-          <Button
-            asChild
-            size="sm"
-            className="h-10 rounded-xl font-bold bg-sky-600 hover:bg-sky-700"
-          >
-            <Link to={`/teacher/modules/new?course=${courseId}`}>
-              <Plus className="mr-2 h-4 w-4" /> Nuevo Módulo
-            </Link>
-          </Button>
-        </div>
-
-        <CardContent className="p-0">
-          {modules.length === 0 ? (
-            <div className="py-16 text-center">
-              <BookOpen className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-              <h3 className="text-lg font-black text-slate-900 dark:text-white">Sin módulos aún</h3>
-              <p className="text-slate-500 font-medium mt-1">Crea el primer módulo para estructurar tu curso.</p>
-              <Button asChild className="mt-4 bg-sky-600 hover:bg-sky-700 rounded-xl font-black">
-                <Link to={`/teacher/modules/new?course=${courseId}`}>
-                  <Plus className="mr-2 h-4 w-4" /> Crear Módulo
-                </Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {modules.map((module) => (
-                <div key={module.id}>
-                  <div className="p-6 flex items-center gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                    <button
-                      onClick={() => toggleModule(module.id)}
-                      className="flex items-center gap-3 flex-1 text-left"
-                    >
-                      {expandedModules.has(module.id)
-                        ? <ChevronDown className="h-5 w-5 text-slate-400 shrink-0" />
-                        : <ChevronRight className="h-5 w-5 text-slate-400 shrink-0" />
-                      }
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-10 rounded-xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 flex items-center justify-center shrink-0">
-                          <BookOpen className="h-5 w-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-black text-slate-900 dark:text-white truncate">{module.title}</h4>
-                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Módulo {module.order}</p>
-                        </div>
-                      </div>
-                    </button>
-                    <div className="flex gap-2 shrink-0">
-                      <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-                        <Link to={`/teacher/lessons/new?module=${module.id}`}>
-                          <Eye className="h-4 w-4 text-slate-500" />
-                        </Link>
-                      </Button>
-                      <Button asChild variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800" title="Ver Ejercicios">
-                        <Link to={`/teacher/modules/${module.id}/exercises`}>
-                          <BarChart className="h-4 w-4 text-slate-500" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        onClick={() => setModuleToDelete(module)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Delete Module Dialog */}
-      <AlertDialog open={!!moduleToDelete} onOpenChange={(open) => !open && !isDeletingModule && setModuleToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl">
+      <AlertDialog open={!!moduleToDelete} onOpenChange={() => setModuleToDelete(null)}>
+        <AlertDialogContent className="rounded-none border-2 border-slate-900 dark:border-white bg-white dark:bg-[#0a0a0b]">
           <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
-            </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar módulo?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Esta acción eliminará permanentemente el módulo{' '}
-              <span className="font-bold text-slate-900 dark:text-white">"{moduleToDelete?.title}"</span> y todas sus lecciones.
+            <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter">Eliminar Módulo</AlertDialogTitle>
+            <AlertDialogDescription className="label-micro uppercase tracking-widest text-slate-500">
+              ¿ESTÁS SEGURO DE QUE DESEAS ELIMINAR EL MÓDULO "{moduleToDelete?.title}"? ESTA ACCIÓN ELIMINARÁ TODAS LAS LECCIONES Y CONTENIDO ASOCIADO Y NO SE PUEDE DESHACER.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isDeletingModule} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-none border-slate-900/10 font-bold uppercase text-[10px] tracking-widest px-6 h-10">CANCELAR</AlertDialogCancel>
             <AlertDialogAction
-              disabled={isDeletingModule}
               onClick={handleDeleteModule}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold"
+              className="rounded-none bg-rose-500 hover:bg-rose-600 text-white font-black uppercase text-[10px] tracking-widest px-6 h-10"
+              disabled={isDeletingModule}
             >
-              {isDeletingModule ? 'Eliminando...' : 'Sí, eliminar'}
+              {isDeletingModule ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <Trash2 className="h-3.5 w-3.5 mr-2" />}
+              ELIMINAR DEFINITIVAMENTE
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

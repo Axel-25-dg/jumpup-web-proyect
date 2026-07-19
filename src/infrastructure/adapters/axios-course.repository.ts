@@ -162,6 +162,43 @@ export class AxiosCourseRepository implements CourseRepository {
     }
   }
 
+  async getExercisesByLesson(lessonId: number): Promise<any[]> {
+    try {
+      const { data } = await apiClient.get<PaginatedResult<any>>('/exercises/', {
+        params: { lesson: lessonId, page_size: 100 },
+      });
+      return data.results;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async createLanguage(payload: { name: string; code: string }): Promise<any> {
+    try {
+      const { data } = await apiClient.post('/languages/', payload);
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async updateLanguage(id: number, payload: { name?: string; code?: string }): Promise<any> {
+    try {
+      const { data } = await apiClient.patch(`/languages/${id}/`, payload);
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async deleteLanguage(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/languages/${id}/`);
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
   async createExercise(payload: ExercisePayload): Promise<any> {
     try {
       const { data } = await apiClient.post('/exercises/', payload);

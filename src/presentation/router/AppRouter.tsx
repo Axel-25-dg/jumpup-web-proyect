@@ -3,7 +3,6 @@ import { Suspense, lazy, useEffect } from 'react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 import ProtectedRoute from './ProtectedRoute'
 import AppShell from '@/presentation/components/AppShell'
-import PlaceholderPage from '../pages/PlaceholderPage'
 
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('../pages/auth/RegisterPage'))
@@ -35,6 +34,40 @@ const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'))
 
 // Admin & Teacher
 const AdminDashboardPage = lazy(() => import('../pages/admin/AdminDashboardPage'))
+
+// Admin Management - Courses
+const AdminCoursesPage = lazy(() => import('../pages/admin/management/AdminCoursesPage'))
+const AdminCourseFormPage = lazy(() => import('../pages/admin/management/AdminCourseFormPage'))
+const AdminModulesPage = lazy(() => import('../pages/admin/management/AdminModulesPage'))
+const AdminLessonsPage = lazy(() => import('../pages/admin/management/AdminLessonsPage'))
+const AdminExercisesPage = lazy(() => import('../pages/admin/management/AdminExercisesPage'))
+const AdminLanguagesPage = lazy(() => import('../pages/admin/management/AdminLanguagesPage'))
+const AdminAnnouncementsPage = lazy(() => import('../pages/admin/management/AdminAnnouncementsPage'))
+const AdminAnnouncementFormPage = lazy(() => import('../pages/admin/management/AdminAnnouncementFormPage'))
+const AdminForumCategoriesPage = lazy(() => import('../pages/admin/management/AdminForumCategoriesPage'))
+const AdminForumCategoryFormPage = lazy(() => import('../pages/admin/management/AdminForumCategoryFormPage'))
+const AdminResourcesPage = lazy(() => import('../pages/admin/management/AdminResourcesPage'))
+const AdminResourceFormPage = lazy(() => import('../pages/admin/management/AdminResourceFormPage'))
+const AdminLiveSessionsPage = lazy(() => import('../pages/admin/management/AdminLiveSessionsPage'))
+const AdminLiveSessionFormPage = lazy(() => import('../pages/admin/management/AdminLiveSessionFormPage'))
+
+// E-Commerce - Catalogo
+const AdminCatalogoPage = lazy(() => import('../pages/admin/management/AdminCatalogoPage'))
+const AdminCatalogoFormPage = lazy(() => import('../pages/admin/management/AdminCatalogoFormPage'))
+
+// E-Commerce - Ordenes de Compra
+const AdminOrdenesCompraPage = lazy(() => import('../pages/admin/management/AdminOrdenesCompraPage'))
+const AdminOrdenCompraDetailPage = lazy(() => import('../pages/admin/management/AdminOrdenCompraDetailPage'))
+
+// Admin Management - Users, Classrooms, Certificates (NEW)
+const AdminUsersPage = lazy(() => import('../pages/admin/management/AdminUsersPage'))
+const AdminUserFormPage = lazy(() => import('../pages/admin/management/AdminUserFormPage'))
+const AdminClassroomsPage = lazy(() => import('../pages/admin/management/AdminClassroomsPage'))
+const AdminClassroomFormPage = lazy(() => import('../pages/admin/management/AdminClassroomFormPage'))
+const AdminCertificatesPage = lazy(() => import('../pages/admin/management/AdminCertificatesPage'))
+const AdminIssueCertificatePage = lazy(() => import('../pages/admin/management/AdminIssueCertificatePage'))
+
+// Teacher
 const TeacherDashboardPage = lazy(() => import('../pages/teacher/TeacherDashboardPage'))
 const TeacherCoursesPage = lazy(() => import('../pages/teacher/courses/TeacherCoursesPage'))
 const CreateCoursePage = lazy(() => import('../pages/teacher/courses/CreateCoursePage'))
@@ -155,8 +188,8 @@ export default function AppRouter() {
                <Route path="/management/courses/:id/edit" element={<CourseFormPage />} />
             </Route>
 
-            {/* Shared Authenticated Routes (Students & Teachers) */}
-            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher']} />}>
+            {/* Shared Authenticated Routes (All roles) */}
+            <Route element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']} />}>
                <Route path="/forum" element={<ForumPage />} />
                <Route path="/classrooms" element={<ClassroomsPage />} />
                <Route path="/live/:id" element={<LiveSessionPage />} />
@@ -164,15 +197,67 @@ export default function AppRouter() {
             </Route>
 
             {/* Admin Protected Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-               <Route path="/admin" element={<AdminDashboardPage />} />
-               <Route path="/admin/users" element={<PlaceholderPage title="Gestión de Usuarios" />} />
-               <Route path="/admin/categories" element={<CategoryListPage />} />
-               <Route path="/admin/categories/new" element={<CategoryFormPage />} />
-               <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
-               <Route path="/admin/products" element={<PlaceholderPage title="Inventario de Productos" />} />
-               <Route path="/admin/orders" element={<PlaceholderPage title="Registro de Ventas" />} />
-            </Route>
+             <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route path="/admin" element={<AdminDashboardPage />} />
+                
+                {/* Users */}
+                <Route path="/admin/users" element={<AdminUsersPage />} />
+                <Route path="/admin/users/new" element={<AdminUserFormPage />} />
+                <Route path="/admin/users/:id/edit" element={<AdminUserFormPage />} />
+                
+                {/* Categories */}
+                <Route path="/admin/categories" element={<CategoryListPage />} />
+                <Route path="/admin/categories/new" element={<CategoryFormPage />} />
+                <Route path="/admin/categories/:id/edit" element={<CategoryFormPage />} />
+                
+                {/* E-Commerce - Catalogo */}
+                <Route path="/admin/catalogo" element={<AdminCatalogoPage />} />
+                <Route path="/admin/catalogo/new" element={<AdminCatalogoFormPage />} />
+                <Route path="/admin/catalogo/:id/edit" element={<AdminCatalogoFormPage />} />
+
+                {/* E-Commerce - Ordenes de Compra */}
+                <Route path="/admin/ordenes-compra" element={<AdminOrdenesCompraPage />} />
+                <Route path="/admin/ordenes-compra/:id" element={<AdminOrdenCompraDetailPage />} />
+                
+                {/* Announcements */}
+                <Route path="/admin/announcements" element={<AdminAnnouncementsPage />} />
+                <Route path="/admin/announcements/new" element={<AdminAnnouncementFormPage />} />
+                <Route path="/admin/announcements/:id/edit" element={<AdminAnnouncementFormPage />} />
+
+                {/* Forum Categories */}
+                <Route path="/admin/forum-categories" element={<AdminForumCategoriesPage />} />
+                <Route path="/admin/forum-categories/new" element={<AdminForumCategoryFormPage />} />
+                <Route path="/admin/forum-categories/:id/edit" element={<AdminForumCategoryFormPage />} />
+
+                {/* Resources */}
+                <Route path="/admin/resources" element={<AdminResourcesPage />} />
+                <Route path="/admin/resources/new" element={<AdminResourceFormPage />} />
+                <Route path="/admin/resources/:id/edit" element={<AdminResourceFormPage />} />
+
+                {/* Live Sessions */}
+                <Route path="/admin/live-sessions" element={<AdminLiveSessionsPage />} />
+                <Route path="/admin/live-sessions/new" element={<AdminLiveSessionFormPage />} />
+                <Route path="/admin/live-sessions/:id/edit" element={<AdminLiveSessionFormPage />} />
+
+                {/* Admin Management Routes - Courses */}
+                <Route path="/admin/management/courses" element={<AdminCoursesPage />} />
+                <Route path="/admin/management/courses/new" element={<AdminCourseFormPage />} />
+                <Route path="/admin/management/courses/:id/edit" element={<AdminCourseFormPage />} />
+                <Route path="/admin/management/modules" element={<AdminModulesPage />} />
+                <Route path="/admin/management/lessons" element={<AdminLessonsPage />} />
+                <Route path="/admin/management/exercises" element={<AdminExercisesPage />} />
+                <Route path="/admin/management/languages" element={<AdminLanguagesPage />} />
+                
+                {/* Admin - Classrooms */}
+                <Route path="/admin/classrooms" element={<AdminClassroomsPage />} />
+                <Route path="/admin/classrooms/new" element={<AdminClassroomFormPage />} />
+                <Route path="/admin/classrooms/:id/edit" element={<AdminClassroomFormPage />} />
+                <Route path="/admin/classrooms/:id/manage" element={<ManageClassroomPage />} />
+                
+                {/* Admin - Certificates */}
+                <Route path="/admin/certificates" element={<AdminCertificatesPage />} />
+                <Route path="/admin/certificates/issue" element={<AdminIssueCertificatePage />} />
+             </Route>
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

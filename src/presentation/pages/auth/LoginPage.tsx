@@ -220,7 +220,7 @@ export default function LoginPage() {
         {/* Background image with overlay */}
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&q=80&w=1400"
+            src="https://guaman-idiomas-ute.online/media/media/9ead07c7-1f71-4e/7af66d79fabf4d0b9f2edad7725a8229.jpg"
             alt="Estudiantes aprendiendo"
             className="w-full h-full object-cover grayscale"
           />

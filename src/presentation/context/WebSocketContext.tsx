@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+  import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/presentation/store/auth.store';
 import { localTokenStorage } from '@/infrastructure/storage/local-token-storage';
 import { API_CONFIG } from '@/infrastructure/config/api.config';
@@ -21,22 +21,26 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     if (!user || !API_CONFIG.WS_URL) return;
+    if (sessionStorage.getItem('ws_notifications_disabled') === 'true') return;
+    if (API_CONFIG.WS_URL.includes('guaman-idiomas-ute.online')) return;
 
     let disposed = false;
+    let hasOpenedOnce = false;
 
     const connect = () => {
       if (disposed || reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) return;
+      if (sessionStorage.getItem('ws_notifications_disabled') === 'true') return;
 
       const token = localTokenStorage.getAccessToken();
       if (!token) return;
 
-      // El backend Django registra NotificationConsumer en ws/notifications/.
       const ws = new WebSocket(`${API_CONFIG.WS_URL}/notifications/?token=${token}`);
       socketRef.current = ws;
 
       ws.onopen = () => {
         if (disposed) return;
         setIsConnected(true);
+        hasOpenedOnce = true;
         reconnectAttemptsRef.current = 0;
       };
 
@@ -52,6 +56,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (disposed) return;
         socketRef.current = null;
         setIsConnected(false);
+        if (!hasOpenedOnce) {
+          sessionStorage.setItem('ws_notifications_disabled', 'true');
+          return;
+        }
         if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           reconnectAttemptsRef.current += 1;
           const delay = Math.min(1000 * 2 ** reconnectAttemptsRef.current, 30000);
@@ -59,7 +67,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       };
 
-      ws.onerror = () => ws.close();
+      ws.onerror = () => {
+        if (!hasOpenedOnce) {
+          sessionStorage.setItem('ws_notifications_disabled', 'true');
+        }
+        ws.close();
+      };
     };
 
     connect();

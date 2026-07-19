@@ -1,36 +1,18 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  Users,
-  Plus,
-  Search,
-  MoreVertical,
-  Edit2,
-  Trash2,
-  ArrowRight,
-  AlertCircle,
-  BookOpen
+  Users, Plus, Search, MoreVertical, Edit2,
+  Trash2, AlertCircle, BookOpen
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Badge } from '@/presentation/components/ui/badge'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuTrigger,
 } from '@/presentation/components/ui/dropdown-menu'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/presentation/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import { getTeacherClassroomsUseCase, deleteClassroomUseCase } from '@/infrastructure/factories/teacher.factory'
@@ -83,144 +65,157 @@ export default function TeacherClassroomsPage() {
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Mis Aulas</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Gestiona tus grupos y estudiantes</p>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="chip">
+              <Users className="h-3.5 w-3.5 text-sky-500" />
+              Instructor
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              Mis <span className="text-sky-500">Aulas</span>
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg font-medium">
+              Control total sobre tus grupos de estudio, materiales y seguimiento de alumnos.
+            </p>
+          </div>
+          <Button asChild className="rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[11px] tracking-[0.2em] px-8 py-6 h-auto hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all gap-2 shrink-0 group">
+            <Link to="/teacher/classrooms/new">
+              <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" /> Crear Nueva Aula
+            </Link>
+          </Button>
         </div>
-        <Button asChild className="h-12 rounded-2xl font-black bg-sky-600 hover:bg-sky-700 shadow-xl shadow-sky-500/20 px-6 group">
-          <Link to="/teacher/classrooms/new">
-            <Plus className="mr-2 h-5 w-5" /> Crear Nueva Aula
-            <ArrowRight className="ml-2 h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-          </Link>
-        </Button>
-      </div>
+      </section>
 
-      {/* List */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-            <Input
-              placeholder="Buscar aula por nombre..."
+      {/* LIST */}
+      <div className="px-8 md:px-12 py-10">
+        {/* Toolbar */}
+        <div className="flex flex-col md:flex-row gap-6 justify-between items-center mb-10">
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              placeholder="BUSCAR AULA POR NOMBRE..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
             />
           </div>
-          <Badge variant="outline" className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold px-4 py-2">
-            {classrooms.length} aula{classrooms.length !== 1 ? 's' : ''}
-          </Badge>
+          <div className="label-caps px-6 py-2.5 border border-slate-900/10 dark:border-white/10 text-slate-500 font-black tracking-widest bg-slate-50 dark:bg-white/5">
+            {classrooms.length} AULAS BAJO TU CARGO
+          </div>
         </div>
 
-        <CardContent className="p-0">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
-            {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex gap-6 items-center">
-                    <Skeleton className="h-16 w-16 rounded-2xl" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-5 w-48" />
-                      <Skeleton className="h-3 w-32" />
-                    </div>
+        <div className="grid gap-px md:grid-cols-2 lg:grid-cols-3 bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
+          {isLoading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} className="h-64 bg-white dark:bg-[#0a0a0b] animate-pulse" />
+            ))
+          ) : filteredClassrooms.length > 0 ? (
+            filteredClassrooms.map((classroom) => (
+              <div key={classroom.id} className="bg-white dark:bg-[#0a0a0b] p-8 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                <div className="flex items-start justify-between mb-6">
+                  <div className="h-12 w-12 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-sky-500 shrink-0 group-hover:bg-sky-500 group-hover:text-white transition-all">
+                    <Users className="h-5 w-5" />
                   </div>
-                ))}
-              </div>
-            ) : filteredClassrooms.length > 0 ? (
-              filteredClassrooms.map((classroom) => (
-                <div key={classroom.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="h-16 w-16 rounded-2xl bg-sky-50 dark:bg-sky-900/20 text-sky-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                    <Users className="h-8 w-8" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-center md:text-left">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white truncate">{classroom.name}</h3>
-                    {classroom.description && (
-                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 truncate">{classroom.description}</p>
-                    )}
-                    <p className="text-xs font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">
-                      Creada: {new Date(classroom.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-none border-slate-900/10 dark:border-white/10">
+                      <DropdownMenuItem
+                        onSelect={() => navigate(`/teacher/classrooms/${classroom.id}/manage`)}
+                        className="label-micro py-3"
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" /> Gestionar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => setClassroomToDelete(classroom)}
+                        className="label-micro py-3 text-rose-600 focus:text-rose-600"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" /> Eliminar Aula
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <h3 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight leading-tight mb-1">{classroom.name}</h3>
+                {classroom.description && (
+                  <p className="label-micro text-slate-400 mb-4 line-clamp-2 uppercase">{classroom.description}</p>
+                )}
+
+                <div className="space-y-4 mt-auto">
+                  <div className="pt-6 border-t border-slate-900/5 dark:border-white/5">
+                    <p className="label-micro text-slate-400 mb-1">CÓDIGO DE ACCESO</p>
+                    <p className="font-mono text-sm font-black tracking-widest text-slate-900 dark:text-white">
+                      {classroom.access_code}
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="h-10 rounded-xl font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
-                    >
-                      <Link to={`/teacher/classrooms/${classroom.id}/manage`}>
-                        <BookOpen className="mr-2 h-4 w-4" /> Gestionar
-                      </Link>
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl p-2">
-                        <DropdownMenuItem
-                          onSelect={() => navigate(`/teacher/classrooms/${classroom.id}/manage`)}
-                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" /> Gestionar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onSelect={() => setClassroomToDelete(classroom)}
-                          className="font-bold py-3 text-red-600 dark:text-red-400 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="flex items-center justify-between py-3 border-y border-slate-900/5 dark:border-white/5">
+                    <span className="label-micro text-slate-400">CREADA EL</span>
+                    <span className="label-micro font-bold text-slate-700 dark:text-slate-300">
+                      {new Date(classroom.created_at).toLocaleDateString('es-ES').toUpperCase()}
+                    </span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="py-20 text-center">
-                <Users className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                  {searchTerm ? 'No se encontraron aulas' : 'Aún no tienes aulas'}
-                </h3>
-                <p className="text-slate-500 font-medium mt-1">
-                  {searchTerm ? 'Prueba con otro término de búsqueda.' : 'Crea tu primera aula para empezar.'}
-                </p>
-                {!searchTerm && (
-                  <Button asChild className="mt-4 bg-sky-600 hover:bg-sky-700 rounded-xl font-black">
-                    <Link to="/teacher/classrooms/new"><Plus className="mr-2 h-4 w-4" /> Crear Aula</Link>
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Delete Dialog */}
-      <AlertDialog open={!!classroomToDelete} onOpenChange={(open) => !open && !isDeleting && setClassroomToDelete(null)}>
-        <AlertDialogContent className="rounded-3xl">
-          <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                <Button
+                  asChild
+                  className="w-full mt-8 rounded-none bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[10px] tracking-widest hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-all h-11"
+                >
+                  <Link to={`/teacher/classrooms/${classroom.id}/manage`}>
+                    GESTIONAR GRUPO <BookOpen className="ml-2 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full py-24 text-center bg-white dark:bg-[#0a0a0b]">
+              <div className="h-20 w-20 border border-slate-900/10 dark:border-white/10 mx-auto mb-6 flex items-center justify-center">
+                <Users className="h-8 w-8 text-slate-200" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">
+                {searchTerm ? 'Sin Resultados' : 'Sin Aulas Activas'}
+              </h3>
+              <p className="label-micro text-slate-400 max-w-xs mx-auto mb-8 uppercase leading-relaxed">
+                {searchTerm ? 'INTENTA CON OTRO TÉRMINO O FILTRO DE BÚSQUEDA.' : 'COMIENZA CREANDO TU PRIMER GRUPO DE ENSEÑANZA.'}
+              </p>
+              {!searchTerm && (
+                <Button asChild className="rounded-none bg-sky-500 hover:bg-sky-600 text-white font-black uppercase text-[10px] tracking-widest px-8 h-12">
+                  <Link to="/teacher/classrooms/new">
+                    <Plus className="mr-2 h-4 w-4" /> CREAR AULA
+                  </Link>
+                </Button>
+              )}
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar aula?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Esta acción no se puede deshacer. Se eliminará permanentemente el aula{' '}
-              <span className="font-bold text-slate-900 dark:text-white">"{classroomToDelete?.name}"</span> y todos sus datos.
+          )}
+        </div>
+      </div>
+
+      {/* DELETE CONFIRM */}
+      <AlertDialog open={!!classroomToDelete} onOpenChange={(open) => !open && !isDeleting && setClassroomToDelete(null)}>
+        <AlertDialogContent className="rounded-none border-slate-900/10">
+          <AlertDialogHeader>
+            <div className="flex h-16 w-16 items-center justify-center border border-rose-500/20 bg-rose-500/5 mx-auto mb-6">
+              <AlertCircle className="h-8 w-8 text-rose-500" />
+            </div>
+            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Eliminar Registro</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm font-medium py-4">
+              Esta operación es irreversible. Se eliminará el aula <span className="text-slate-900 dark:text-white font-bold">"{classroomToDelete?.name?.toUpperCase()}"</span> y todos sus datos de seguimiento.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isDeleting} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+            <AlertDialogCancel disabled={isDeleting} className="rounded-none font-bold uppercase text-[10px] tracking-[0.2em]">CANCELAR</AlertDialogCancel>
             <AlertDialogAction
               disabled={isDeleting}
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold shadow-lg shadow-red-500/20"
+              className="rounded-none bg-rose-600 hover:bg-rose-700 font-bold uppercase text-[10px] tracking-[0.2em]"
             >
-              {isDeleting ? 'Eliminando...' : 'Sí, eliminar'}
+              {isDeleting ? 'ELIMINANDO...' : 'CONFIRMAR ACCIÓN'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

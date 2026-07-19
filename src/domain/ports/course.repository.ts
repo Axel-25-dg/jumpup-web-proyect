@@ -5,12 +5,11 @@ import type { Language } from '../entities/course.entity';
 
 export interface ExercisePayload {
   lesson: number;
-  title: string;
-  max_score?: number;
-  exercise_type: string;
   question_text: string;
-  options: string[];
+  exercise_type: 'multiple_choice' | 'translate' | 'listen' | 'fill_blank' | 'match';
   correct_answer: string;
+  options?: string[];
+  audio_url?: string;
 }
 
 export interface CourseRepository {
@@ -30,7 +29,11 @@ export interface CourseRepository {
   deleteModule(id: number): Promise<void>;
   createLesson(payload: { module: number; title: string; content_type: string; content?: string; video_url?: string; order?: number; xp_reward?: number }): Promise<Lesson>;
   deleteLesson(id: number): Promise<void>;
+  getExercisesByLesson(lessonId: number): Promise<any[]>;
   createExercise(payload: ExercisePayload): Promise<any>;
   deleteExercise(id: number): Promise<void>;
   getLanguages(): Promise<Array<{ id: number; name: string; code: string }>>;
+  createLanguage?(payload: { name: string; code: string }): Promise<any>;
+  updateLanguage?(id: number, payload: { name?: string; code?: string }): Promise<any>;
+  deleteLanguage?(id: number): Promise<void>;
 }

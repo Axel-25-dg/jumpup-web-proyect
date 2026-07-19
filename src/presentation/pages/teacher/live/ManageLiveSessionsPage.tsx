@@ -6,15 +6,12 @@ import {
   Calendar,
   Clock,
   Users,
-  PlayCircle,
   MoreVertical,
   Edit2,
   Trash2,
   AlertCircle
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,9 +70,9 @@ export default function ManageLiveSessionsPage() {
         s.id === sessionToCancel.id ? { ...s, status: 'cancelled' } : s
       ))
       toast.success(`Sesión "${sessionToCancel.title}" cancelada`)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error cancelling session:', error)
-      toast.error(error?.detail || 'Error al cancelar la sesión')
+      toast.error(error instanceof Error ? error.message : 'Error al cancelar la sesión')
     } finally {
       setIsCancelling(false)
       setSessionToCancel(null)
@@ -87,176 +84,198 @@ export default function ManageLiveSessionsPage() {
   const displayedSessions = activeTab === 'upcoming' ? upcomingSessions : pastSessions
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Sesiones en Vivo</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">Programa y gestiona tus clases virtuales</p>
-        </div>
-        <Button
-          asChild
-          className="h-12 rounded-2xl font-black bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-500/20 px-6"
-        >
-          <Link to="/teacher/live/new">
-            <Plus className="mr-2 h-5 w-5" /> Programar Sesión
-          </Link>
-        </Button>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-fit">
-        <button
-          onClick={() => setActiveTab('upcoming')}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'upcoming' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-        >
-          Próximas Sesiones
-          {upcomingSessions.length > 0 && (
-            <span className="ml-2 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-black px-2 py-0.5 rounded-full">
-              {upcomingSessions.length}
-            </span>
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('past')}
-          className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === 'past' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}
-        >
-          Historial
-        </button>
-      </div>
-
-      <div className="grid gap-6">
-        {isLoading ? (
-          <div className="space-y-4">
-            {[1, 2].map(i => (
-              <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />
-            ))}
+    <div className="animate-in fade-in duration-500">
+      {/* Header Editorial */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-20">
+        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
+          <div className="space-y-6 max-w-2xl">
+            <div className="chip">
+              <Video className="h-3.5 w-3.5 text-sky-500" />
+              Live Streaming
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight leading-[1.05] text-slate-900 dark:text-white">
+              Sesiones <br />
+              <span className="text-sky-500">en Vivo.</span>
+            </h1>
+            <p className="text-base sm:text-lg leading-relaxed text-slate-600 dark:text-slate-300 max-w-lg">
+              Programa y gestiona tus clases virtuales con integración directa de streaming y chat en tiempo real.
+            </p>
           </div>
-        ) : displayedSessions.length > 0 ? (
-          displayedSessions.map((session) => (
-            <Card key={session.id} className={`border-none shadow-xl ${session.status === 'live' ? 'shadow-rose-500/10 ring-2 ring-rose-500/20' : session.status === 'cancelled' ? 'opacity-60' : 'shadow-slate-200/50 dark:shadow-none'} bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden`}>
-              <CardContent className="p-6 md:p-8 flex flex-col md:flex-row gap-6 items-center">
-                {/* Date/Time Block */}
-                <div className="flex flex-col items-center justify-center min-w-[120px] p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <span className={`text-xs font-black uppercase tracking-widest ${session.status === 'live' ? 'text-rose-500 animate-pulse' : session.status === 'cancelled' ? 'text-slate-400' : 'text-slate-400 dark:text-slate-500'}`}>
-                    {session.status === 'live' ? 'EN VIVO' : session.status === 'cancelled' ? 'CANCELADA' : new Date(session.scheduled_date).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
-                  </span>
-                  <span className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                    {new Date(session.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex border border-slate-900/10 dark:border-white/10 p-1">
+              <button
+                onClick={() => setActiveTab('upcoming')}
+                className={`px-6 py-2 label-caps transition-colors ${activeTab === 'upcoming' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+              >
+                Próximas ({upcomingSessions.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('past')}
+                className={`px-6 py-2 label-caps transition-colors ${activeTab === 'past' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+              >
+                Historial
+              </button>
+            </div>
+            <Button asChild size="lg" className="gap-2 group">
+              <Link to="/teacher/live/new">
+                <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
+                Programar
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-                {/* Info */}
-                <div className="flex-1 text-center md:text-left">
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{session.title}</h3>
-                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                    <div className="flex items-center text-sm font-bold text-slate-500">
-                      <Clock className="h-4 w-4 mr-1.5" />
-                      {session.duration_minutes} min
+      {/* Sessions Grid Editorial */}
+      <section className="border-b border-slate-900/10 dark:border-white/10">
+        <div className="grid gap-px bg-slate-900/10 dark:bg-white/10">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-80 bg-white dark:bg-slate-950 animate-pulse" />
+              ))}
+            </div>
+          ) : displayedSessions.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              {displayedSessions.map((session) => (
+                <div key={session.id} className={`group bg-white dark:bg-slate-950 p-8 md:p-10 flex flex-col justify-between card-hover min-h-[320px] ${session.status === 'cancelled' ? 'opacity-50 grayscale' : ''}`}>
+                  <div>
+                    <div className="flex items-start justify-between mb-8">
+                      <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10">
+                        {session.status === 'live' ? (
+                          <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
+                          </span>
+                        ) : (
+                          <Calendar className="h-5 w-5 text-sky-500" />
+                        )}
+                      </div>
+
+                      {(session.status === 'upcoming' || session.status === 'live') && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="h-8 w-8 flex items-center justify-center border border-transparent hover:border-slate-900/10 dark:hover:border-white/10 transition-colors">
+                              <MoreVertical className="h-4 w-4 text-slate-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-none border-slate-900 dark:border-white border-2">
+                            <DropdownMenuItem
+                              onClick={() => navigate(`/teacher/live/${session.id}/edit`)}
+                              className="label-caps py-3 cursor-pointer"
+                            >
+                              <Edit2 className="mr-2 h-4 w-4" /> Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setSessionToCancel(session)}
+                              className="label-caps py-3 text-red-600 cursor-pointer"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" /> Cancelar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
-                    <div className="flex items-center text-sm font-bold text-slate-500">
-                      <Users className="h-4 w-4 mr-1.5" />
-                      {session.enrolled_count || 0} confirmados
+
+                    <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white leading-tight mb-4 group-hover:text-sky-500 transition-colors">
+                      {session.title}
+                    </h3>
+
+                    <div className="space-y-2 mb-8">
+                      <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <Calendar className="h-3.5 w-3.5 mr-2" />
+                        {new Date(session.scheduled_date).toLocaleDateString('es-ES', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long'
+                        })}
+                      </div>
+                      <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <Clock className="h-3.5 w-3.5 mr-2" />
+                        {new Date(session.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <span className="mx-2 opacity-30">|</span>
+                        {session.duration_minutes} MIN
+                      </div>
+                      <div className="flex items-center text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <Users className="h-3.5 w-3.5 mr-2" />
+                        {session.enrolled_count || 0} INSCRITOS
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                  {session.status === 'live' ? (
-                    <Button
-                      asChild={!!session.join_url}
-                      className="flex-1 md:flex-none h-12 rounded-xl font-black bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-500/20 text-white"
-                    >
-                      {session.join_url ? (
-                        <a href={session.join_url} target="_blank" rel="noopener noreferrer">
-                          <Video className="mr-2 h-5 w-5" /> Entrar a Sala
+                  <div className="flex items-center gap-3">
+                    {session.status === 'live' ? (
+                      <Button
+                        asChild
+                        variant="default"
+                        className="w-full h-12 rounded-none bg-rose-500 hover:bg-rose-600 text-white font-black"
+                      >
+                        <a href={session.join_url || '#'} target="_blank" rel="noopener noreferrer">
+                          UNIRSE AHORA
                         </a>
-                      ) : (
-                        <span><Video className="mr-2 h-5 w-5" /> Entrar a Sala</span>
-                      )}
-                    </Button>
-                  ) : session.status === 'upcoming' ? (
-                    <Button
-                      onClick={() => session.join_url && window.open(session.join_url, '_blank')}
-                      variant="outline"
-                      className="flex-1 md:flex-none h-12 rounded-xl font-bold text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-                    >
-                      <PlayCircle className="mr-2 h-5 w-5" /> Iniciar Ahora
-                    </Button>
-                  ) : null}
-
-                  {(session.status === 'upcoming' || session.status === 'live') && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-12 w-12 rounded-xl shrink-0 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800">
-                          <MoreVertical className="h-5 w-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-48 rounded-2xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 p-2">
-                        <DropdownMenuItem
-                          onClick={() => navigate(`/teacher/live/${session.id}/edit`)}
-                          className="font-bold py-3 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl"
-                        >
-                          <Edit2 className="mr-2 h-4 w-4" /> Editar Detalles
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setSessionToCancel(session)}
-                          className="font-bold py-3 text-red-600 dark:text-red-400 cursor-pointer focus:bg-red-50 dark:focus:bg-red-900/30 rounded-xl"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> Cancelar Sesión
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                      </Button>
+                    ) : session.status === 'upcoming' ? (
+                      <Button
+                        onClick={() => session.join_url && window.open(session.join_url, '_blank')}
+                        variant="outline"
+                        className="w-full h-12 rounded-none border-2 border-slate-900 dark:border-white font-black hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-950 transition-all"
+                      >
+                        INICIAR SALA
+                      </Button>
+                    ) : (
+                      <div className="w-full h-12 flex items-center justify-center border border-slate-900/10 dark:border-white/10 label-caps text-slate-400">
+                        {session.status === 'cancelled' ? 'SESIÓN CANCELADA' : 'SESIÓN FINALIZADA'}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="py-20 text-center">
-            <Calendar className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">No hay sesiones</h3>
-            <p className="text-slate-500 font-medium mt-2">
-              {activeTab === 'upcoming'
-                ? 'No tienes sesiones próximas. ¡Programa tu primera clase!'
-                : 'No tienes historial de sesiones.'}
-            </p>
-            {activeTab === 'upcoming' && (
-              <Button asChild className="mt-4 bg-indigo-600 hover:bg-indigo-700 rounded-xl font-black">
-                <Link to="/teacher/live/new">
-                  <Plus className="mr-2 h-4 w-4" /> Programar Sesión
-                </Link>
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-slate-950 py-40 px-10 text-center border-l border-slate-900/10 dark:border-white/10">
+              <div className="flex h-20 w-20 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-8">
+                <Video className="h-8 w-8 text-slate-200 dark:text-slate-800" />
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tighter">Vacío.</h3>
+              <p className="label-caps text-slate-400 dark:text-slate-500 mb-8 max-w-xs mx-auto">
+                {activeTab === 'upcoming'
+                  ? 'No tienes sesiones programadas para el futuro.'
+                  : 'Tu historial de clases en vivo está vacío.'}
+              </p>
+              {activeTab === 'upcoming' && (
+                <Button asChild variant="outline" className="rounded-none border-slate-900 dark:border-white border-2 px-8">
+                  <Link to="/teacher/live/new">PROGRAMAR PRIMERA SESIÓN</Link>
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={!!sessionToCancel} onOpenChange={(open) => !open && !isCancelling && setSessionToCancel(null)}>
-        <AlertDialogContent className="rounded-3xl">
+        <AlertDialogContent className="rounded-none border-4 border-slate-900 dark:border-white bg-white dark:bg-slate-950 max-w-md">
           <AlertDialogHeader>
-            <div className="mx-auto bg-amber-100 dark:bg-amber-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+            <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mb-6">
+              <AlertCircle className="h-8 w-8 text-rose-500" />
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Cancelar sesión?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Se cancelará la sesión{' '}
-              <span className="font-bold text-slate-900 dark:text-white">"{sessionToCancel?.title}"</span>.
-              Los alumnos inscritos serán notificados.
+            <AlertDialogTitle className="text-3xl font-black tracking-tighter uppercase leading-none text-slate-900 dark:text-white mb-4">
+              ¿Cancelar <br /> Sesión?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+              Estás a punto de cancelar la sesión <span className="font-bold text-slate-900 dark:text-white underline decoration-rose-500 decoration-2">"{sessionToCancel?.title}"</span>. Esta acción no se puede deshacer y notificará a todos los estudiantes inscritos.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isCancelling} className="rounded-xl h-12 px-6 font-bold">
-              No, mantener
+          <AlertDialogFooter className="mt-10 sm:justify-start gap-4">
+            <AlertDialogCancel disabled={isCancelling} className="rounded-none border-2 border-slate-900 dark:border-white h-12 px-8 label-caps">
+              Mantener
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isCancelling}
               onClick={handleCancelSession}
-              className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl h-12 px-6 font-bold"
+              className="bg-rose-500 hover:bg-rose-600 text-white rounded-none h-12 px-8 label-caps border-none"
             >
-              {isCancelling ? 'Cancelando...' : 'Sí, cancelar sesión'}
+              {isCancelling ? 'PROCESANDO...' : 'SÍ, CANCELAR'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

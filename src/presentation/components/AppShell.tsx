@@ -11,12 +11,19 @@ import {
   Sparkles,
   Search,
   PanelRight,
+  PanelLeft,
   FolderOpen,
   Sun,
   Moon,
   X,
   Menu,
   ArrowRight,
+  Tags,
+  Bell,
+  ShoppingBag,
+  Receipt,
+  Video,
+  Radio,
 } from 'lucide-react'
 import { useAuthStore } from '@/presentation/store/auth.store'
 
@@ -40,19 +47,34 @@ export default function AppShell() {
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
+  const notificationRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync theme class to documentElement
+  useEffect(() => {
+    const root = window.document.documentElement
+    if (theme === 'dark') {
+      root.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+    }
+  }, [theme])
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false)
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -104,7 +126,7 @@ export default function AppShell() {
       return [
         { to: '/teacher', label: 'Panel Profesor', icon: LayoutDashboard, protected: true },
         { to: '/teacher/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
-        { to: '/teacher/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
+        { to: '/teacher/classrooms', label: 'Mis Aulas', icon: Radio, protected: true },
         { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
         { to: '/teacher/profile', label: 'Mi Perfil', icon: User, protected: true }
@@ -112,9 +134,22 @@ export default function AppShell() {
     }
     if (role === 'admin' || role === 'administrador') {
       return [
-        { to: '/admin', label: 'Panel Admin', icon: LayoutDashboard, protected: true },
+        { to: '/admin', label: 'Panel de Control', icon: LayoutDashboard, protected: true },
+        { to: '/admin/management/courses', label: 'Cursos', icon: BookOpen, protected: true },
+        { to: '/admin/management/modules', label: 'Módulos', icon: BookOpen, protected: true },
+        { to: '/admin/management/lessons', label: 'Lecciones', icon: BookOpen, protected: true },
+        { to: '/admin/management/exercises', label: 'Ejercicios', icon: BookOpen, protected: true },
+        { to: '/admin/management/languages', label: 'Idiomas', icon: Tags, protected: true },
         { to: '/admin/users', label: 'Usuarios', icon: Users, protected: true },
-        { to: '/admin/categories', label: 'Categorías', icon: BookOpen, protected: true },
+        { to: '/admin/classrooms', label: 'Aulas', icon: Users, protected: true },
+        { to: '/admin/certificates', label: 'Certificados', icon: Award, protected: true },
+        { to: '/admin/categories', label: 'Categorías', icon: Tags, protected: true },
+        { to: '/admin/announcements', label: 'Anuncios', icon: Bell, protected: true },
+        { to: '/admin/forum-categories', label: 'Foro', icon: MessageSquare, protected: true },
+        { to: '/admin/resources', label: 'Recursos', icon: FolderOpen, protected: true },
+        { to: '/admin/catalogo', label: 'Catálogo', icon: ShoppingBag, protected: true },
+        { to: '/admin/ordenes-compra', label: 'Órdenes', icon: Receipt, protected: true },
+        { to: '/admin/live-sessions', label: 'Sesiones', icon: Video, protected: true },
       ]
     }
     return [
@@ -123,7 +158,7 @@ export default function AppShell() {
       { to: '/chat', label: 'Tutor IA', icon: Sparkles, protected: true },
       { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
       { to: '/social', label: 'Social', icon: Users, protected: true },
-      { to: '/classrooms', label: 'Aulas Vivas', icon: Users, protected: true },
+      { to: '/classrooms', label: 'Aulas Vivas', icon: Radio, protected: true },
       { to: '/certificates', label: 'Certificados', icon: Award, protected: true },
     ]
   }
@@ -368,22 +403,20 @@ export default function AppShell() {
     )}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className={cn(
-            'h-8 w-8 grid place-items-center border transition-colors',
-            theme === 'dark'
-              ? 'border-neutral-700 group-hover:border-sky-500/60'
-              : 'border-neutral-200 group-hover:border-sky-500/40',
-            'group-hover:bg-sky-500/10'
-          )}>
-            <Sparkles className="h-4 w-4 text-sky-500" />
-          </div>
-          <span className={cn(
-            'text-lg font-semibold tracking-tight',
-            theme === 'dark' ? 'text-neutral-100' : 'text-neutral-900'
-          )}>
-            Jump<span className="text-sky-500">Up</span>
+        <Link to="/" className="flex items-center gap-2 group shrink-0 transition-opacity hover:opacity-90">
+          <img
+            src="/JumpUp_Logo.png"
+            alt="JumpUp"
+            className="h-8 w-8 object-contain"
+          />
+          <span
+            translate="no"
+            className={cn(
+              'text-xl font-bold tracking-tight',
+              theme === 'dark' ? 'text-white' : 'text-neutral-900'
+            )}
+          >
+            <span className="text-sky-500">ump</span>Up
           </span>
         </Link>
 
@@ -503,32 +536,48 @@ export default function AppShell() {
     )
   }
 
-  // ─── Protected Sidebar/Topbar Layout ──────────────────────────────────────
+  const notifications = [
+    {
+      id: 1,
+      title: "Nueva clase disponible",
+      desc: "Tu profesor ha subido material en 'Inglés Intermedio B2'.",
+      time: "Hace 10 min",
+      read: false,
+    },
+    {
+      id: 2,
+      title: "Logro desbloqueado",
+      desc: "Has obtenido la insignia 'Racha Imbatible' por 7 días seguidos.",
+      time: "Hace 1 hora",
+      read: false,
+    },
+    {
+      id: 3,
+      title: "Feedback de Ejercicio",
+      desc: "El tutor IA analizó tu última pronunciación de voz.",
+      time: "Hace 3 horas",
+      read: true,
+    }
+  ]
+
+  // ─── Protected Sidebar/Topbar Layout ───────────────────────────────────────────────
   return (
-    <div className={cn("flex min-h-screen", theme === 'dark' ? "bg-slate-950" : "bg-slate-50")}>
+    <div className={cn("flex min-h-screen", theme === 'dark' ? "bg-[#0a0a0b]" : "bg-[#f7f6f3]")}>
       {/* TOP BAR */}
       <header className={cn(
-        "fixed top-0 z-[70] w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md transition-all duration-300",
-        user ? (isSidebarExpanded ? "pr-64" : "pr-16") : "pr-0"
+        "fixed top-0 z-[50] w-full border-b border-slate-200 dark:border-white/[0.06] bg-white/80 dark:bg-[#0a0a0b]/80 backdrop-blur-md transition-all duration-300",
+        user ? (isSidebarExpanded ? "pl-64" : "pl-16") : "pl-0"
       )}>
         <div className="flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="bg-sky-500 p-1.5 rounded-xl shadow-lg shadow-sky-200 group-hover:scale-110 transition-all duration-300">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
-                JumpUp
-              </span>
-            </Link>
-
+            {/* Left side info (search or page title style) */}
             {user && (
               <div className="hidden md:flex relative group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500 group-focus-within:text-sky-500 transition-colors" />
                 <input
                   type="text"
                   placeholder="Buscar recursos..."
-                  className={cn("h-10 w-64 pl-10 pr-4 rounded-xl border-none text-sm font-medium focus:ring-2 focus:ring-sky-500/20 transition-all outline-none", theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-900')}
+                  className={cn("h-10 w-64 pl-10 pr-4 rounded-xl border-none text-sm font-medium focus:ring-2 focus:ring-sky-500/20 transition-all outline-none", theme === 'dark' ? 'bg-white/[0.04] text-white' : 'bg-slate-100 text-slate-900')}
                 />
               </div>
             )}
@@ -537,11 +586,64 @@ export default function AppShell() {
           <div className="flex items-center gap-3">
             {user && (
               <>
-                <Badge variant="outline" className="hidden sm:flex bg-amber-50 text-amber-600 border-amber-200 gap-1.5 font-bold py-1.5 px-3 rounded-full">
+                <Badge variant="outline" className="hidden sm:flex bg-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20 gap-1.5 font-bold py-1.5 px-3 rounded-full">
                   <Trophy className="h-3.5 w-3.5" />
                   <span>1,240 XP</span>
                 </Badge>
               </>
+            )}
+
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Cambiar tema"
+              className={cn(
+                'p-2.5 border rounded-xl transition-all duration-200 cursor-pointer hover:scale-105 active:scale-95',
+                theme === 'dark'
+                  ? 'border-white/10 text-sky-400 hover:border-white/20 bg-white/[0.02]'
+                  : 'border-slate-200 text-amber-500 hover:border-slate-300 bg-slate-50'
+              )}
+            >
+              {theme === 'dark' ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {user && (
+              <div className="relative" ref={notificationRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 hover:border-sky-500 dark:hover:border-sky-500/30 transition-all text-slate-500 dark:text-slate-400 hover:text-sky-500 cursor-pointer active:scale-95 bg-slate-50 dark:bg-white/[0.02] relative"
+                >
+                  <Bell size={18} />
+                  <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-sky-500"></span>
+                </button>
+
+                {isNotificationOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#0e0e11] rounded-2xl shadow-xl border border-slate-200 dark:border-white/[0.06] p-2 z-[110]">
+                    <div className="p-3 border-b border-slate-100 dark:border-white/[0.04]">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">Notificaciones</p>
+                    </div>
+                    <div className="py-2 max-h-72 overflow-y-auto custom-scrollbar">
+                      {notifications.map((notif) => (
+                        <div
+                          key={notif.id}
+                          className={cn(
+                            "p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors flex flex-col gap-1 cursor-pointer",
+                            !notif.read && "bg-sky-500/[0.03] dark:bg-sky-500/[0.03]"
+                          )}
+                        >
+                          <div className="flex justify-between items-start">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white">{notif.title}</p>
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-semibold">{notif.time}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">{notif.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {user ? (
@@ -552,36 +654,36 @@ export default function AppShell() {
                     e.stopPropagation()
                     setIsUserMenuOpen(!isUserMenuOpen)
                   }}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-transparent hover:border-sky-200 dark:hover:border-sky-800 transition-all p-0 shadow-sm bg-slate-100 dark:bg-slate-800 overflow-hidden cursor-pointer active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-white/10 hover:border-sky-500 dark:hover:border-sky-500 transition-all p-0 shadow-xs bg-slate-100 dark:bg-white/[0.02] overflow-hidden cursor-pointer active:scale-95"
                 >
                   <Avatar className="h-full w-full rounded-none">
-                    <AvatarFallback className="bg-gradient-to-br from-sky-500 to-blue-600 text-white font-black text-xs">
+                    <AvatarFallback className="bg-gradient-to-br from-sky-500 to-blue-600 text-white font-bold text-xs">
                       {getInitials(user.username)}
                     </AvatarFallback>
                   </Avatar>
                 </button>
 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 dark:border-slate-800 p-2 z-[110]">
+                  <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-[#0e0e11] rounded-2xl shadow-xl border border-slate-150 dark:border-white/[0.06] p-2 z-[110]">
                     <div className="p-3">
-                      <p className="text-sm font-black text-slate-900 dark:text-white">{user.username}</p>
-                      <p className="truncate text-xs text-slate-500 dark:text-slate-400 font-bold">{user.email}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{user.username}</p>
+                      <p className="truncate text-xs text-slate-500 dark:text-slate-400 font-medium">{user.email}</p>
                     </div>
-                    <div className="h-px bg-slate-100 dark:bg-slate-800 my-2" />
+                    <div className="h-px bg-slate-100 dark:bg-white/[0.04] my-2" />
                     <Link
                       to="/profile"
                       onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors"
                     >
-                      <div className="bg-slate-100 p-1.5 rounded-lg"><User className="h-4 w-4" /></div>
-                      <span className="font-bold text-sm text-slate-700">Mi Perfil</span>
+                      <div className="bg-slate-100 dark:bg-white/[0.04] p-1.5 rounded-lg"><User className="h-4 w-4" /></div>
+                      <span className="font-bold text-sm text-slate-700 dark:text-slate-300">Mi Perfil</span>
                     </Link>
-                    <div className="h-px bg-slate-100 my-2" />
+                    <div className="h-px bg-slate-100 dark:bg-white/[0.04] my-2" />
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-rose-50 text-rose-600 transition-colors text-left"
+                      className="flex items-center gap-3 w-full p-2.5 rounded-xl hover:bg-rose-55 dark:hover:bg-rose-950/20 text-rose-600 transition-colors text-left cursor-pointer"
                     >
-                      <div className="bg-rose-100 p-1.5 rounded-lg"><LogOut className="h-4 w-4" /></div>
+                      <div className="bg-rose-100 dark:bg-rose-950/30 p-1.5 rounded-lg"><LogOut className="h-4 w-4" /></div>
                       <span className="font-bold text-sm">Cerrar Sesión</span>
                     </button>
                   </div>
@@ -589,10 +691,10 @@ export default function AppShell() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" asChild size="sm" className="hidden sm:flex font-black text-slate-600">
+                <Button variant="ghost" asChild size="sm" className="hidden sm:flex font-bold text-slate-650">
                   <Link to="/login">Entrar</Link>
                 </Button>
-                <Button asChild size="sm" className="bg-sky-600 hover:bg-sky-700 text-white font-black rounded-xl shadow-lg shadow-sky-200 px-6">
+                <Button asChild size="sm" className="bg-sky-650 hover:bg-sky-700 text-white font-bold rounded-xl shadow-md shadow-sky-500/10 px-6">
                   <Link to="/register">Empezar</Link>
                 </Button>
               </div>
@@ -605,17 +707,43 @@ export default function AppShell() {
       {user && (
         <aside
           className={cn(
-            "fixed right-0 top-0 h-screen bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 z-[60] transition-all duration-300 ease-in-out shadow-2xl flex flex-col pt-4",
+            "fixed left-0 top-0 h-screen border-r z-[60] transition-all duration-300 ease-in-out flex flex-col pt-4",
+            theme === 'dark'
+              ? "bg-[#0a0a0b] border-white/10"
+              : "bg-white border-slate-900/10",
             isSidebarExpanded ? "w-64" : "w-16"
           )}
         >
-          <div className="flex items-center justify-end px-4 mb-6 mt-16">
-            <button
-              onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-500 dark:text-slate-400 transition-colors"
-            >
-              <PanelRight size={20} className={cn("transition-transform", isSidebarExpanded && "rotate-180")} />
-            </button>
+          {/* Logo container inside sidebar */}
+          <div className="flex items-center gap-3 px-4 h-12 mb-6 shrink-0">
+            <img
+              src="/JumpUp_Logo.png"
+              alt="JumpUp Logo"
+              className="h-8 w-8 object-contain shrink-0"
+            />
+            {isSidebarExpanded && (
+              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white select-none">
+                <span className="text-sky-500">ump</span>Up
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center px-4 mb-6">
+            {isSidebarExpanded ? (
+              <button
+                onClick={() => setIsSidebarExpanded(false)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl text-slate-500 dark:text-slate-400 transition-colors cursor-pointer ml-auto"
+              >
+                <PanelLeft size={18} />
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSidebarExpanded(true)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl text-slate-500 dark:text-slate-400 transition-colors cursor-pointer mx-auto"
+              >
+                <PanelRight size={18} />
+              </button>
+            )}
           </div>
 
           <nav className="flex-1 px-2 space-y-1 overflow-y-auto no-scrollbar overflow-x-hidden">
@@ -624,30 +752,34 @@ export default function AppShell() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) => cn(
-                  "flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group relative",
+                  "flex items-center gap-4 p-3 transition-colors duration-150 group relative",
                   isActive
-                    ? "bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 shadow-sm"
-                    : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
+                    ? "text-sky-500"
+                    : theme === 'dark'
+                      ? "text-neutral-400 hover:text-neutral-100"
+                      : "text-neutral-500 hover:text-neutral-900"
                 )}
               >
                 {({ isActive }) => (
                   <>
                     <div className={cn(
-                      "min-w-[24px] flex justify-center transition-transform duration-300",
-                      "group-hover:scale-110"
+                      "min-w-[24px] flex justify-center",
                     )}>
-                      <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                      <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                     </div>
 
                     <span className={cn(
-                      "font-bold text-sm whitespace-nowrap transition-all duration-300",
+                      "text-sm font-semibold whitespace-nowrap transition-all duration-300",
                       isSidebarExpanded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
                     )}>
                       {item.label}
                     </span>
 
                     {!isSidebarExpanded && (
-                      <div className="absolute right-full mr-4 px-3 py-1 bg-slate-900 text-white text-[10px] font-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase tracking-widest whitespace-nowrap z-[70]">
+                      <div className={cn(
+                        "absolute left-full ml-4 px-3 py-1 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase tracking-wider whitespace-nowrap z-[70]",
+                        theme === 'dark' ? 'bg-neutral-800' : 'bg-slate-900'
+                      )}>
                         {item.label}
                       </div>
                     )}
@@ -658,20 +790,20 @@ export default function AppShell() {
           </nav>
 
           {/* Sidebar Footer */}
-          <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="p-3 border-t border-slate-100 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.01]">
              <div className={cn(
                "flex items-center gap-3 transition-all duration-300",
                !isSidebarExpanded && "justify-center"
              )}>
-                <div className="h-10 w-10 rounded-xl bg-sky-500 shrink-0 flex items-center justify-center text-white font-black text-xs shadow-lg shadow-sky-200">
+                <div className="h-10 w-10 rounded-xl bg-sky-500 shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-sky-500/10">
                   {getInitials(user.username)}
                 </div>
                 <div className={cn(
                   "flex flex-col transition-opacity duration-300 overflow-hidden",
                   isSidebarExpanded ? "opacity-100 w-full" : "opacity-0 w-0"
                 )}>
-                  <span className="text-xs font-black text-slate-900 dark:text-white truncate">{user.username}</span>
-                  <span className="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-tighter">{displayRole}</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.username}</span>
+                  <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">{displayRole}</span>
                 </div>
              </div>
           </div>
@@ -681,10 +813,10 @@ export default function AppShell() {
       {/* MAIN CONTENT */}
       <main className={cn(
         "flex-1 pt-16 transition-all duration-300",
-        user ? (isSidebarExpanded ? "pr-64" : "pr-16") : "pr-0"
+        user ? (isSidebarExpanded ? "pl-64" : "pl-16") : "pl-0"
       )}>
-        <div className="p-6 md:p-10 max-w-7xl mx-auto">
-          <Outlet />
+        <div className="max-w-7xl mx-auto px-0">
+          <Outlet context={{ theme }} />
         </div>
       </main>
     </div>

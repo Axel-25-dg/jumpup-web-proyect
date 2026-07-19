@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Edit2, PlusCircle, Search, Trash2 } from 'lucide-react'
+import { Edit2, PlusCircle, Search, Trash2, BookOpen } from 'lucide-react'
 import type { Course } from '@/domain/entities/course.entity'
 import { getCoursesUseCase, manageCoursesUseCase } from '@/infrastructure/factories/course.factory'
 
@@ -44,59 +44,121 @@ export default function CourseListPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl p-6">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-800">Cursos</h1>
-          <p className="mt-1 text-slate-500">Crea y administra el catálogo educativo.</p>
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="chip">
+              <BookOpen className="h-3.5 w-3.5 text-sky-500" />
+              Contenido
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
+              Gestión de <span className="text-sky-500">Cursos</span>.
+            </h1>
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-lg">
+              Crea, edita y administra el catálogo educativo global de la plataforma.
+            </p>
+          </div>
+          <Link
+            to="/management/courses/new"
+            className="inline-flex items-center justify-center gap-3 bg-slate-900 dark:bg-white px-8 py-4 text-[11px] font-bold uppercase tracking-[0.22em] text-white dark:text-slate-900 transition-all hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white"
+          >
+            <PlusCircle className="h-4 w-4" /> Nuevo curso
+          </Link>
         </div>
-        <Link
-          to="/management/courses/new"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-sky-500/30 transition-all hover:bg-sky-400"
-        >
-          <PlusCircle className="h-5 w-5" /> Nuevo curso
-        </Link>
+      </section>
+
+      {/* FILTERS */}
+      <div className="border-b border-slate-900/10 dark:border-white/10 p-6 md:p-8">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 max-w-4xl">
+          <div className="relative flex-1">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="BUSCAR POR TÍTULO O DESCRIPCIÓN..."
+              className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3.5 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+            />
+          </div>
+          <button className="bg-white dark:bg-white/5 border border-slate-900/10 dark:border-white/10 px-8 py-3 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/10 transition-colors" type="submit">
+            Filtrar
+          </button>
+        </form>
       </div>
 
-      <form onSubmit={handleSearch} className="mb-6 flex gap-3">
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por título o descripción"
-            className="w-full rounded-xl border border-slate-200 py-2.5 pl-10 pr-4 text-sm outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10"
-          />
+      {error && (
+        <div className="m-8 border border-rose-200 bg-rose-50 dark:bg-rose-900/10 dark:border-rose-900/30 p-4 flex items-center gap-3">
+          <Trash2 className="h-4 w-4 text-rose-500" />
+          <p className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">{error}</p>
         </div>
-        <button className="rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 hover:bg-slate-50" type="submit">
-          Buscar
-        </button>
-      </form>
-
-      {error && <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">{error}</div>}
+      )}
 
       {loading ? (
-        <div className="flex h-64 items-center justify-center"><div className="h-10 w-10 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" /></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin border-2 border-sky-500 border-t-transparent" />
+        </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[720px] text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
-              <tr><th className="px-6 py-4">Curso</th><th className="px-6 py-4">Idioma</th><th className="px-6 py-4">Nivel</th><th className="px-6 py-4">Descripción</th><th className="px-6 py-4 text-right">Acciones</th></tr>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[800px] text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+                <th className="px-8 py-5 label-caps text-slate-400">Curso / Título</th>
+                <th className="px-8 py-5 label-caps text-slate-400">Idioma</th>
+                <th className="px-8 py-5 label-caps text-slate-400">Nivel</th>
+                <th className="px-8 py-5 label-caps text-slate-400">Descripción</th>
+                <th className="px-8 py-5 label-caps text-slate-400 text-right">Acciones</th>
+              </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-900/5 dark:divide-white/5">
               {courses.map((course) => (
-                <tr key={course.id} className="hover:bg-slate-50/70">
-                  <td className="px-6 py-4 font-bold text-slate-700">{course.title}</td>
-                  <td className="px-6 py-4">{course.language_name}</td>
-                  <td className="px-6 py-4"><span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-700">{course.difficulty_level}</span></td>
-                  <td className="max-w-xs truncate px-6 py-4">{course.description || 'Sin descripción'}</td>
-                  <td className="px-6 py-4"><div className="flex justify-end gap-2">
-                    <Link to={`/management/courses/${course.id}/edit`} title="Editar" className="rounded-lg p-2 text-slate-400 hover:bg-sky-50 hover:text-sky-600"><Edit2 className="h-4 w-4" /></Link>
-                    <button onClick={() => void handleDelete(course)} title="Eliminar" className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
-                  </div></td>
+                <tr key={course.id} className="card-hover group">
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col">
+                      <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-sky-500 transition-colors">
+                        {course.title}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono mt-0.5">ID: #{course.id}</span>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className="label-micro text-slate-600 dark:text-slate-400">{course.language_name}</span>
+                  </td>
+                  <td className="px-8 py-6">
+                    <span className="chip text-[10px] px-2 py-0.5 border-sky-500/20 text-sky-600 bg-sky-500/[0.05]">
+                      {course.difficulty_level}
+                    </span>
+                  </td>
+                  <td className="px-8 py-6 max-w-xs">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">
+                      {course.description || 'Sin descripción'}
+                    </p>
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex justify-end gap-2">
+                      <Link
+                        to={`/management/courses/${course.id}/edit`}
+                        className="p-2 border border-slate-900/10 dark:border-white/10 hover:bg-sky-500 hover:text-white transition-all"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Link>
+                      <button
+                        onClick={() => void handleDelete(course)}
+                        className="p-2 border border-slate-900/10 dark:border-white/10 hover:bg-rose-500 hover:text-white transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
-              {courses.length === 0 && <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">No hay cursos para mostrar.</td></tr>}
+              {courses.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-8 py-20 text-center">
+                    <p className="label-caps text-slate-400">No se encontraron cursos en el catálogo.</p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

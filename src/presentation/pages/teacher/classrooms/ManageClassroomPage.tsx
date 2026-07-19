@@ -11,12 +11,7 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react'
-import { Card, CardContent } from '@/presentation/components/ui/card'
 import { Button } from '@/presentation/components/ui/button'
-import { Input } from '@/presentation/components/ui/input'
-import { Avatar, AvatarFallback } from '@/presentation/components/ui/avatar'
-import { Badge } from '@/presentation/components/ui/badge'
-import { Skeleton } from '@/presentation/components/ui/skeleton'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,9 +50,7 @@ export default function ManageClassroomPage() {
         const classroomData = await getClassroomByIdUseCase.execute(classroomId)
         setClassroom(classroomData)
         
-        // El backend envía los estudiantes en `enrollments` al consultar el detalle de un aula
         const enrollments = (classroomData as any).enrollments || []
-        // Mapear los campos del backend (student, student_username, student_email, is_active)
         const mappedStudents: ClassroomStudent[] = enrollments.map((e: any) => ({
           id: e.id,
           classroom_id: classroomId,
@@ -129,204 +122,232 @@ export default function ManageClassroomPage() {
   )
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-            <Link to="/teacher/classrooms"><ArrowLeft className="h-5 w-5" /></Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {isLoading ? <Skeleton className="h-8 w-48" /> : (classroom?.name || 'Gestión de Aula')}
+    <div className="animate-in fade-in duration-500">
+      {/* HERO */}
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" asChild className="-ml-2 rounded-none hover:bg-slate-100 dark:hover:bg-white/5">
+                <Link to="/teacher/classrooms"><ArrowLeft className="h-4 w-4" /></Link>
+              </Button>
+              <div className="chip">
+                <Users className="h-3.5 w-3.5 text-sky-500" />
+                Control de Aula
+              </div>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              {isLoading ? 'CARGANDO...' : (classroom?.name || 'Gestión Técnica')}
             </h1>
-            <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-1">
-              {isLoading ? '' : classroom?.description || 'Gestiona tus alumnos'}
+            <p className="text-base text-slate-500 dark:text-slate-400 max-w-xl font-medium leading-relaxed">
+              {isLoading ? 'Recuperando parámetros del aula...' : (classroom?.description?.toUpperCase() || 'ADMINISTRACIÓN DE INSCRIPCIONES Y SEGUIMIENTO ACADÉMICO.')}
             </p>
             {!isLoading && classroom?.access_code && (
-              <div className="mt-2 flex items-center gap-2">
-                <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-200 border-none font-mono text-sm tracking-widest px-3 py-1">
-                  CÓDIGO: {classroom.access_code}
-                </Badge>
+              <div className="flex items-center gap-4 pt-2">
+                <span className="label-micro text-slate-400 tracking-widest">CÓDIGO DE ACCESO VIGENTE:</span>
+                <span className="font-mono text-sm font-black text-sky-500 border border-sky-500/20 bg-sky-500/5 px-4 py-1">
+                  {classroom.access_code}
+                </span>
               </div>
             )}
           </div>
+          <Button variant="outline" className="rounded-none border-slate-900/10 dark:border-white/10 h-14 px-8 font-black uppercase text-[11px] tracking-[0.2em] hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-all">
+            <Settings className="mr-3 h-4 w-4" /> Configuración Avanzada
+          </Button>
         </div>
-        <Button variant="outline" className="h-12 rounded-xl font-bold dark:border-slate-700">
-          <Settings className="mr-2 h-5 w-5" /> Ajustes del Aula
-        </Button>
-      </div>
+      </section>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="bg-sky-50 dark:bg-sky-900/20 text-sky-600 p-4 rounded-2xl">
+      {/* STATS GRID */}
+      <div className="grid gap-px sm:grid-cols-3 bg-slate-900/10 dark:bg-white/10 border-b border-slate-900/10 dark:border-white/10">
+        <div className="p-10 bg-white dark:bg-[#0a0a0b] group">
+          <p className="label-caps text-slate-400 mb-6 tracking-widest">Total Alumnos</p>
+          <div className="flex items-end justify-between">
+            <h4 className="text-5xl font-black text-slate-900 dark:text-white leading-none">
+              {students.length.toString().padStart(2, '0')}
+            </h4>
+            <div className="h-12 w-12 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-sky-500 group-hover:bg-sky-500 group-hover:text-white transition-all">
               <Users className="h-6 w-6" />
             </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Alumnos</p>
-              <h4 className="text-3xl font-black text-slate-900 dark:text-white">{students.length}</h4>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 p-4 rounded-2xl">
-              <UserCheck className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Activos</p>
-              <h4 className="text-3xl font-black text-slate-900 dark:text-white">
-                {students.filter(s => s.status === 'active').length}
-              </h4>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
-          <CardContent className="p-6 flex items-center gap-4">
-            <div className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 p-4 rounded-2xl">
-              <MessageSquare className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pendientes</p>
-              <h4 className="text-3xl font-black text-slate-900 dark:text-white">
-                {students.filter(s => s.status === 'pending').length}
-              </h4>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Student List */}
-      <Card className="border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
-          <div className="relative w-full sm:max-w-md">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
-            <Input
-              placeholder="Buscar alumno por nombre o email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-12 pl-12 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium"
-            />
           </div>
         </div>
-        <CardContent className="p-0">
-          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+
+        <div className="p-10 bg-white dark:bg-[#0a0a0b] group">
+          <p className="label-caps text-slate-400 mb-6 tracking-widest">Estado Activo</p>
+          <div className="flex items-end justify-between">
+            <h4 className="text-5xl font-black text-emerald-600 dark:text-emerald-500 leading-none">
+              {students.filter(s => s.status === 'active').length.toString().padStart(2, '0')}
+            </h4>
+            <div className="h-12 w-12 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+              <UserCheck className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="p-10 bg-white dark:bg-[#0a0a0b] group">
+          <p className="label-caps text-slate-400 mb-6 tracking-widest">Solicitudes</p>
+          <div className="flex items-end justify-between">
+            <h4 className="text-5xl font-black text-amber-500 leading-none">
+              {students.filter(s => s.status === 'pending').length.toString().padStart(2, '0')}
+            </h4>
+            <div className="h-12 w-12 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SEARCH TOOLBAR */}
+      <div className="px-8 md:px-12 py-8 bg-white dark:bg-transparent border-b border-slate-900/10 dark:border-white/10">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <input
+            placeholder="BUSCAR ALUMNO POR IDENTIDAD O EMAIL..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-slate-900/10 dark:border-white/10 bg-transparent py-3.5 pl-12 pr-4 text-[11px] font-bold uppercase tracking-widest outline-none focus:border-sky-500 transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* STUDENT LIST / TABLE */}
+      <div className="overflow-x-auto bg-[#f7f6f3] dark:bg-[#0a0a0b]">
+        <table className="w-full min-w-[1000px] text-left border-collapse">
+          <thead>
+            <tr className="border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+              <th className="px-10 py-5 label-caps text-slate-400">Identidad del Estudiante</th>
+              <th className="px-10 py-5 label-caps text-slate-400">Progreso Académico</th>
+              <th className="px-10 py-5 label-caps text-slate-400">Estado de Cuenta</th>
+              <th className="px-10 py-5 label-caps text-slate-400 text-right">Operaciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-900/5 dark:divide-white/5 bg-white dark:bg-transparent">
             {isLoading ? (
-              <div className="p-6 space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex gap-6 items-center">
-                    <Skeleton className="h-14 w-14 rounded-full" />
-                    <div className="space-y-2 flex-1">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-3 w-48" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              [1, 2, 3].map(i => (
+                <tr key={i} className="animate-pulse">
+                  <td colSpan={4} className="px-10 py-10"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
+                </tr>
+              ))
             ) : filteredStudents.length > 0 ? (
               filteredStudents.map((student) => (
-                <div key={student.id} className="p-6 flex flex-col md:flex-row items-center gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <Avatar className="h-14 w-14 border-2 border-white dark:border-slate-800 shadow-md">
-                    <AvatarFallback className="bg-gradient-to-br from-sky-400 to-indigo-500 text-white font-black">
-                      {(student.student_name || 'Al').substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 text-center md:text-left">
-                    <h3 className="text-lg font-black text-slate-900 dark:text-white">{student.student_name || 'Alumno sin nombre'}</h3>
-                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{student.student_email}</p>
-                    <p className="text-xs font-bold text-slate-400 mt-0.5">
-                      Ingresó: {new Date(student.joined_at).toLocaleDateString('es-ES')}
-                    </p>
-                  </div>
+                <tr key={student.id} className="card-hover group">
+                  <td className="px-10 py-6">
+                    <div className="flex items-center gap-5">
+                      <div className="h-14 w-14 shrink-0 border border-slate-900/10 dark:border-white/10 flex items-center justify-center bg-slate-50 dark:bg-white/5 font-black text-xs text-sky-500 group-hover:bg-sky-500 group-hover:text-white transition-all uppercase">
+                        {(student.student_name || 'AL').substring(0, 2)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-sky-500 transition-colors">
+                          {student.student_name || 'ALUMNO SIN NOMBRE'}
+                        </p>
+                        <p className="label-micro text-slate-400 font-mono mt-0.5">{student.student_email}</p>
+                        <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase">
+                          INGRESO: {new Date(student.joined_at).toLocaleDateString('es-ES').toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
 
-                  <div className="flex flex-col items-center gap-1 min-w-[100px]">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Progreso</span>
-                    <Badge variant="outline" className={`font-black ${(student.progress || 0) > 70 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-900/20 text-amber-600 border-amber-200 dark:border-amber-800'}`}>
-                      {student.progress || 0}%
-                    </Badge>
-                  </div>
+                  <td className="px-10 py-6">
+                    <div className="w-full max-w-[120px] space-y-2">
+                      <div className="flex justify-between items-center label-micro">
+                        <span className="text-slate-400">RENDIMIENTO</span>
+                        <span className="font-black text-slate-900 dark:text-white">{student.progress || 0}%</span>
+                      </div>
+                      <div className="h-1 bg-slate-100 dark:bg-white/5 overflow-hidden">
+                        <div
+                          className={`h-full transition-all duration-1000 ${
+                            (student.progress || 0) > 70 ? 'bg-emerald-500' : 'bg-amber-500'
+                          }`}
+                          style={{ width: `${student.progress || 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  </td>
 
-                  <div className="flex items-center gap-3 w-full md:w-auto justify-center">
-                    {student.status === 'pending' ? (
-                      <>
+                  <td className="px-10 py-6">
+                    <span className={`label-micro px-3 py-1 border font-bold ${
+                      student.status === 'active'
+                      ? 'border-emerald-500/20 text-emerald-600 bg-emerald-500/5'
+                      : 'border-amber-500/20 text-amber-600 bg-amber-500/5'
+                    }`}>
+                      {student.status.toUpperCase()}
+                    </span>
+                  </td>
+
+                  <td className="px-10 py-6">
+                    <div className="flex justify-end gap-2">
+                      {student.status === 'pending' ? (
+                        <>
+                          <Button
+                            size="sm"
+                            disabled={actionLoading === student.id}
+                            onClick={() => handleApprove(student)}
+                            className="rounded-none bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[10px] tracking-widest h-9 px-4"
+                          >
+                            {actionLoading === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Aprobar'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={actionLoading === student.id}
+                            onClick={() => handleReject(student)}
+                            variant="outline"
+                            className="rounded-none border-rose-200 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-black uppercase text-[10px] tracking-widest h-9 px-4"
+                          >
+                            Rechazar
+                          </Button>
+                        </>
+                      ) : (
                         <Button
-                          size="sm"
-                          disabled={actionLoading === student.id}
-                          onClick={() => handleApprove(student)}
-                          className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl h-10 px-4"
-                        >
-                          {actionLoading === student.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserCheck className="mr-2 h-4 w-4" /> Aprobar</>}
-                        </Button>
-                        <Button
-                          size="sm"
-                          disabled={actionLoading === student.id}
-                          onClick={() => handleReject(student)}
-                          variant="outline"
-                          className="text-red-500 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20 font-bold rounded-xl h-10 px-4"
-                        >
-                          Rechazar
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Badge className={student.status === 'active' ? 'bg-emerald-100 text-emerald-700 font-bold' : 'bg-slate-100 text-slate-700 font-bold'}>
-                          {student.status === 'active' ? 'Activo' : 'Removido'}
-                        </Badge>
-                        <Button
-                          size="sm"
+                          size="icon"
                           disabled={actionLoading === student.id}
                           onClick={() => setStudentToRemove(student)}
-                          variant="ghost"
-                          className="text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 rounded-xl h-10 w-10 p-0"
+                          variant="outline"
+                          className="rounded-none border-slate-900/10 h-9 w-9 text-rose-500 hover:bg-rose-600 hover:text-white transition-all"
                         >
-                          <UserX className="h-5 w-5" />
+                          <UserX className="h-4 w-4" />
                         </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
               ))
             ) : (
-              <div className="py-20 text-center">
-                <Users className="h-12 w-12 text-slate-200 dark:text-slate-700 mx-auto mb-4" />
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">No se encontraron alumnos</h3>
-                <p className="text-slate-500 font-medium">
-                  {searchTerm ? 'Prueba con otra búsqueda.' : 'Aún no hay alumnos en este aula.'}
-                </p>
-              </div>
+              <tr>
+                <td colSpan={4} className="py-32 text-center">
+                  <div className="h-20 w-20 border border-slate-900/10 dark:border-white/10 mx-auto mb-6 flex items-center justify-center">
+                    <Users className="h-8 w-8 text-slate-100" />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Sin Registros</h3>
+                  <p className="label-micro text-slate-400 uppercase tracking-widest mt-2">
+                    {searchTerm ? 'LA BÚSQUEDA NO COINCIDE CON NINGÚN ALUMNO.' : 'ESTE AULA NO CUENTA CON ALUMNOS INSCRITOS AÚN.'}
+                  </p>
+                </td>
+              </tr>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </tbody>
+        </table>
+      </div>
 
       {/* Remove Confirmation Dialog */}
       <AlertDialog open={!!studentToRemove} onOpenChange={(open) => !open && !isRemoving && setStudentToRemove(null)}>
-        <AlertDialogContent className="rounded-3xl">
+        <AlertDialogContent className="rounded-none border-slate-900/10">
           <AlertDialogHeader>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 p-3 rounded-full w-fit mb-4">
-              <AlertCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
+            <div className="flex h-16 w-16 items-center justify-center border border-rose-500/20 bg-rose-500/5 mx-auto mb-6">
+              <AlertCircle className="h-8 w-8 text-rose-500" />
             </div>
-            <AlertDialogTitle className="text-center text-2xl font-black">¿Eliminar del aula?</AlertDialogTitle>
-            <AlertDialogDescription className="text-center font-medium">
-              Se eliminará a{' '}
-              <span className="font-bold text-slate-900 dark:text-white">
-                {studentToRemove?.student_name || 'este alumno'}
-              </span>{' '}
-              del aula. Perderá acceso al contenido del grupo.
+            <AlertDialogTitle className="text-center text-2xl font-black uppercase tracking-tight">Expulsar del Aula</AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-sm font-medium py-4">
+              Esta operación restringirá el acceso a <span className="text-slate-900 dark:text-white font-bold">{studentToRemove?.student_name?.toUpperCase()}</span>. El alumno perderá acceso inmediato a los contenidos y sesiones de este grupo.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="sm:justify-center gap-3 mt-6">
-            <AlertDialogCancel disabled={isRemoving} className="rounded-xl h-12 px-6 font-bold">Cancelar</AlertDialogCancel>
+          <AlertDialogFooter className="sm:justify-center gap-3 pt-4">
+            <AlertDialogCancel disabled={isRemoving} className="rounded-none font-bold uppercase text-[10px] tracking-[0.2em]">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={isRemoving}
               onClick={handleRemove}
-              className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6 font-bold"
+              className="rounded-none bg-rose-600 hover:bg-rose-700 font-bold uppercase text-[10px] tracking-[0.2em]"
             >
-              {isRemoving ? 'Eliminando...' : 'Sí, eliminar'}
+              {isRemoving ? 'PROCESANDO...' : 'CONFIRMAR EXPULSIÓN'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
