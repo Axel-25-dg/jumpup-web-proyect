@@ -102,8 +102,21 @@ export default function LiveSessionPage() {
 
     let ws: WebSocket | null = null
 
-    const rtcConfig = {
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    const rtcConfig: RTCConfiguration = {
+      iceServers: [
+        {
+          urls: [
+            'stun:stun.l.google.com:19302',
+            'stun:stun1.l.google.com:19302'
+          ]
+        },
+        {
+          urls: 'turn:178.105.61.61:3478',
+          username: 'admin',
+          credential: 'admin1234'
+        }
+      ],
+      iceTransportPolicy: 'all'
     }
 
     const createPeerConnection = (targetUserId: number) => {
@@ -156,7 +169,11 @@ export default function LiveSessionPage() {
           } else if (data.type === 'user_joined') {
             setParticipants((prev) => {
               if (prev.some((p) => p.user_id === data.user_id)) return prev
-              return [...prev, { user_id: data.user_id, username: data.username }]
+              return [...prev, {
+                user_id: data.user_id,
+                username: data.username,
+                is_teacher: data.is_teacher
+              }]
             })
             // We initiate the offer to the newly joined user
             const pc = createPeerConnection(data.user_id)
@@ -477,7 +494,9 @@ export default function LiveSessionPage() {
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user?.username}</p>
-                <p className="label-micro text-slate-400 mt-0.5">Tú</p>
+                <p className="label-micro text-slate-400 mt-0.5">
+                  Tú {user?.role === 'teacher' || user?.is_staff ? '(Profesor)' : '(Estudiante)'}
+                </p>
               </div>
             </div>
 
