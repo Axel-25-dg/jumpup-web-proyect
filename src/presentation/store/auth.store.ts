@@ -14,7 +14,7 @@ interface AuthState {
 
 interface AuthActions {
   login(username: string, password: string): Promise<void>
-  register(username: string, email: string, password: string): Promise<void>
+  register(username: string, email: string, password: string, password2: string): Promise<void>
   logout(): Promise<void>
   loadSession(): Promise<void>
   clearError(): void
@@ -50,10 +50,10 @@ export const useAuthStore = create<AuthState & AuthActions>((set, get) => {
       }
     },
 
-    async register(username, email, password) {
+    async register(username, email, password, password2) {
       set({ isLoading: true, error: null })
       try {
-        const { user, tokens } = await authUseCase.register({ username, email, password })
+        const { user, tokens } = await authUseCase.register({ username, email, password, password2 })
         set({ user, tokens, isLoading: false, isInitialized: true })
       } catch (err: unknown) {
         const apiErr = err as { detail?: string; message?: string }

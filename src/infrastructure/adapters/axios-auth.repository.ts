@@ -65,12 +65,13 @@ export class AxiosAuthRepository implements AuthRepository {
     }
   }
 
-  async register(username: string, email: string, password: string): Promise<AuthSession> {
+  async register(username: string, email: string, password: string, password2: string): Promise<AuthSession> {
     try {
       const { data } = await apiClient.post<RawAuthResponse>('/auth/register/', {
         username,
         email,
         password,
+        password2,
       })
       const session = toAuthSession(data)
       localTokenStorage.setTokens(session.tokens.access, session.tokens.refresh)
