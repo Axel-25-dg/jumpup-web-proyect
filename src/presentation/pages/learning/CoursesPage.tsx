@@ -38,6 +38,18 @@ export default function CoursesPage() {
   const [completedLessonIds, setCompletedLessonIds] = useState<number[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingModules, setIsLoadingModules] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    // Auto-close sidebar on small screens
+    const handleResize = () => {
+      if (window.innerWidth < 1024) setIsSidebarOpen(false)
+      else setIsSidebarOpen(true)
+    }
+    window.addEventListener('resize', handleResize)
+    handleResize()
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     async function fetchInitialData() {
@@ -113,10 +125,25 @@ export default function CoursesPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-0 border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/[0.02] animate-in fade-in duration-500">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-64px)] border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/[0.02] animate-in fade-in duration-500 relative">
+      {/* Mobile Sidebar Toggle */}
+      <Button
+        variant="outline"
+        size="sm"
+        className="lg:hidden absolute top-4 left-4 z-20 gap-2"
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+      >
+        <BookOpen className="h-4 w-4" />
+        {isSidebarOpen ? 'Cerrar Menú' : 'Ver Cursos'}
+      </Button>
+
       {/* Sidebar de Cursos */}
-      <aside className="lg:w-80 border-r border-slate-900/10 dark:border-white/10">
-        <div className="p-8 border-b border-slate-900/10 dark:border-white/10">
+      <aside className={`
+        ${isSidebarOpen ? 'flex' : 'hidden'}
+        lg:flex flex-col lg:w-80 border-r border-slate-900/10 dark:border-white/10
+        absolute lg:relative z-10 bg-white dark:bg-[#0a0a0b] w-full h-full lg:h-auto
+      `}>
+        <div className="p-6 sm:p-8 border-b border-slate-900/10 dark:border-white/10 pt-16 lg:pt-8">
           <div className="chip mb-4">
             <BookOpen className="h-3.5 w-3.5 text-sky-500" />
             Academia
@@ -127,7 +154,7 @@ export default function CoursesPage() {
           <p className="label-micro text-slate-400 dark:text-slate-500 mt-1">Tu progreso educativo</p>
         </div>
 
-        <div className="divide-y divide-slate-900/10 dark:divide-white/10">
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-900/10 dark:divide-white/10">
           {courses.length === 0 ? (
             <div className="p-8 text-center">
               <p className="label-caps text-slate-400">Sin inscripciones</p>
@@ -139,7 +166,10 @@ export default function CoursesPage() {
             courses.map((course) => (
               <button
                 key={course.id}
-                onClick={() => handleSelectCourse(course)}
+                onClick={() => {
+                  handleSelectCourse(course)
+                  if (window.innerWidth < 1024) setIsSidebarOpen(false)
+                }}
                 className={`w-full text-left p-6 transition-all duration-200 group relative ${
                   selectedCourse?.id === course.id
                     ? 'bg-sky-500/[0.06] border-r-2 border-sky-500'
@@ -167,7 +197,7 @@ export default function CoursesPage() {
         </div>
 
         {/* Gamification Widget - Editorial Style */}
-        <div className="p-8 border-t border-slate-900/10 dark:border-white/10 bg-slate-50 dark:bg-white/[0.01]">
+        <div className="p-6 sm:p-8 border-t border-slate-900/10 dark:border-white/10 bg-slate-50 dark:bg-white/[0.01]">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/5">
                <Trophy className="h-4 w-4 text-amber-500" />
@@ -182,7 +212,7 @@ export default function CoursesPage() {
               <span className="text-slate-500">Nivel de Progreso</span>
               <span className="text-sky-500">75%</span>
             </div>
-            <div className="h-1 w-full bg-slate-200 dark:bg-white/10 rounded-none">
+            <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-none">
               <div className="h-full bg-sky-500 w-[75%]"></div>
             </div>
           </div>
@@ -190,10 +220,10 @@ export default function CoursesPage() {
       </aside>
 
       {/* Contenido Principal */}
-      <main className="flex-1 min-w-0">
+      <main className="flex-1 min-w-0 pt-16 lg:pt-0">
         {selectedCourse ? (
           <div className="animate-in fade-in duration-500">
-            <div className="p-8 md:p-12 border-b border-slate-900/10 dark:border-white/10">
+            <div className="p-6 sm:p-8 md:p-12 border-b border-slate-900/10 dark:border-white/10">
               <div className="flex flex-wrap items-center gap-2 mb-6">
                 {selectedCourse.language_info && (
                   <span className="chip border-sky-500/20 text-sky-600 bg-sky-500/[0.05]">
@@ -204,15 +234,15 @@ export default function CoursesPage() {
                   {selectedCourse.difficulty_level}
                 </span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-6 uppercase">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none mb-6 uppercase">
                 {selectedCourse.title}
               </h1>
-              <p className="text-lg text-slate-500 dark:text-slate-400 font-medium max-w-3xl leading-relaxed">
+              <p className="text-base sm:text-lg text-slate-500 dark:text-slate-400 font-medium max-w-3xl leading-relaxed">
                 {selectedCourse.description}
               </p>
             </div>
 
-            <div className="p-8 md:p-12">
+            <div className="p-4 sm:p-8 md:p-12">
               {isLoadingModules ? (
                 <div className="flex flex-col h-64 items-center justify-center gap-4">
                   <Loader2 className="h-8 w-8 animate-spin text-sky-500" />
@@ -238,7 +268,7 @@ export default function CoursesPage() {
                            return (
                             <div
                               key={lesson.id}
-                              className="group flex items-center justify-between p-6 bg-white dark:bg-[#0a0a0b] card-hover"
+                              className="group flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-white dark:bg-[#0a0a0b] card-hover gap-4"
                             >
                               <div className="flex items-center gap-5 min-w-0">
                                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center border ${
@@ -268,7 +298,7 @@ export default function CoursesPage() {
                                 size="sm"
                                 variant="outline"
                                 asChild
-                                className={`rounded-none px-6 font-bold uppercase text-[10px] tracking-widest transition-all ${
+                                className={`w-full sm:w-auto rounded-none px-6 font-bold uppercase text-[10px] tracking-widest transition-all ${
                                   isCompleted
                                     ? 'border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/5'
                                     : 'border-slate-900 dark:border-white hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-black'
@@ -287,7 +317,7 @@ export default function CoursesPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 border border-dashed border-slate-900/10 dark:border-white/10">
+                <div className="text-center py-20 px-6 border border-dashed border-slate-900/10 dark:border-white/10">
                   <BookOpen className="h-8 w-8 text-slate-300 mx-auto mb-4" />
                   <h3 className="label-caps text-slate-900 dark:text-white">Contenido en preparación</h3>
                   <p className="text-xs text-slate-500 mt-2 max-w-xs mx-auto">
@@ -298,13 +328,13 @@ export default function CoursesPage() {
             </div>
           </div>
         ) : (
-          <div className="flex h-full flex-col items-center justify-center text-center p-12 bg-slate-50 dark:bg-transparent">
+          <div className="flex h-full min-h-[400px] flex-col items-center justify-center text-center p-8 sm:p-12 bg-slate-50 dark:bg-transparent">
             <div className="mb-8">
-              <div className="flex h-20 w-20 items-center justify-center border-2 border-slate-900 dark:border-white">
-                <BookOpen className="h-10 w-10 text-sky-500" />
+              <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center border-2 border-slate-900 dark:border-white">
+                <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-sky-500" />
               </div>
             </div>
-            <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mb-4">Selecciona un Curso</h3>
+            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tighter uppercase mb-4">Selecciona un Curso</h3>
             <p className="label-caps text-slate-400 max-w-xs leading-relaxed">
               Explora tus clases activas desde el panel lateral para comenzar.
             </p>

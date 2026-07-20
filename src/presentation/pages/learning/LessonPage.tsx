@@ -225,23 +225,23 @@ export default function LessonPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 py-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+    <div className="max-w-2xl mx-auto space-y-8 py-4 px-4 sm:px-0 animate-in fade-in slide-in-from-bottom-8 duration-500">
       {/* Top Header - Modern Progress */}
-      <div className="flex items-center gap-6">
-        <Button variant="ghost" size="icon" asChild className="-ml-2 h-10 w-10 text-slate-500 hover:text-slate-800 hover:bg-transparent">
+      <div className="flex items-center gap-4 sm:gap-6">
+        <Button variant="ghost" size="icon" asChild className="-ml-2 h-10 w-10 text-slate-500 hover:text-slate-800 hover:bg-transparent shrink-0">
           <Link to="/courses">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
-        <div className="flex-1 space-y-2">
-          <div className="flex justify-between items-end">
-            <div className="space-y-0.5">
+        <div className="flex-1 space-y-2 min-w-0">
+          <div className="flex justify-between items-end gap-2">
+            <div className="space-y-0.5 truncate">
               <span className="label-micro text-slate-400">Progreso de Lección</span>
-              <p className="text-xs font-bold text-slate-900 dark:text-white">
+              <p className="text-[10px] sm:text-xs font-bold text-slate-900 dark:text-white truncate">
                 Ejercicio {currentIdx + 1} <span className="text-slate-400 font-medium">/ {exercises.length}</span>
               </p>
             </div>
-            <span className="label-micro px-1.5 py-0.5 border border-sky-500/30 text-sky-500 bg-sky-500/5">{progressPercent}%</span>
+            <span className="label-micro px-1.5 py-0.5 border border-sky-500/30 text-sky-500 bg-sky-500/5 shrink-0">{progressPercent}%</span>
           </div>
           <div className="h-1.5 w-full bg-slate-900/10 dark:bg-white/10">
             <div
@@ -254,7 +254,7 @@ export default function LessonPage() {
 
       {/* Main Exercise Card */}
       <div className="border border-slate-900/10 dark:border-white/10 bg-white dark:bg-white/[0.02] overflow-hidden">
-        <div className="p-6 border-b border-slate-900/10 dark:border-white/10">
+        <div className="p-5 sm:p-6 border-b border-slate-900/10 dark:border-white/10">
           <div className="flex items-center justify-between mb-4">
             <span className="chip text-[9px] px-1.5 py-0.5">
               {currentExercise.exercise_type.replace('_', ' ')}
@@ -264,13 +264,13 @@ export default function LessonPage() {
               <span>+{Math.round(lesson.xp_reward / exercises.length)} XP</span>
             </div>
           </div>
-          <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-2">{currentExercise.title}</h2>
-          <p className="text-sm font-bold text-slate-500 italic leading-relaxed">
+          <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight mb-2">{currentExercise.title}</h2>
+          <p className="text-xs sm:text-sm font-bold text-slate-500 italic leading-relaxed">
             "{currentExercise.question_text}"
           </p>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-5 sm:p-6 space-y-6">
           {/* Audio player if listen type */}
           {currentExercise.exercise_type === 'listen' && currentExercise.audio_url && (
             <div className="flex justify-center py-6">
