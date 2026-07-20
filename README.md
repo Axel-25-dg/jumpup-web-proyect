@@ -3,7 +3,7 @@
 <h3 align="center">Carrera de Desarrollo de Software</h3>
 <p align="center">
   <br>
-  <img src="src/assets/JumpUp_Logo.png" width="180" alt="Logo JumpUp"/>
+  <img src="src/assets/logo_ute.jpg" width="180" alt="Logo UTE"/>
 </p>
 
 # JumpUp Idiomas - Web App React
