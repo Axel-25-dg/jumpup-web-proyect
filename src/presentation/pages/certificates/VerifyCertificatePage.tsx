@@ -4,7 +4,7 @@ import { apiClient } from '@/infrastructure/http/axios-client'
 import { Award, ShieldCheck, ShieldAlert, Loader2, ArrowLeft, CheckCircle2, Search, Download } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import type { Certificate } from '@/domain/entities/certificate.entity'
-import * as htmlToImage from 'html-to-image'
+import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
 export default function VerifyCertificatePage() {
@@ -23,25 +23,28 @@ export default function VerifyCertificatePage() {
     }
     setIsDownloading(true)
     try {
-      const dataUrl = await htmlToImage.toPng(certificateRef.current, {
-        quality: 1,
+      // Small delay to ensure everything is rendered
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      const canvas = await html2canvas(certificateRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
         backgroundColor: '#ffffff',
-        pixelRatio: 2,
-        filter: (node) => {
-          if (node.id === 'pdf-actions') return false
-          return true
-        }
+        ignoreElements: (element) => element.id === 'pdf-actions'
       })
       
-      const rect = certificateRef.current.getBoundingClientRect()
+      const dataUrl = canvas.toDataURL('image/png')
       const pdf = new jsPDF('p', 'mm', 'a4')
       const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (rect.height * pdfWidth) / rect.width
+      const imgWidth = canvas.width
+      const imgHeight = canvas.height
+      const pdfHeight = (imgHeight * pdfWidth) / imgWidth
       
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`Certificado_${certificate?.certificate_code || 'JumpUp'}.pdf`)
     } catch (error: any) {
-      alert('Hubo un error al generar el PDF: ' + (error?.message || 'Error desconocido'))
+      alert('Hubo un error al generar el PDF. Asegúrate de desactivar traductores automáticos y reintenta.')
       console.error('Error generating PDF', error)
     } finally {
       setIsDownloading(false)

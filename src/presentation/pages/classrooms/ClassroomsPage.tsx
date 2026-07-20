@@ -92,17 +92,17 @@ export default function ClassroomsPage() {
   return (
     <div className="animate-in fade-in duration-500">
       {/* HERO */}
-      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-16">
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-4 sm:px-8 md:px-12 py-10 md:py-16">
         <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-8">
           <div className="space-y-4">
             <div className="chip">
               <Users className="h-3.5 w-3.5 text-sky-500" />
               Estudiante
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
               Aulas <span className="text-sky-500">Virtuales</span>.
             </h1>
-            <p className="text-base leading-relaxed text-slate-600 dark:text-slate-300 max-w-lg font-medium">
+            <p className="text-sm sm:text-base leading-relaxed text-slate-600 dark:text-slate-300 max-w-lg font-medium">
               Participa en clases estructuradas por tus profesores y asiste a sesiones en vivo con tecnología de vanguardia.
             </p>
           </div>
@@ -112,7 +112,7 @@ export default function ClassroomsPage() {
       <div className="grid gap-px lg:grid-cols-3 bg-slate-900/10 dark:bg-white/10 border-b border-slate-900/10 dark:border-white/10">
         {/* JOIN FORM */}
         <div className="bg-white dark:bg-[#0a0a0b]">
-          <div className="flex items-center gap-4 px-8 py-8 border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
+          <div className="flex items-center gap-4 px-4 sm:px-8 py-8 border-b border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
             <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10 bg-white dark:bg-transparent">
               <Key className="h-5 w-5 text-sky-500" />
             </div>
@@ -122,7 +122,7 @@ export default function ClassroomsPage() {
             </div>
           </div>
 
-          <div className="px-8 py-10 space-y-6">
+          <div className="px-4 sm:px-8 py-10 space-y-6">
             <div className="space-y-3">
               <label className="label-caps text-slate-400 dark:text-slate-500 block">Código de Inscripción</label>
               <input
@@ -131,7 +131,7 @@ export default function ClassroomsPage() {
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                 maxLength={8}
-                className="w-full text-center tracking-[0.4em] font-mono text-xl border border-slate-900/10 dark:border-white/10 bg-transparent px-4 py-5 focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 text-slate-900 dark:text-white placeholder:text-slate-200 dark:placeholder:text-slate-800 uppercase transition-all"
+                className="w-full text-center tracking-[0.2em] sm:tracking-[0.4em] font-mono text-lg sm:text-xl border border-slate-900/10 dark:border-white/10 bg-transparent px-4 py-5 focus:outline-none focus:border-sky-500 dark:focus:border-sky-500 text-slate-900 dark:text-white placeholder:text-slate-200 dark:placeholder:text-slate-800 uppercase transition-all"
               />
             </div>
 
@@ -167,18 +167,18 @@ export default function ClassroomsPage() {
         <div className="lg:col-span-2 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
           {/* Active Live Sessions */}
           <div className="border-b border-slate-900/10 dark:border-white/10 bg-white dark:bg-transparent">
-            <div className="flex items-center gap-4 px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+            <div className="flex items-center gap-4 px-4 sm:px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
               <span className="relative flex h-2.5 w-2.5 shrink-0">
                 {liveSessions.length > 0 && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />}
                 <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${liveSessions.length > 0 ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-700'}`} />
               </span>
-              <h2 className="label-caps text-slate-900 dark:text-white font-black tracking-widest">Sesiones en Vivo</h2>
+              <h2 className="label-caps text-slate-900 dark:text-white font-black tracking-widest text-xs sm:text-sm">Sesiones en Vivo</h2>
             </div>
             
             {liveSessions.length > 0 ? (
               <div className="divide-y divide-slate-900/10 dark:divide-white/10">
                 {liveSessions.map((session) => (
-                  <div key={session.id} className="flex items-center gap-6 px-8 md:px-10 py-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                  <div key={session.id} className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 px-4 sm:px-8 md:px-10 py-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                     <div className="flex h-12 w-12 items-center justify-center border border-rose-500/20 bg-rose-500/5 shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-colors">
                       <Video className="h-5 w-5" />
                     </div>
@@ -188,7 +188,7 @@ export default function ClassroomsPage() {
                         {new Date(session.scheduled_at).toLocaleString('es-ES', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }).toUpperCase()}
                       </p>
                     </div>
-                    <Button size="sm" className="rounded-none bg-rose-500 hover:bg-rose-600 font-bold uppercase text-[10px] tracking-widest px-6" asChild>
+                    <Button size="sm" className="w-full sm:w-auto rounded-none bg-rose-500 hover:bg-rose-600 font-bold uppercase text-[10px] tracking-widest px-6" asChild>
                       {session.meeting_url ? (
                         <a href={session.meeting_url} target="_blank" rel="noopener noreferrer">ACCEDER</a>
                       ) : (
@@ -199,19 +199,19 @@ export default function ClassroomsPage() {
                 ))}
               </div>
             ) : (
-              <div className="px-8 md:px-10 py-8">
+              <div className="px-4 sm:px-8 md:px-10 py-8">
                 <p className="label-micro text-slate-400 uppercase tracking-wider">No hay sesiones activas en este momento.</p>
               </div>
             )}
           </div>
 
           {/* My Classrooms */}
-          <div className="px-8 md:px-10 py-10">
-            <h2 className="label-caps text-slate-400 dark:text-slate-500 mb-8 tracking-[0.2em] font-black">Mis Aulas Inscritas</h2>
+          <div className="px-4 sm:px-8 md:px-10 py-10">
+            <h2 className="label-caps text-slate-400 dark:text-slate-500 mb-8 tracking-[0.2em] font-black text-xs sm:text-sm">Mis Aulas Inscritas</h2>
             {classrooms.length > 0 ? (
               <div className="grid gap-px sm:grid-cols-2 bg-slate-900/10 dark:bg-white/10 border border-slate-900/10 dark:border-white/10">
                 {classrooms.map((cls) => (
-                  <div key={cls.id} className="p-8 bg-white dark:bg-[#0a0a0b] hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                  <div key={cls.id} className="p-6 sm:p-8 bg-white dark:bg-[#0a0a0b] hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10 text-sky-500 group-hover:bg-sky-500 group-hover:text-white transition-all">
                         <BookOpen className="h-5 w-5" />
@@ -226,9 +226,9 @@ export default function ClassroomsPage() {
                     </p>
 
                     <div className="pt-6 border-t border-slate-900/5 dark:border-white/5 space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="label-micro text-slate-400">INSTRUCTOR</span>
-                        <span className="label-micro font-bold text-slate-700 dark:text-slate-300 truncate max-w-[120px]">{cls.teacher_info?.username?.toUpperCase() || 'ASIGNADO'}</span>
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="label-micro text-slate-400 shrink-0">INSTRUCTOR</span>
+                        <span className="label-micro font-bold text-slate-700 dark:text-slate-300 truncate text-right">{cls.teacher_info?.username?.toUpperCase() || 'ASIGNADO'}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="label-micro text-slate-400">COMUNIDAD</span>

@@ -89,7 +89,7 @@ export default function TeacherDashboardPage() {
   return (
     <div className="animate-in fade-in duration-500">
       {/* HERO — editorial */}
-      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-20">
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-4 sm:px-8 md:px-12 py-10 md:py-20">
         <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
           <div className="space-y-6 max-w-2xl">
             <div className="chip">
@@ -132,9 +132,9 @@ export default function TeacherDashboardPage() {
 
       {/* STATS GRID — editorial */}
       <section className="border-b border-slate-900/10 dark:border-white/10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 border-l border-slate-900/10 dark:border-white/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-l border-slate-900/10 dark:border-white/10">
           {teacherStats.map((stat, i) => (
-            <div key={i} className="p-8 md:p-10 border-b border-r border-slate-900/10 dark:border-white/10 card-hover">
+            <div key={i} className="p-6 sm:p-8 md:p-10 border-b border-r border-slate-900/10 dark:border-white/10 card-hover">
               <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10 mb-6">
                 <stat.icon className="h-5 w-5 text-sky-500" />
               </div>
@@ -151,14 +151,15 @@ export default function TeacherDashboardPage() {
 
         {/* UPCOMING SESSIONS */}
         <div className="lg:col-span-2 border-r border-slate-900/10 dark:border-white/10">
-          <div className="flex items-center justify-between px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+          <div className="flex items-center justify-between px-4 sm:px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
             <div>
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Próximas Sesiones</h2>
               <p className="label-caps text-slate-400 dark:text-slate-500 mt-1">Clases programadas</p>
             </div>
             <Button asChild variant="ghost" size="sm" className="gap-1 group">
               <Link to="/teacher/live">
-                Ver todas
+                <span className="hidden sm:inline">Ver todas</span>
+                <span className="sm:hidden">Todas</span>
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -167,7 +168,7 @@ export default function TeacherDashboardPage() {
           <div className="divide-y divide-slate-900/5 dark:divide-white/5">
             {upcomingSessions.length > 0 ? (
               upcomingSessions.map(session => (
-                <div key={session.id} className="flex items-center gap-5 px-8 md:px-10 py-5 card-hover">
+                <div key={session.id} className="flex items-center gap-5 px-4 sm:px-8 md:px-10 py-5 card-hover">
                   <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10 shrink-0">
                     <Video className="h-5 w-5 text-sky-500" />
                   </div>
@@ -183,7 +184,7 @@ export default function TeacherDashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-20 px-10">
+              <div className="text-center py-20 px-6 sm:px-10">
                 <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
                   <Video className="h-6 w-6 text-sky-500" />
                 </div>
@@ -196,12 +197,12 @@ export default function TeacherDashboardPage() {
           </div>
 
           {/* Quick Access */}
-          <div className="border-t border-slate-900/10 dark:border-white/10 grid grid-cols-2 border-l border-slate-900/10 dark:border-white/10">
+          <div className="border-t border-slate-900/10 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 border-l border-slate-900/10 dark:border-white/10">
             {[
               { to: '/teacher/classrooms', title: 'Mis Aulas', desc: 'Ver y gestionar alumnos', icon: Users },
               { to: '/teacher/courses', title: 'Mis Cursos', desc: 'Contenido educativo', icon: BookOpen },
             ].map((link, i) => (
-              <Link key={i} to={link.to} className="group p-8 border-b border-r border-slate-900/10 dark:border-white/10 card-hover flex items-center gap-5">
+              <Link key={i} to={link.to} className="group p-6 sm:p-8 border-b border-r border-slate-900/10 dark:border-white/10 card-hover flex items-center gap-5">
                 <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10">
                   <link.icon className="h-5 w-5 text-sky-500" />
                 </div>
@@ -217,7 +218,7 @@ export default function TeacherDashboardPage() {
         {/* SIDEBAR */}
         <aside>
           {/* Live activity */}
-          <div className="px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
+          <div className="px-4 sm:px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Live Activity</h2>
@@ -236,7 +237,7 @@ export default function TeacherDashboardPage() {
           </div>
 
           {/* Tip del día */}
-          <div className="px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
+          <div className="px-4 sm:px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-10 w-10 items-center justify-center border border-slate-900/10 dark:border-white/10">
                 <Lightbulb className="h-4 w-4 text-sky-500" />

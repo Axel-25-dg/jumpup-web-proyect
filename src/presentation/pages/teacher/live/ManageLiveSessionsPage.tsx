@@ -86,7 +86,7 @@ export default function ManageLiveSessionsPage() {
   return (
     <div className="animate-in fade-in duration-500">
       {/* Header Editorial */}
-      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-14 md:py-20">
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-4 sm:px-8 md:px-12 py-10 md:py-20">
         <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
           <div className="space-y-6 max-w-2xl">
             <div className="chip">
@@ -101,22 +101,22 @@ export default function ManageLiveSessionsPage() {
               Programa y gestiona tus clases virtuales con integración directa de streaming y chat en tiempo real.
             </p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 shrink-0 w-full lg:w-auto">
             <div className="flex border border-slate-900/10 dark:border-white/10 p-1">
               <button
                 onClick={() => setActiveTab('upcoming')}
-                className={`px-6 py-2 label-caps transition-colors ${activeTab === 'upcoming' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 label-caps transition-colors text-xs sm:text-sm ${activeTab === 'upcoming' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Próximas ({upcomingSessions.length})
               </button>
               <button
                 onClick={() => setActiveTab('past')}
-                className={`px-6 py-2 label-caps transition-colors ${activeTab === 'past' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 label-caps transition-colors text-xs sm:text-sm ${activeTab === 'past' ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-950' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Historial
               </button>
             </div>
-            <Button asChild size="lg" className="gap-2 group">
+            <Button asChild size="lg" className="gap-2 group w-full sm:w-auto">
               <Link to="/teacher/live/new">
                 <Plus className="h-4 w-4 group-hover:rotate-90 transition-transform" />
                 Programar
@@ -138,7 +138,7 @@ export default function ManageLiveSessionsPage() {
           ) : displayedSessions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {displayedSessions.map((session) => (
-                <div key={session.id} className={`group bg-white dark:bg-slate-950 p-8 md:p-10 flex flex-col justify-between card-hover min-h-[320px] ${session.status === 'cancelled' ? 'opacity-50 grayscale' : ''}`}>
+                <div key={session.id} className={`group bg-white dark:bg-slate-950 p-6 sm:p-8 md:p-10 flex flex-col justify-between card-hover min-h-[320px] ${session.status === 'cancelled' ? 'opacity-50 grayscale' : ''}`}>
                   <div>
                     <div className="flex items-start justify-between mb-8">
                       <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10">
