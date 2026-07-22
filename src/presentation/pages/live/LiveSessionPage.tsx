@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { localTokenStorage } from '@/infrastructure/storage/local-token-storage'
 import { useAuthStore } from '@/presentation/store/auth.store'
+import { API_CONFIG } from '@/infrastructure/config/api.config'
 import {
   Radio, VideoOff, Mic, MicOff, PhoneOff, Users, Loader2,
   MessageSquare, Settings, Hand, MonitorUp,
@@ -393,12 +394,20 @@ export default function LiveSessionPage() {
   useEffect(() => {
     if (!session || isEnded || accessDenied) return
 
-    const token = localTokenStorage.getAccessToken()
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+    const token = localTokenStorage.getAccessToken() || ''
 
-    const wsHost = apiBaseUrl.replace(/^https?:\/\//, '').replace(/\/api$/, '')
-    const wsProto = apiBaseUrl.startsWith('https') ? 'wss:' : 'ws:'
-    const wsUrl = `${wsProto}//${wsHost}/ws/live-session/${id}/${token ? `?token=${token}` : ''}`
+    let wsOrigin = import.meta.env.VITE_WS_URL || API_CONFIG.WS_URL || ''
+    if (!wsOrigin) {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
+      const wsProto = apiBaseUrl.startsWith('https') ? 'wss:' : 'ws:'
+      const wsHost = apiBaseUrl.replace(/^https?:\/\//, '').replace(/\/api\/?$/, '')
+      wsOrigin = `${wsProto}//${wsHost}`
+    }
+
+    const baseWs = wsOrigin.replace(/\/$/, '')
+    const wsEndpoint = baseWs.endsWith('/ws') ? baseWs : `${baseWs}/ws`
+    const wsUrl = `${wsEndpoint}/live-session/${id}/?token=${encodeURIComponent(token)}`
+    console.log('[LiveSession] Conectando a WebSocket:', wsUrl)
 
     let ws: WebSocket | null = null
     let reconnectTimeout: any
