@@ -210,9 +210,9 @@ export default function LiveSessionPage() {
       pc.onicecandidate = (event) => {
         if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
-            type: 'webrtc_signal',
-            target_user_id: targetUserId,
-            signal: { type: 'ice_candidate', candidate: event.candidate }
+            type: 'ice_candidate',
+            target: targetUserId,
+            candidate: event.candidate
           }))
         }
       }
@@ -262,9 +262,9 @@ export default function LiveSessionPage() {
               await pc.setLocalDescription(offer)
               if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
-                  type: 'webrtc_signal',
-                  target_user_id: data.user_id,
-                  signal: offer
+                  type: 'offer',
+                  target: data.user_id,
+                  sdp: offer
                 }))
               }
             } else if (data.type === 'user_left') {
@@ -283,31 +283,30 @@ export default function LiveSessionPage() {
                 text: data.message,
                 time: data.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               }])
-            } else if (data.type === 'webrtc_signal') {
-              const senderId = data.sender_id
-              const signal = data.signal
-              if (!senderId || !signal) return
+            } else if (data.type === 'offer' || data.type === 'answer' || data.type === 'ice_candidate') {
+              const senderId = data.from
+              if (!senderId) return
 
               let pc = peerConnections.current[senderId]
               if (!pc) {
                 pc = createPeerConnection(senderId)
               }
 
-              if (signal.type === 'offer') {
-                await pc.setRemoteDescription(new RTCSessionDescription(signal))
+              if (data.type === 'offer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(data.sdp))
                 const answer = await pc.createAnswer()
                 await pc.setLocalDescription(answer)
                 if (ws && ws.readyState === WebSocket.OPEN) {
                   ws.send(JSON.stringify({
-                    type: 'webrtc_signal',
-                    target_user_id: senderId,
-                    signal: answer
+                    type: 'answer',
+                    target: senderId,
+                    sdp: answer
                   }))
                 }
-              } else if (signal.type === 'answer') {
-                await pc.setRemoteDescription(new RTCSessionDescription(signal))
-              } else if (signal.type === 'ice_candidate') {
-                await pc.addIceCandidate(new RTCIceCandidate(signal.candidate))
+              } else if (data.type === 'answer') {
+                await pc.setRemoteDescription(new RTCSessionDescription(data.sdp))
+              } else if (data.type === 'ice_candidate') {
+                await pc.addIceCandidate(new RTCIceCandidate(data.candidate))
               }
             }
           } catch (e) {
