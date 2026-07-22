@@ -150,10 +150,12 @@ export default function LiveSessionPage() {
         try {
           const data = JSON.parse(event.data)
           if (data.type === 'participants') {
-            setParticipants(data.users || [])
+            setParticipants(data.participants || data.users || [])
             // Optionally: Initiate connection with already present participants
             // but usually we rely on user_joined or existing participants sending offers
           } else if (data.type === 'user_joined') {
+            // Ignore if the event is about ourselves
+            if (data.user_id === user?.user_id) return
             setParticipants((prev) => {
               if (prev.some((p) => p.user_id === data.user_id)) return prev
               return [...prev, { user_id: data.user_id, username: data.username }]
@@ -377,7 +379,7 @@ export default function LiveSessionPage() {
             </div>
 
             {/* Remote Feeds */}
-            {participants.filter(p => p.user_id !== user?.user_id && p.user_id !== (user as any)?.id).map((part) => (
+            {participants.filter(p => p.user_id !== user?.user_id).map((part) => (
               <div key={part.user_id} className="relative group overflow-hidden bg-black min-h-[300px]">
                 <div className="absolute top-4 left-4 z-20 pointer-events-none">
                   <span className="chip text-[9px] px-1.5 py-0.5 bg-black/50 text-white backdrop-blur-md">
@@ -465,7 +467,7 @@ export default function LiveSessionPage() {
         <aside className={`w-80 flex flex-col transition-all duration-300 ${showChat ? 'flex' : 'hidden lg:flex'} bg-white dark:bg-white/[0.02]`}>
           <div className="p-4 border-b border-slate-900/10 dark:border-white/10 flex items-center justify-between">
             <h3 className="label-caps text-slate-900 dark:text-white flex items-center gap-2">
-              <Users size={14} className="text-sky-500" /> Participantes ({participants.length + 1})
+              <Users size={14} className="text-sky-500" /> Participantes ({participants.filter(p => p.user_id !== user?.user_id).length + 1})
             </h3>
           </div>
 
@@ -482,7 +484,7 @@ export default function LiveSessionPage() {
             </div>
 
             {/* Other participants */}
-            {participants.filter(p => p.user_id !== user?.user_id && p.user_id !== (user as any)?.id).map((part, idx) => (
+            {participants.filter(p => p.user_id !== user?.user_id).map((part, idx) => (
               <div key={idx} className="p-3 border border-slate-900/10 dark:border-white/10 flex items-center justify-between hover:border-sky-500/30 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-xs font-bold text-sky-500">
@@ -496,7 +498,7 @@ export default function LiveSessionPage() {
               </div>
             ))}
 
-            {participants.length === 0 && (
+            {participants.filter(p => p.user_id !== user?.user_id).length === 0 && (
               <div className="p-6 text-center border border-dashed border-slate-900/10 dark:border-white/10 space-y-2">
                 <Sparkles size={16} className="text-sky-500 opacity-20 mx-auto" />
                 <p className="label-micro text-slate-400">Esperando conexiones...</p>
