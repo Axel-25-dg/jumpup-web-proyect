@@ -45,7 +45,27 @@ export default function ClassroomsPage() {
         const liveArray = Array.isArray(liveData) ? liveData : (liveData?.data || liveData?.results || [])
         
         setClassrooms(classArray)
-        setLiveSessions(liveArray.filter((session: any) => session.status === 'live' || session.status === 'scheduled'))
+        
+        const enrolledClassroomIds = new Set(classArray.map((c: any) => String(c.id)))
+        const enrolledCourseIds = new Set(classArray.map((c: any) => String(c.course || c.course_info?.id)).filter(Boolean))
+
+        const filteredLive = liveArray.filter((session: any) => {
+          const isStatusActive = session.status === 'live' || session.status === 'scheduled' || session.status === 'upcoming'
+          if (!isStatusActive) return false
+
+          const sessClassId = session.classroom || session.classroom_id
+          const sessCourseId = session.course || session.course_id
+
+          const isMatchingClass = sessClassId && enrolledClassroomIds.has(String(sessClassId))
+          const isMatchingCourse = sessCourseId && enrolledCourseIds.has(String(sessCourseId))
+
+          if (classArray.length > 0) {
+            return isMatchingClass || isMatchingCourse
+          }
+          return true
+        })
+
+        setLiveSessions(filteredLive)
       } catch (err) {
         console.error('Error fetching classrooms data:', err)
       } finally {
