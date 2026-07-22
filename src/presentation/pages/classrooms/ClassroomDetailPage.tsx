@@ -167,13 +167,13 @@ export default function ClassroomDetailPage() {
   return (
     <div className="animate-in fade-in duration-500 min-h-screen bg-white dark:bg-[#0a0a0b]">
       {/* HERO SECTION */}
-      <section className="border-b border-slate-900/10 dark:border-white/10 px-8 md:px-12 py-10 md:py-16 bg-slate-50 dark:bg-white/[0.02]">
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-4 sm:px-8 md:px-12 py-10 md:py-16 bg-slate-50 dark:bg-white/[0.02]">
         <div className="max-w-5xl mx-auto space-y-6">
           <Link to="/classrooms" className="inline-flex items-center gap-2 label-caps text-slate-400 hover:text-sky-500 transition-colors">
             <ArrowLeft className="h-3.5 w-3.5" /> Volver a Aulas
           </Link>
           <div>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
               <div className="chip">
                 <Users className="h-3.5 w-3.5 text-sky-500" />
                 Aula Virtual
@@ -189,13 +189,13 @@ export default function ClassroomDetailPage() {
               {classroom.name}
             </h1>
             {classroom.description && (
-              <p className="text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
                 {classroom.description}
               </p>
             )}
           </div>
           
-          <div className="flex flex-wrap gap-6 pt-4">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 sm:gap-6 pt-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 border border-slate-900/10 dark:border-white/10 flex items-center justify-center bg-white dark:bg-white/5">
                 <Users className="h-4 w-4 text-slate-400" />
@@ -218,7 +218,7 @@ export default function ClassroomDetailPage() {
         </div>
       </section>
 
-      <div className="max-w-5xl mx-auto px-8 md:px-12 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 md:px-12 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* MAIN CONTENT (LESSONS) */}
         <div className="lg:col-span-2 space-y-10">
           <div>
@@ -253,7 +253,7 @@ export default function ClassroomDetailPage() {
                       {mod.lessons?.map((lesson) => {
                          const isCompleted = lesson.is_completed || completedLessonIds.includes(lesson.id)
                          return (
-                          <div key={lesson.id} className="group flex items-center justify-between p-5 bg-white dark:bg-[#0a0a0b] card-hover">
+                          <div key={lesson.id} className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-white dark:bg-[#0a0a0b] card-hover gap-4">
                             <div className="flex items-center gap-4 min-w-0">
                               <div className={`flex h-8 w-8 shrink-0 items-center justify-center border ${
                                 isCompleted
@@ -274,7 +274,7 @@ export default function ClassroomDetailPage() {
                                 </div>
                               </div>
                             </div>
-                            <Button size="sm" variant="outline" asChild className={`rounded-none px-4 font-bold uppercase text-[10px] tracking-widest ${isCompleted ? 'border-emerald-500/30 text-emerald-600' : 'border-slate-900/10'}`}>
+                            <Button size="sm" variant="outline" asChild className={`w-full sm:w-auto rounded-none px-4 font-bold uppercase text-[10px] tracking-widest ${isCompleted ? 'border-emerald-500/30 text-emerald-600' : 'border-slate-900/10'}`}>
                               <Link to={`/courses/${classroom.course}/lessons/${lesson.id}`}>
                                 {isCompleted ? 'Repasar' : 'Iniciar'}
                               </Link>

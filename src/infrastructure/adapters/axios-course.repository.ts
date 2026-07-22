@@ -154,6 +154,15 @@ export class AxiosCourseRepository implements CourseRepository {
     }
   }
 
+  async updateLesson(id: number, payload: Partial<{ title: string; content_type: string; order: number; xp_reward: number }>): Promise<Lesson> {
+    try {
+      const { data } = await apiClient.patch<Lesson>(`/lessons/${id}/`, payload);
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
   async deleteLesson(id: number): Promise<void> {
     try {
       await apiClient.delete(`/lessons/${id}/`);
@@ -202,6 +211,15 @@ export class AxiosCourseRepository implements CourseRepository {
   async createExercise(payload: ExercisePayload): Promise<any> {
     try {
       const { data } = await apiClient.post('/exercises/', payload);
+      return data;
+    } catch (err) {
+      throw parseApiError(err);
+    }
+  }
+
+  async updateExercise(id: number, payload: Partial<ExercisePayload>): Promise<any> {
+    try {
+      const { data } = await apiClient.patch(`/exercises/${id}/`, payload);
       return data;
     } catch (err) {
       throw parseApiError(err);

@@ -84,7 +84,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-0 animate-in fade-in duration-700">
       {/* --- HERO BANNER — Editorial Style --- */}
-      <section className="border-b border-slate-900/10 dark:border-white/10 py-14 md:py-20">
+      <section className="border-b border-slate-900/10 dark:border-white/10 px-4 sm:px-8 py-10 md:py-20">
         <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between gap-10">
           <div className="space-y-6 max-w-2xl">
             {/* Chips row */}
@@ -138,14 +138,14 @@ export default function DashboardPage() {
 
       {/* --- QUICK STATS GRID — Editorial, matches public features grid --- */}
       <section className="border-b border-slate-900/10 dark:border-white/10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 border-l border-slate-900/10 dark:border-white/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-l border-slate-900/10 dark:border-white/10">
           {[
             { label: 'Progreso', value: `${data?.progress_percentage ?? 0}%`, sub: `${data?.completed_lessons ?? 0} lecciones`, icon: BookOpen },
             { label: 'Insignias', value: data?.achievements_count ?? 0, sub: 'Logros desbloqueados', icon: Trophy },
             { label: 'Títulos', value: data?.certificates_count ?? 0, sub: 'Certificados MCER', icon: Award },
             { label: 'Aulas', value: data?.active_classrooms ?? 0, sub: 'Clases activas', icon: Users },
           ].map((stat, i) => (
-            <div key={i} className="p-8 md:p-10 border-b border-r border-slate-900/10 dark:border-white/10 group card-hover">
+            <div key={i} className="p-6 sm:p-8 md:p-10 border-b border-r border-slate-900/10 dark:border-white/10 group card-hover">
               <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10 mb-6">
                 <stat.icon className="h-5 w-5 text-sky-500" />
               </div>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-2 border-r border-slate-900/10 dark:border-white/10">
 
           {/* Section header */}
-          <div className="flex items-center justify-between px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
+          <div className="flex items-center justify-between px-4 sm:px-8 md:px-10 py-6 border-b border-slate-900/10 dark:border-white/10">
             <div>
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Tus Logros</h2>
               <p className="label-caps text-slate-400 dark:text-slate-500 mt-1">Lo que has conquistado</p>
@@ -179,8 +179,8 @@ export default function DashboardPage() {
           <div className="divide-y divide-slate-900/5 dark:divide-white/5">
             {achievements.length > 0 ? (
               achievements.map((ach) => (
-                <div key={ach.id} className="flex items-center gap-6 px-8 md:px-10 py-6 group card-hover transition-colors">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-slate-900/10 dark:border-white/10">
+                <div key={ach.id} className="flex items-center gap-4 sm:gap-6 px-4 sm:px-8 md:px-10 py-6 group card-hover transition-colors">
+                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center border border-slate-900/10 dark:border-white/10">
                     {ach.achievement?.icon ? (
                       <span className="text-2xl">{ach.achievement.icon}</span>
                     ) : (
@@ -210,13 +210,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Access Grid */}
-          <div className="border-t border-slate-900/10 dark:border-white/10 grid grid-cols-2 border-l border-slate-900/10 dark:border-white/10">
+          <div className="border-t border-slate-900/10 dark:border-white/10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 border-l border-slate-900/10 dark:border-white/10">
             {[
               { to: '/courses', title: 'Explorar', desc: 'Mis niveles activos', icon: Compass },
               { to: '/social', title: 'Social', desc: 'Conecta con otros', icon: Users },
               { to: '/achievements', title: 'Logros', desc: 'Tus medallas', icon: Trophy },
             ].map((link, i) => (
-              <Link key={i} to={link.to} className="group p-8 border-b border-r border-slate-900/10 dark:border-white/10 card-hover transition-colors flex items-center gap-5">
+              <Link key={i} to={link.to} className="group p-6 sm:p-8 border-b border-r border-slate-900/10 dark:border-white/10 card-hover transition-colors flex items-center gap-5">
                 <div className="flex h-12 w-12 items-center justify-center border border-slate-900/10 dark:border-white/10">
                   <link.icon className="h-5 w-5 text-sky-500" />
                 </div>
@@ -232,7 +232,7 @@ export default function DashboardPage() {
         {/* --- LEADERBOARD SIDEBAR --- Editorial */}
         <aside>
           {/* Header */}
-          <div className="flex items-center justify-between px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
+          <div className="flex items-center justify-between px-4 sm:px-8 py-6 border-b border-slate-900/10 dark:border-white/10">
             <div>
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Ranking</h2>
               <p className="label-caps text-slate-400 dark:text-slate-500 mt-1">Liga de Diamante</p>
@@ -246,7 +246,7 @@ export default function DashboardPage() {
           <div className="divide-y divide-slate-900/5 dark:divide-white/5">
             {topUsers.length > 0 ? (
               topUsers.slice(0, 6).map((user, idx) => (
-                <div key={idx} className={`flex items-center gap-4 px-8 py-5 transition-colors ${idx === 0 ? 'bg-sky-500/[0.04] dark:bg-sky-500/[0.06]' : 'card-hover'}`}>
+                <div key={idx} className={`flex items-center gap-4 px-4 sm:px-8 py-5 transition-colors ${idx === 0 ? 'bg-sky-500/[0.04] dark:bg-sky-500/[0.06]' : 'card-hover'}`}>
                   <span className={`text-sm font-bold w-5 shrink-0 text-right ${idx === 0 ? 'text-sky-500' : 'text-slate-400 dark:text-slate-500'}`}>
                     {idx + 1}
                   </span>

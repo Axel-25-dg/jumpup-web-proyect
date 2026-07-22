@@ -42,6 +42,10 @@ export default function AdminCoursesPage() {
   const [courseToDelete, setCourseToDelete] = useState<Course | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // El backend Django no expone is_active en el serializer, pero el modelo
+  // crea cursos con is_active=True por defecto. Tratamos undefined como activo.
+  const isActive = (course: Course): boolean => course.is_active !== false
+
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -74,10 +78,11 @@ export default function AdminCoursesPage() {
   }
 
   const handleToggleActive = async (course: Course) => {
+    const newActive = !isActive(course)
     try {
-      await courseRepo.updateCourse(course.id, { is_active: !course.is_active })
-      setCourses(courses.map(c => c.id === course.id ? { ...c, is_active: !c.is_active } : c))
-      toast.success(`Curso ${course.is_active ? 'desactivado' : 'activado'} con éxito`)
+      await courseRepo.updateCourse(course.id, { is_active: newActive })
+      setCourses(courses.map(c => c.id === course.id ? { ...c, is_active: newActive } : c))
+      toast.success(`Curso ${newActive ? 'activado' : 'desactivado'} con éxito`)
     } catch (error) {
       console.error('Error toggling course status:', error)
       toast.error('Error al cambiar el estado del curso')
@@ -87,8 +92,8 @@ export default function AdminCoursesPage() {
   const filteredCourses = courses.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase())
     if (!matchesSearch) return false
-    if (statusFilter === 'active') return c.is_active === true && c.status !== 'draft'
-    if (statusFilter === 'draft') return c.is_active === false || c.status === 'draft'
+    if (statusFilter === 'active') return isActive(c)
+    if (statusFilter === 'draft') return !isActive(c)
     return true
   })
   return (
@@ -168,7 +173,7 @@ export default function AdminCoursesPage() {
                   <td colSpan={4} className="px-8 py-8"><div className="h-4 bg-slate-100 dark:bg-white/5 w-full" /></td>
                 </tr>
               ))
-            ) : filteredCourses.length > 0 ? (
+            ) : !isLoading && filteredCourses.length > 0 ? (
               filteredCourses.map((course) => (
                 <tr key={course.id} className="card-hover group">
                   <td className="px-8 py-6">
@@ -203,9 +208,9 @@ export default function AdminCoursesPage() {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`label-micro flex items-center gap-2 ${course.is_active ? 'text-emerald-600' : 'text-amber-500'}`}>
-                      <span className={`h-1.5 w-1.5 ${course.is_active ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      {course.is_active ? 'PUBLICADO' : 'INACTIVO'}
+                    <span className={`label-micro flex items-center gap-2 ${isActive(course) ? 'text-emerald-600' : 'text-amber-500'}`}>
+                      <span className={`h-1.5 w-1.5 ${isActive(course) ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                      {isActive(course) ? 'PUBLICADO' : 'INACTIVO'}
                     </span>
                   </td>
                   <td className="px-8 py-6">
@@ -229,7 +234,7 @@ export default function AdminCoursesPage() {
                             <Edit2 className="h-4 w-4 mr-2" /> Editar Curso
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => handleToggleActive(course)} className="label-micro py-3">
-                            <Eye className="h-4 w-4 mr-2" /> {course.is_active ? 'Ocultar Catálogo' : 'Mostrar Catálogo'}
+                            <Eye className="h-4 w-4 mr-2" /> {isActive(course) ? 'Ocultar Catálogo' : 'Mostrar Catálogo'}
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => setCourseToDelete(course)} className="label-micro py-3 text-rose-500 focus:text-rose-500">
                             <Trash2 className="h-4 w-4 mr-2" /> Eliminar Permanente
@@ -240,7 +245,7 @@ export default function AdminCoursesPage() {
                   </td>
                 </tr>
               ))
-            ) : (
+            ) : !isLoading ? (
               <tr>
                 <td colSpan={4} className="py-24 text-center">
                   <div className="flex h-16 w-16 items-center justify-center border border-slate-900/10 dark:border-white/10 mx-auto mb-6">
@@ -249,7 +254,7 @@ export default function AdminCoursesPage() {
                   <p className="label-caps text-slate-400">No se encontraron registros de cursos</p>
                 </td>
               </tr>
-            )}
+            ) : null}
           </tbody>
         </table>
       </div>

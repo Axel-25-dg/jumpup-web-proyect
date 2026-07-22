@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Loader2,
   ArrowLeft,
+  Edit2,
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
 import { Input } from '@/presentation/components/ui/input'
@@ -36,7 +37,7 @@ import {
   getCertificatesUseCase,
   issueCertificateUseCase,
   revokeCertificateUseCase,
-} from '@/infrastructure/factories/admin.factory'
+} from '@/infrastructure/factories/admin-certificate.factory'
 import type { Certificate } from '@/domain/entities/certificate.entity'
 
 export default function AdminCertificatesPage() {
@@ -239,13 +240,25 @@ export default function AdminCertificatesPage() {
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-52">
+                    <DropdownMenuContent className="w-56">
+                      <DropdownMenuItem
+                        onSelect={() => navigate(`/admin/certificates/${cert.id}`)}
+                        className="gap-2"
+                      >
+                        <Award className="h-4 w-4" /> Ver detalle
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => navigate(`/admin/certificates/${cert.id}/edit`)}
+                        className="gap-2"
+                      >
+                        <Edit2 className="h-4 w-4" /> Editar
+                      </DropdownMenuItem>
                       {cert.status === 'issued' && (
                         <DropdownMenuItem
                           onSelect={() => setCertToRevoke(cert)}
                           className="gap-2 text-rose-600 focus:text-rose-600"
                         >
-                          <XCircle className="h-4 w-4" /> Revocar Certificado
+                          <XCircle className="h-4 w-4" /> Revocar
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuItem

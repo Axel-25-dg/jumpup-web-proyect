@@ -137,7 +137,8 @@ export default function AppShell() {
       return [
         { to: '/teacher', label: 'Panel Profesor', icon: LayoutDashboard, protected: true },
         { to: '/teacher/courses', label: 'Mis Cursos', icon: BookOpen, protected: true },
-        { to: '/teacher/classrooms', label: 'Mis Aulas', icon: Radio, protected: true },
+        { to: '/teacher/classrooms', label: 'Mis Aulas', icon: Users, protected: true },
+        { to: '/teacher/live', label: 'Sesiones en Vivo', icon: Radio, protected: true },
         { to: '/teacher/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/forum', label: 'Comunidad', icon: MessageSquare, protected: true },
         { to: '/teacher/profile', label: 'Mi Perfil', icon: User, protected: true }
@@ -154,9 +155,8 @@ export default function AppShell() {
         { to: '/admin/users', label: 'Usuarios', icon: Users, protected: true },
         { to: '/admin/classrooms', label: 'Aulas', icon: Users, protected: true },
         { to: '/admin/certificates', label: 'Certificados', icon: Award, protected: true },
-        { to: '/admin/categories', label: 'Categorías', icon: Tags, protected: true },
         { to: '/admin/announcements', label: 'Anuncios', icon: Bell, protected: true },
-        { to: '/admin/forum-categories', label: 'Foro', icon: MessageSquare, protected: true },
+        { to: '/admin/forum', label: 'Foro', icon: MessageSquare, protected: true },
         { to: '/admin/resources', label: 'Recursos', icon: FolderOpen, protected: true },
         { to: '/admin/catalogo', label: 'Catálogo', icon: ShoppingBag, protected: true },
         { to: '/admin/ordenes-compra', label: 'Órdenes', icon: Receipt, protected: true },
@@ -576,10 +576,20 @@ export default function AppShell() {
       {/* TOP BAR */}
       <header className={cn(
         "fixed top-0 z-[50] w-full border-b border-slate-200 dark:border-white/[0.06] bg-white/80 dark:bg-[#0a0a0b]/80 backdrop-blur-md transition-all duration-300",
-        user ? (isSidebarExpanded ? "pl-64" : "pl-16") : "pl-0"
+        user ? (isSidebarExpanded ? "lg:pl-64" : "lg:pl-16") : "pl-0"
       )}>
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-8">
+        <div className="flex h-16 items-center justify-between px-4 md:px-6">
+          <div className="flex items-center gap-4 md:gap-8">
+            {/* Mobile Sidebar Toggle */}
+            {user && (
+              <button
+                onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+                className="lg:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+              >
+                <Menu size={20} />
+              </button>
+            )}
+
             {/* Left side info (search or page title style) */}
             {user && (
               <div className="hidden md:flex relative group">
@@ -717,117 +727,142 @@ export default function AppShell() {
 
       {/* SIDEBAR */}
       {user && (
-        <aside
-          className={cn(
-            "fixed left-0 top-0 h-screen border-r z-[60] transition-all duration-300 ease-in-out flex flex-col pt-4",
-            theme === 'dark'
-              ? "bg-[#0a0a0b] border-white/10"
-              : "bg-white border-slate-900/10",
-            isSidebarExpanded ? "w-64" : "w-16"
-          )}
-        >
-          {/* Logo container inside sidebar */}
-          <div className="flex items-center gap-3 px-4 h-12 mb-6 shrink-0">
-            <img
-              src="/JumpUp_Logo.png"
-              alt="JumpUp Logo"
-              className="h-8 w-8 object-contain shrink-0"
+        <>
+          {/* Mobile Overlay */}
+          {isSidebarExpanded && (
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+              onClick={() => setIsSidebarExpanded(false)}
             />
-            {isSidebarExpanded && (
-              <span translate="no" className="text-xl font-bold tracking-tight text-slate-900 dark:text-white select-none">
-                <span className="text-sky-500">ump</span>Up
-              </span>
-            )}
-          </div>
+          )}
 
-          <div className="flex items-center px-4 mb-6">
-            {isSidebarExpanded ? (
+          <aside
+            className={cn(
+              "fixed left-0 top-0 h-screen border-r z-[60] transition-all duration-300 ease-in-out flex flex-col pt-4",
+              theme === 'dark'
+                ? "bg-[#0a0a0b] border-white/10"
+                : "bg-white border-slate-900/10",
+              isSidebarExpanded ? "w-64 translate-x-0" : "w-16 -translate-x-full lg:translate-x-0"
+            )}
+          >
+            {/* Logo container inside sidebar */}
+            <div className="flex items-center justify-between px-4 h-12 mb-6 shrink-0">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/JumpUp_Logo.png"
+                  alt="JumpUp Logo"
+                  className="h-8 w-8 object-contain shrink-0"
+                />
+                {(isSidebarExpanded) && (
+                  <span translate="no" className={cn(
+                    "text-xl font-bold tracking-tight select-none transition-opacity duration-300",
+                    theme === 'dark' ? "text-white" : "text-slate-900",
+                    !isSidebarExpanded && "lg:opacity-0"
+                  )}>
+                    <span className="text-sky-500">ump</span>Up
+                  </span>
+                )}
+              </div>
               <button
                 onClick={() => setIsSidebarExpanded(false)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl text-slate-500 dark:text-slate-400 transition-colors cursor-pointer ml-auto"
+                className="lg:hidden p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white"
               >
-                <PanelLeft size={18} />
+                <X size={18} />
               </button>
-            ) : (
-              <button
-                onClick={() => setIsSidebarExpanded(true)}
-                className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl text-slate-500 dark:text-slate-400 transition-colors cursor-pointer mx-auto"
-              >
-                <PanelRight size={18} />
-              </button>
-            )}
-          </div>
+            </div>
 
-          <nav className="flex-1 px-2 space-y-1 overflow-y-auto no-scrollbar overflow-x-hidden">
-            {filteredNavItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => cn(
-                  "flex items-center gap-4 p-3 transition-colors duration-150 group relative",
-                  isActive
-                    ? "text-sky-500"
-                    : theme === 'dark'
-                      ? "text-neutral-400 hover:text-neutral-100"
-                      : "text-neutral-500 hover:text-neutral-900"
-                )}
-              >
-                {({ isActive }) => (
-                  <>
-                    <div className={cn(
-                      "min-w-[24px] flex justify-center",
-                    )}>
-                      <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
-                    </div>
+            <div className="hidden lg:flex items-center px-4 mb-6">
+              {isSidebarExpanded ? (
+                <button
+                  onClick={() => setIsSidebarExpanded(false)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl text-slate-500 dark:text-slate-400 transition-colors cursor-pointer ml-auto"
+                >
+                  <PanelLeft size={18} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsSidebarExpanded(true)}
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-white/[0.04] rounded-xl text-slate-500 dark:text-slate-400 transition-colors cursor-pointer mx-auto"
+                >
+                  <PanelRight size={18} />
+                </button>
+              )}
+            </div>
 
-                    <span className={cn(
-                      "text-sm font-semibold whitespace-nowrap transition-all duration-300",
-                      isSidebarExpanded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none"
-                    )}>
-                      {item.label}
-                    </span>
-
-                    {!isSidebarExpanded && (
+            <nav className="flex-1 px-2 space-y-1 overflow-y-auto no-scrollbar overflow-x-hidden">
+              {filteredNavItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) setIsSidebarExpanded(false)
+                  }}
+                  className={({ isActive }) => cn(
+                    "flex items-center gap-4 p-3 transition-colors duration-150 group relative",
+                    isActive
+                      ? "text-sky-500"
+                      : theme === 'dark'
+                        ? "text-neutral-400 hover:text-neutral-100"
+                        : "text-neutral-500 hover:text-neutral-900"
+                  )}
+                >
+                  {({ isActive }) => (
+                    <>
                       <div className={cn(
-                        "absolute left-full ml-4 px-3 py-1 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase tracking-wider whitespace-nowrap z-[70]",
-                        theme === 'dark' ? 'bg-neutral-800' : 'bg-slate-900'
+                        "min-w-[24px] flex justify-center",
+                      )}>
+                        <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+                      </div>
+
+                      <span className={cn(
+                        "text-sm font-semibold whitespace-nowrap transition-all duration-300",
+                        isSidebarExpanded ? "opacity-100 translate-x-0" : "lg:opacity-0 lg:translate-x-4 pointer-events-none"
                       )}>
                         {item.label}
-                      </div>
-                    )}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </nav>
+                      </span>
 
-          {/* Sidebar Footer */}
-          <div className="p-3 border-t border-slate-100 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.01]">
-             <div className={cn(
-               "flex items-center gap-3 transition-all duration-300",
-               !isSidebarExpanded && "justify-center"
-             )}>
-                <div className="h-10 w-10 rounded-xl bg-sky-500 shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-sky-500/10">
-                  {getInitials(user.username)}
-                </div>
-                <div className={cn(
-                  "flex flex-col transition-opacity duration-300 overflow-hidden",
-                  isSidebarExpanded ? "opacity-100 w-full" : "opacity-0 w-0"
-                )}>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.username}</span>
-                  <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">{displayRole}</span>
-                </div>
-             </div>
-          </div>
-        </aside>
+                      {(!isSidebarExpanded) && (
+                        <div className={cn(
+                          "absolute left-full ml-4 px-3 py-1 text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none uppercase tracking-wider whitespace-nowrap z-[70] hidden lg:block",
+                          theme === 'dark' ? 'bg-neutral-800' : 'bg-slate-900'
+                        )}>
+                          {item.label}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* Sidebar Footer */}
+            <div className="p-3 border-t border-slate-100 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.01]">
+               <div className={cn(
+                 "flex items-center gap-3 transition-all duration-300",
+                 !isSidebarExpanded && "lg:justify-center"
+               )}>
+                  <div className="h-10 w-10 rounded-xl bg-sky-500 shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-md shadow-sky-500/10">
+                    {getInitials(user.username)}
+                  </div>
+                  <div className={cn(
+                    "flex flex-col transition-opacity duration-300 overflow-hidden",
+                    isSidebarExpanded ? "opacity-100 w-full" : "lg:opacity-0 lg:w-0"
+                  )}>
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.username}</span>
+                    <span className="text-[10px] font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wider">{displayRole}</span>
+                  </div>
+               </div>
+            </div>
+          </aside>
+        </>
       )}
 
       {/* MAIN CONTENT */}
       <main className={cn(
-        "flex-1 pt-16 transition-all duration-300",
-        user ? (isSidebarExpanded ? "pl-64" : "pl-16") : "pl-0"
+        "flex-1 pt-16 transition-all duration-300 w-full overflow-x-hidden",
+        user ? (isSidebarExpanded ? "lg:pl-64" : "lg:pl-16") : "pl-0"
       )}>
-        <div className="max-w-7xl mx-auto px-0">
+        <div className="w-full max-w-7xl mx-auto">
           <Outlet context={{ theme }} />
         </div>
       </main>

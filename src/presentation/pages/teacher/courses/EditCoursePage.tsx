@@ -126,7 +126,7 @@ export default function EditCoursePage() {
       await courseRepo.deleteModule(moduleToDelete.id)
       setModules(prev => prev.filter(m => m.id !== moduleToDelete.id))
       toast.success(`Módulo "${moduleToDelete.title}" eliminado`)
-    } catch (err: any) {
+    } catch {
       toast.error('Error al eliminar el módulo')
     } finally {
       setIsDeletingModule(false)
