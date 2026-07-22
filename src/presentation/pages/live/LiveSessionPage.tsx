@@ -491,7 +491,7 @@ export default function LiveSessionPage() {
           try {
             const data = JSON.parse(event.data)
             if (data.type === 'participants') {
-              const users: { user_id: number; username: string; is_teacher?: boolean }[] = data.users || []
+              const users: { user_id: number; username: string; is_teacher?: boolean }[] = data.participants || data.users || []
               setParticipants(users)
               // KEY FIX: Connect to all existing participants in the room
               // when we first join (not just to new joiners)
