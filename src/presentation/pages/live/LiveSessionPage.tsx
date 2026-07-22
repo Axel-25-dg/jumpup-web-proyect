@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { localTokenStorage } from '@/infrastructure/storage/local-token-storage'
@@ -86,7 +86,16 @@ export default function LiveSessionPage() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const screenStreamRef = useRef<MediaStream | null>(null)
-  const localVideoRef = useRef<HTMLVideoElement>(null)
+  const localVideoRef = useRef<HTMLVideoElement | null>(null)
+  const setLocalVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    localVideoRef.current = el
+    if (el) {
+      const stream = localStreamRef.current
+      if (stream && el.srcObject !== stream) {
+        el.srcObject = stream
+      }
+    }
+  }, [])
   const peerConnections = useRef<Record<number, RTCPeerConnection>>({})
   const iceCandidatesBuffer = useRef<Record<number, RTCIceCandidateInit[]>>({})
   const [remoteStreams, setRemoteStreams] = useState<Record<number, MediaStream>>({})
@@ -339,7 +348,7 @@ export default function LiveSessionPage() {
     }
   }, [isEnded, accessDenied])
 
-  // Bind local video element whenever localStream or isLoading changes
+  // Bind local video element whenever localStream changes (callback ref handles mount, this handles stream-ready-after-mount)
   useEffect(() => {
     if (localVideoRef.current && localStream) {
       localVideoRef.current.srcObject = localStream
@@ -406,11 +415,16 @@ export default function LiveSessionPage() {
 
     const baseWs = wsOrigin.replace(/\/$/, '')
     const wsEndpoint = baseWs.endsWith('/ws') ? baseWs : `${baseWs}/ws`
-    const wsUrl = `${wsEndpoint}/live-session/${id}/?token=${encodeURIComponent(token)}`
-    console.log('[LiveSession] Conectando a WebSocket:', wsUrl)
+    // Try both naming conventions: live_session (Django) and live-session (REST-style)
+    const wsUrlVariants = [
+      `${wsEndpoint}/live_session/${id}/?token=${encodeURIComponent(token)}`,
+      `${wsEndpoint}/live-session/${id}/?token=${encodeURIComponent(token)}`,
+    ]
+    let wsUrlIndex = 0
 
     let ws: WebSocket | null = null
     let reconnectTimeout: any
+    let hasEverConnected = false
 
     const rtcConfig: RTCConfiguration = {
       iceServers: [
@@ -477,7 +491,11 @@ export default function LiveSessionPage() {
     }
 
     const connect = () => {
+
       if (ws) ws.close()
+
+      const wsUrl = wsUrlVariants[wsUrlIndex]
+      console.log('[LiveSession] Conectando a WebSocket:', wsUrl)
 
       try {
         ws = new WebSocket(wsUrl)
@@ -485,13 +503,20 @@ export default function LiveSessionPage() {
 
         ws.onopen = () => {
           setIsConnected(true)
+          hasEverConnected = true
         }
 
         ws.onmessage = async (event) => {
           try {
             const data = JSON.parse(event.data)
+            console.log('[WS] Mensaje recibido:', data.type, data)
             if (data.type === 'participants') {
-              const allUsers: { user_id: number; username: string; is_teacher?: boolean }[] = data.participants || data.users || []
+              const allUsers: { user_id: number; username: string; is_teacher?: boolean }[] =
+                (data.participants || data.users || data.data || []).map((u: any) => ({
+                  user_id: u.user_id ?? u.id,
+                  username: u.username ?? u.name ?? u.display_name ?? `Usuario ${u.user_id ?? u.id}`,
+                  is_teacher: u.is_teacher ?? u.is_host ?? false
+                }))
               // Filter out self from participants list
               const users = allUsers.filter(u => u.user_id !== user?.user_id)
               setParticipants(users)
@@ -545,15 +570,16 @@ export default function LiveSessionPage() {
             } else if (data.type === 'user_joined') {
               // Skip if this is the current user joining themselves
               if (data.user_id === user?.user_id) return
+              const joinedUser = {
+                user_id: data.user_id ?? data.id,
+                username: data.username ?? data.name ?? data.display_name ?? `Usuario ${data.user_id ?? data.id}`,
+                is_teacher: data.is_teacher ?? data.is_host ?? false
+              }
               setParticipants((prev) => {
-                if (prev.some((p) => p.user_id === data.user_id)) return prev
-                return [...prev, {
-                  user_id: data.user_id,
-                  username: data.username,
-                  is_teacher: data.is_teacher
-                }]
+                if (prev.some((p) => p.user_id === joinedUser.user_id)) return prev
+                return [...prev, joinedUser]
               })
-              const pc = createPeerConnection(data.user_id)
+              const pc = createPeerConnection(joinedUser.user_id)
               const offer = await pc.createOffer()
               await pc.setLocalDescription(offer)
               if (ws && ws.readyState === WebSocket.OPEN) {
@@ -621,7 +647,14 @@ export default function LiveSessionPage() {
         ws.onclose = () => {
           setIsConnected(false)
           if (!isEnded && !accessDenied) {
-            reconnectTimeout = setTimeout(connect, 3000)
+            // If never connected and there's a fallback URL, try it
+            if (!hasEverConnected && wsUrlIndex < wsUrlVariants.length - 1) {
+              wsUrlIndex++
+              console.log('[LiveSession] Intentando URL alternativa...')
+              reconnectTimeout = setTimeout(connect, 500)
+            } else {
+              reconnectTimeout = setTimeout(connect, 3000)
+            }
           }
         }
 
@@ -636,6 +669,7 @@ export default function LiveSessionPage() {
         }
       }
     }
+
 
     connect()
 
@@ -859,7 +893,7 @@ export default function LiveSessionPage() {
 
                 {isScreenSharing ? (
                   <video
-                    ref={localVideoRef}
+                    ref={setLocalVideoRef}
                     autoPlay
                     playsInline
                     muted
@@ -885,7 +919,7 @@ export default function LiveSessionPage() {
                     <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
                   </div>
                   <video
-                    ref={localVideoRef}
+                    ref={setLocalVideoRef}
                     autoPlay
                     playsInline
                     muted
@@ -933,7 +967,7 @@ export default function LiveSessionPage() {
                 </div>
                 
                 <video
-                  ref={localVideoRef}
+                  ref={setLocalVideoRef}
                   autoPlay
                   playsInline
                   muted
