@@ -491,12 +491,12 @@ export default function LiveSessionPage() {
           try {
             const data = JSON.parse(event.data)
             if (data.type === 'participants') {
-              const users: { user_id: number; username: string; is_teacher?: boolean }[] = data.participants || data.users || []
+              const allUsers: { user_id: number; username: string; is_teacher?: boolean }[] = data.participants || data.users || []
+              // Filter out self from participants list
+              const users = allUsers.filter(u => u.user_id !== user?.user_id)
               setParticipants(users)
-              // KEY FIX: Connect to all existing participants in the room
-              // when we first join (not just to new joiners)
+              // Connect to all existing participants in the room when we join
               for (const remoteUser of users) {
-                if (remoteUser.user_id === user?.user_id) continue // skip self
                 if (peerConnections.current[remoteUser.user_id]) continue // already connected
                 // Only the user with the HIGHER user_id sends the offer to avoid double-offer race
                 if ((user?.user_id ?? 0) > remoteUser.user_id) {
@@ -505,9 +505,9 @@ export default function LiveSessionPage() {
                   await pc.setLocalDescription(offer)
                   if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({
-                      type: 'webrtc_signal',
-                      target_user_id: remoteUser.user_id,
-                      signal: offer
+                      type: 'offer',
+                      target: remoteUser.user_id,
+                      sdp: offer
                     }))
                   }
                 } else {
@@ -543,6 +543,8 @@ export default function LiveSessionPage() {
                 setActivePresenter(prev => (prev?.user_id === data.user_id ? null : prev))
               }
             } else if (data.type === 'user_joined') {
+              // Skip if this is the current user joining themselves
+              if (data.user_id === user?.user_id) return
               setParticipants((prev) => {
                 if (prev.some((p) => p.user_id === data.user_id)) return prev
                 return [...prev, {
@@ -1167,7 +1169,9 @@ export default function LiveSessionPage() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase">{user?.username}</p>
-                      <p className="label-micro text-sky-500 mt-0.5 font-bold uppercase tracking-tighter">ANFITRIÓN (TÚ)</p>
+                      <p className="label-micro mt-0.5 font-bold uppercase tracking-tighter text-sky-500">
+                        {isTeacherOrHost ? 'ANFITRIÓN (TÚ)' : 'PARTICIPANTE (TÚ)'}
+                      </p>
                     </div>
                   </div>
                 </div>
