@@ -161,8 +161,9 @@ export default function LiveSessionPage() {
   const toggleScreenShare = async () => {
     try {
       if (!isScreenSharing) {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ 
-          video: { width: { max: 1280 }, height: { max: 720 }, frameRate: { max: 15 } } 
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { width: { max: 1920 }, height: { max: 1080 }, frameRate: { max: 15 } },
+          audio: true
         })
         screenStreamRef.current = stream
         const videoTrack = stream.getVideoTracks()[0]
@@ -172,6 +173,18 @@ export default function LiveSessionPage() {
           const sender = pc.getSenders().find(s => s.track?.kind === 'video')
           if (sender) sender.replaceTrack(videoTrack)
         })
+
+        // Lower camera web stream to low resolution to save CPU and bandwidth
+        const localCameraTrack = localStreamRef.current?.getVideoTracks()[0]
+        if (localCameraTrack) {
+          await localCameraTrack.applyConstraints({
+            width: { ideal: 320 },
+            height: { ideal: 240 },
+            frameRate: { max: 10 }
+          }).catch(err => console.error("Error applying camera constraints:", err))
+        }
+
+        if (localVideoRef.current) localVideoRef.current.srcObject = stream
 
         videoTrack.onended = () => stopScreenShare()
         setIsScreenSharing(true)
@@ -186,20 +199,27 @@ export default function LiveSessionPage() {
           }))
         }
       } else {
-        stopScreenShare()
+        await stopScreenShare()
       }
     } catch (err) {
       console.error("Error sharing screen:", err)
     }
   }
 
-  const stopScreenShare = () => {
+  const stopScreenShare = async () => {
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(t => t.stop())
     }
     screenStreamRef.current = null
     const videoTrack = localStreamRef.current?.getVideoTracks()[0]
     if (videoTrack) {
+      // Restore camera web stream to original constraints
+      await videoTrack.applyConstraints({
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { max: 30 }
+      }).catch(err => console.error("Error restoring camera constraints:", err))
+
       Object.values(peerConnections.current).forEach(pc => {
         const sender = pc.getSenders().find(s => s.track?.kind === 'video')
         if (sender) sender.replaceTrack(videoTrack)
@@ -236,6 +256,7 @@ export default function LiveSessionPage() {
   useEffect(() => {
     async function loadSession() {
       if (!id || !user) return
+      if (session && String(session.id) === String(id)) return
       try {
         setIsLoading(true)
         const res = await apiClient.get<any>(`/live-sessions/${id}/`)
@@ -294,7 +315,7 @@ export default function LiveSessionPage() {
       }
     }
     loadSession()
-  }, [id, user])
+  }, [id, user?.user_id])
 
   // Session Timer Countdown
   useEffect(() => {
@@ -424,6 +445,7 @@ export default function LiveSessionPage() {
       `${wsEndpoint}/live-session/${id}/?token=${encodeURIComponent(token)}`,
     ]
     let wsUrlIndex = 0
+    let isClosedIntentionally = false
 
     let ws: WebSocket | null = null
     let reconnectTimeout: any
@@ -511,6 +533,38 @@ export default function LiveSessionPage() {
         }
       }
 
+      // Configure priorities for senders (high priority for audio)
+      try {
+        pc.getSenders().forEach(sender => {
+          if (sender.track?.kind === 'audio' && sender.setParameters) {
+            const params = sender.getParameters()
+            if (!params.encodings) params.encodings = [{}]
+            params.encodings[0].networkPriority = 'high'
+            sender.setParameters(params).catch(() => {})
+          }
+        })
+      } catch (e) {
+        console.error("Error setting sender priority:", e)
+      }
+
+      // Negotiate H.264 or VP8 codecs for lower CPU consumption
+      try {
+        pc.getTransceivers().forEach(transceiver => {
+          if (transceiver.receiver.track.kind === 'video') {
+            const capabilities = RTCRtpReceiver.getCapabilities?.('video')
+            if (capabilities && capabilities.codecs) {
+              const codecs = capabilities.codecs
+              const preferredCodecs = codecs.filter(c => c.mimeType === 'video/H264' || c.mimeType === 'video/VP8')
+              if (preferredCodecs.length > 0 && transceiver.setCodecPreferences) {
+                transceiver.setCodecPreferences(preferredCodecs)
+              }
+            }
+          }
+        })
+      } catch (e) {
+        console.error("Error setting codec preferences:", e)
+      }
+
       pc.onicecandidate = (event) => {
         if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({
@@ -539,7 +593,7 @@ export default function LiveSessionPage() {
     }
 
     const connect = () => {
-
+      if (isClosedIntentionally) return
       if (ws) ws.close()
 
       const wsUrl = wsUrlVariants[wsUrlIndex]
@@ -550,11 +604,16 @@ export default function LiveSessionPage() {
         socketRef.current = ws
 
         ws.onopen = () => {
+          if (isClosedIntentionally) {
+            ws?.close()
+            return
+          }
           setIsConnected(true)
           hasEverConnected = true
         }
 
         ws.onmessage = async (event) => {
+          if (isClosedIntentionally) return
           try {
             const data = JSON.parse(event.data)
             console.log('[WS] Mensaje recibido:', data.type, data)
@@ -696,6 +755,7 @@ export default function LiveSessionPage() {
 
         ws.onclose = () => {
           setIsConnected(false)
+          if (isClosedIntentionally) return
           if (!isEnded && !accessDenied) {
             // If never connected and there's a fallback URL, try it
             if (!hasEverConnected && wsUrlIndex < wsUrlVariants.length - 1) {
@@ -709,11 +769,13 @@ export default function LiveSessionPage() {
         }
 
         ws.onerror = (err) => {
+          if (isClosedIntentionally) return
           console.error('Error de WebSocket:', err)
           ws?.close()
         }
       } catch (e) {
         console.error('Error al instanciar WebSocket:', e)
+        if (isClosedIntentionally) return
         if (!isEnded && !accessDenied) {
           reconnectTimeout = setTimeout(connect, 3000)
         }
@@ -724,6 +786,7 @@ export default function LiveSessionPage() {
     connect()
 
     return () => {
+      isClosedIntentionally = true
       if (ws) ws.close()
       clearTimeout(reconnectTimeout)
       Object.values(peerConnections.current).forEach(pc => pc.close())
