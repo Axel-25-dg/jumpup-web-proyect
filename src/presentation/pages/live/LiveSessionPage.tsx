@@ -161,7 +161,9 @@ export default function LiveSessionPage() {
   const toggleScreenShare = async () => {
     try {
       if (!isScreenSharing) {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
+        const stream = await navigator.mediaDevices.getDisplayMedia({ 
+          video: { width: { max: 1280 }, height: { max: 720 }, frameRate: { max: 15 } } 
+        })
         screenStreamRef.current = stream
         const videoTrack = stream.getVideoTracks()[0]
 
@@ -170,8 +172,6 @@ export default function LiveSessionPage() {
           const sender = pc.getSenders().find(s => s.track?.kind === 'video')
           if (sender) sender.replaceTrack(videoTrack)
         })
-
-        if (localVideoRef.current) localVideoRef.current.srcObject = stream
 
         videoTrack.onended = () => stopScreenShare()
         setIsScreenSharing(true)
@@ -197,13 +197,13 @@ export default function LiveSessionPage() {
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(t => t.stop())
     }
+    screenStreamRef.current = null
     const videoTrack = localStreamRef.current?.getVideoTracks()[0]
     if (videoTrack) {
       Object.values(peerConnections.current).forEach(pc => {
         const sender = pc.getSenders().find(s => s.track?.kind === 'video')
         if (sender) sender.replaceTrack(videoTrack)
       })
-      if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current
     }
     setIsScreenSharing(false)
     setActivePresenter(null)
@@ -907,7 +907,11 @@ export default function LiveSessionPage() {
 
                 {isScreenSharing ? (
                   <video
-                    ref={setLocalVideoRef}
+                    ref={(node) => {
+                      if (node && screenStreamRef.current) {
+                        node.srcObject = screenStreamRef.current
+                      }
+                    }}
                     autoPlay
                     playsInline
                     muted
@@ -933,7 +937,11 @@ export default function LiveSessionPage() {
                     <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
                   </div>
                   <video
-                    ref={setLocalVideoRef}
+                    ref={(node) => {
+                      if (node && localStreamRef.current) {
+                        node.srcObject = localStreamRef.current
+                      }
+                    }}
                     autoPlay
                     playsInline
                     muted
