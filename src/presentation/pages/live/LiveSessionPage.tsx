@@ -580,14 +580,16 @@ export default function LiveSessionPage() {
                 return [...prev, joinedUser]
               })
               const pc = createPeerConnection(joinedUser.user_id)
-              const offer = await pc.createOffer()
-              await pc.setLocalDescription(offer)
-              if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({
-                  type: 'offer',
-                  target: data.user_id,
-                  sdp: offer
-                }))
+              if ((user?.user_id ?? 0) > joinedUser.user_id) {
+                const offer = await pc.createOffer()
+                await pc.setLocalDescription(offer)
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                  ws.send(JSON.stringify({
+                    type: 'offer',
+                    target: joinedUser.user_id,
+                    sdp: offer
+                  }))
+                }
               }
             } else if (data.type === 'user_left') {
               setParticipants((prev) => prev.filter((p) => p.user_id !== data.user_id))
