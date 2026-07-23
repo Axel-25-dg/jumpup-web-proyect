@@ -49,6 +49,7 @@ export default function LiveSessionPage() {
   const [messages, setMessages] = useState<{sender: string, text: string, time: string}[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isScreenSharing, setIsScreenSharing] = useState(false)
+  const [mediaReady, setMediaReady] = useState(false)
 
   // Status & Access State
   const [isEnded, setIsEnded] = useState(false)
@@ -338,6 +339,8 @@ export default function LiveSessionPage() {
         setLocalStream(activeStream)
       } catch (err) {
         console.error('Error accessing media devices.', err)
+      } finally {
+        setMediaReady(true)
       }
     }
     initMedia()
@@ -401,7 +404,7 @@ export default function LiveSessionPage() {
   }
 
   useEffect(() => {
-    if (!session || isEnded || accessDenied) return
+    if (!session || isEnded || accessDenied || !mediaReady) return
 
     const token = localTokenStorage.getAccessToken() || ''
 
@@ -681,7 +684,7 @@ export default function LiveSessionPage() {
       Object.values(peerConnections.current).forEach(pc => pc.close())
       peerConnections.current = {}
     }
-  }, [session, id, isEnded, accessDenied])
+  }, [session, id, isEnded, accessDenied, mediaReady])
 
   useEffect(() => {
     participants.forEach(p => {
