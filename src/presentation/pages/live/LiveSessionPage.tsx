@@ -486,8 +486,17 @@ export default function LiveSessionPage() {
       }
 
       pc.ontrack = (event) => {
+        console.log(`[WebRTC] Track recibido de ${targetUserId}:`, event.track.kind)
         const stream = event.streams[0]
         setRemoteStreams(prev => ({ ...prev, [targetUserId]: stream }))
+      }
+
+      pc.oniceconnectionstatechange = () => {
+        console.log(`[WebRTC] ICE State ${targetUserId}:`, pc.iceConnectionState)
+      }
+
+      pc.onconnectionstatechange = () => {
+        console.log(`[WebRTC] Connection State ${targetUserId}:`, pc.connectionState)
       }
 
       return pc
