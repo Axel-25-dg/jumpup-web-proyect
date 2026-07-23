@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { localTokenStorage } from '@/infrastructure/storage/local-token-storage'
@@ -64,6 +64,12 @@ export default function LiveSessionPage() {
   const [permissionRequests, setPermissionRequests] = useState<{ user_id: number; username: string }[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
+  // Spotlight, alternate view modes, and network qualities
+  const [pinnedUserId, setPinnedUserId] = useState<number | null>(null)
+  const [viewMode, setViewMode] = useState<'grid' | 'speaker'>('grid')
+  const [networkQualities, setNetworkQualities] = useState<Record<number, 'excellent' | 'good' | 'poor'>>({})
+  const spotlightContainerRef = useRef<HTMLDivElement>(null)
+
   const isTeacherOrHost =
     user?.role === 'teacher' ||
     user?.role === 'admin' ||
@@ -87,16 +93,6 @@ export default function LiveSessionPage() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const screenStreamRef = useRef<MediaStream | null>(null)
-  const localVideoRef = useRef<HTMLVideoElement | null>(null)
-  const setLocalVideoRef = useCallback((el: HTMLVideoElement | null) => {
-    localVideoRef.current = el
-    if (el) {
-      const stream = localStreamRef.current
-      if (stream && el.srcObject !== stream) {
-        el.srcObject = stream
-      }
-    }
-  }, [])
   const peerConnections = useRef<Record<number, RTCPeerConnection>>({})
   const iceCandidatesBuffer = useRef<Record<number, RTCIceCandidateInit[]>>({})
   const [remoteStreams, setRemoteStreams] = useState<Record<number, MediaStream>>({})
@@ -115,6 +111,31 @@ export default function LiveSessionPage() {
       if (mainContainerRef.current?.requestFullscreen) {
         mainContainerRef.current.requestFullscreen().catch(err => {
           console.error("Error al activar pantalla completa:", err)
+        })
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => console.error("Error al salir de pantalla completa:", err))
+      }
+    }
+  }
+
+  const [isSpotlightFullScreen, setIsSpotlightFullScreen] = useState(false)
+
+  useEffect(() => {
+    const handleSpotlightFSChange = () => {
+      setIsSpotlightFullScreen(!!document.fullscreenElement && document.fullscreenElement === spotlightContainerRef.current)
+    }
+    document.addEventListener('fullscreenchange', handleSpotlightFSChange)
+    return () => document.removeEventListener('fullscreenchange', handleSpotlightFSChange)
+  }, [])
+
+  const toggleSpotlightFullScreen = () => {
+    if (!spotlightContainerRef.current) return
+    if (document.fullscreenElement !== spotlightContainerRef.current) {
+      if (spotlightContainerRef.current.requestFullscreen) {
+        spotlightContainerRef.current.requestFullscreen().catch(err => {
+          console.error("Error al activar pantalla completa de spotlight:", err)
         })
       }
     } else {
@@ -183,8 +204,6 @@ export default function LiveSessionPage() {
             frameRate: { max: 10 }
           }).catch(err => console.error("Error applying camera constraints:", err))
         }
-
-        if (localVideoRef.current) localVideoRef.current.srcObject = stream
 
         videoTrack.onended = () => stopScreenShare()
         setIsScreenSharing(true)
@@ -372,13 +391,6 @@ export default function LiveSessionPage() {
     }
   }, [isEnded, accessDenied])
 
-  // Bind local video element whenever localStream changes (callback ref handles mount, this handles stream-ready-after-mount)
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream
-    }
-  }, [localStream, isLoading])
-
   // Attach local tracks to existing peer connections when localStream becomes ready
   useEffect(() => {
     if (!localStream) return
@@ -394,6 +406,54 @@ export default function LiveSessionPage() {
       })
     })
   }, [localStream])
+
+  // Monitor network quality for each WebRTC PeerConnection
+  useEffect(() => {
+    if (isEnded || accessDenied) return
+
+    const interval = setInterval(async () => {
+      const qualities: Record<number, 'excellent' | 'good' | 'poor'> = {}
+
+      for (const [userIdStr, pc] of Object.entries(peerConnections.current)) {
+        const userId = Number(userIdStr)
+        if (!pc || pc.connectionState === 'closed') continue
+
+        try {
+          const stats = await pc.getStats()
+          let packetsLost = 0
+          let packetsReceived = 0
+          let rtt = 0
+
+          stats.forEach(report => {
+            if (report.type === 'inbound-rtp' && report.kind === 'video') {
+              packetsLost = report.packetsLost || 0
+              packetsReceived = report.packetsReceived || 0
+            }
+            if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+              rtt = report.currentRoundTripTime || 0
+            }
+          })
+
+          const totalPackets = packetsReceived + packetsLost
+          const lossRate = totalPackets > 0 ? (packetsLost / totalPackets) * 100 : 0
+
+          if (lossRate > 5 || rtt > 0.4) {
+            qualities[userId] = 'poor'
+          } else if (lossRate > 1 || rtt > 0.15) {
+            qualities[userId] = 'good'
+          } else {
+            qualities[userId] = 'excellent'
+          }
+        } catch (e) {
+          console.debug(`Could not get network stats for peer ${userId}:`, e)
+        }
+      }
+
+      setNetworkQualities(qualities)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [isEnded, accessDenied])
 
   useEffect(() => {
     if (localStreamRef.current) {
@@ -804,6 +864,88 @@ export default function LiveSessionPage() {
     })
   }, [remoteStreams, participants])
 
+  const renderNetworkIndicator = (userId: number) => {
+    const quality = networkQualities[userId] || 'excellent'
+    let color = 'text-emerald-500'
+    let text = 'Excelente'
+    if (quality === 'good') {
+      color = 'text-amber-500'
+      text = 'Aceptable'
+    } else if (quality === 'poor') {
+      color = 'text-red-500'
+      text = 'Inestable'
+    }
+
+    return (
+      <span className={`inline-flex items-center ${color}`} title={`Conexión: ${text}`}>
+        <Signal size={10} />
+      </span>
+    )
+  }
+
+  const renderLocalNetworkIndicator = () => {
+    const activeQualities = Object.values(networkQualities)
+    let quality = 'excellent'
+    if (activeQualities.includes('poor')) {
+      quality = 'poor'
+    } else if (activeQualities.includes('good')) {
+      quality = 'good'
+    }
+
+    let color = 'text-emerald-500'
+    let text = 'Excelente'
+    if (quality === 'good') {
+      color = 'text-amber-500'
+      text = 'Aceptable'
+    } else if (quality === 'poor') {
+      color = 'text-red-500'
+      text = 'Lenta o inestable'
+    }
+
+    return (
+      <span className={`inline-flex items-center gap-1 ${color}`} title={`Tu conexión: ${text}`}>
+        <Signal size={10} />
+      </span>
+    )
+  }
+
+  const isPresentingLocalScreen = isScreenSharing
+
+  const getSpotlightUser = () => {
+    if (pinnedUserId !== null) {
+      if (pinnedUserId === user?.user_id) {
+        return { user_id: user.user_id, username: 'Tú', isLocal: true, isScreen: false }
+      }
+      const p = participants.find(part => part.user_id === pinnedUserId)
+      if (p) {
+        return { user_id: p.user_id, username: p.username, isLocal: false, isScreen: false }
+      }
+    }
+
+    if (isPresentingLocalScreen) {
+      return { user_id: user!.user_id, username: 'Tú (Tu Pantalla)', isLocal: true, isScreen: true }
+    }
+    if (activePresenter) {
+      return { user_id: activePresenter.user_id, username: activePresenter.username, isLocal: false, isScreen: true }
+    }
+
+    if (viewMode === 'speaker') {
+      const teacher = participants.find(p => p.is_teacher)
+      if (teacher) {
+        return { user_id: teacher.user_id, username: teacher.username, isLocal: false, isScreen: false }
+      }
+      const firstPart = participants[0]
+      if (firstPart) {
+        return { user_id: firstPart.user_id, username: firstPart.username, isLocal: false, isScreen: false }
+      }
+      return { user_id: user!.user_id, username: 'Tú', isLocal: true, isScreen: false }
+    }
+
+    return null
+  }
+
+  const spotlightTarget = getSpotlightUser()
+
   const handleLeaveSession = () => {
     if (socketRef.current) socketRef.current.close()
     navigate('/classrooms')
@@ -939,8 +1081,8 @@ export default function LiveSessionPage() {
           )}
           <div className="flex flex-col">
             <span className="label-micro text-slate-400">Red</span>
-            <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-              <Signal size={10} /> WebRTC Estable
+            <span className="text-xs font-bold flex items-center gap-1">
+              {renderLocalNetworkIndicator()} WebRTC Activo
             </span>
           </div>
           <div className="flex flex-col">
@@ -992,72 +1134,138 @@ export default function LiveSessionPage() {
             </div>
           )}
 
-          {/* Stage View: If someone is sharing screen */}
-          {activePresenter || isScreenSharing ? (
-            <div key="stage" className="flex-1 flex flex-col min-h-0 bg-black">
+          {/* Stage View (Spotlight/Sidebar layout if there's a spotlight target) */}
+          {spotlightTarget ? (
+            <div key="stage" ref={spotlightContainerRef} className="flex-1 flex flex-col lg:flex-row min-h-0 bg-black relative">
               {/* Primary Stage Presenter */}
               <div className="flex-1 relative overflow-hidden bg-slate-950 flex items-center justify-center">
-                <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                  <span className="chip text-[9px] px-2 py-0.5 border border-sky-500/30 text-sky-400 bg-sky-500/20 flex items-center gap-1.5 backdrop-blur-md">
-                    <MonitorUp size={12} />
-                    Presentando: {isScreenSharing ? 'Tú (Tu Pantalla)' : activePresenter?.username}
+                <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2">
+                  <span className="chip text-[9px] px-2 py-0.5 border border-sky-500/30 text-sky-400 bg-sky-500/20 flex items-center gap-1.5 backdrop-blur-md font-sans">
+                    {spotlightTarget.isScreen ? <MonitorUp size={12} /> : <Users size={12} />}
+                    {spotlightTarget.isScreen ? 'Presentando: ' : 'Enfoque: '} {spotlightTarget.username}
                   </span>
-                </div>
-
-                {isScreenSharing ? (
-                  <video
-                    ref={(node) => {
-                      if (node && screenStreamRef.current) {
-                        node.srcObject = screenStreamRef.current
-                      }
-                    }}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  activePresenter && (
-                    <video
-                      ref={(el) => { remoteVideoRefs.current[activePresenter.user_id] = el }}
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-contain"
-                    />
-                  )
-                )}
-              </div>
-
-              {/* Bottom Thumbnail Strip */}
-              <div className="h-28 md:h-36 bg-slate-900 border-t border-slate-800 flex items-center p-2 gap-2 overflow-x-auto no-scrollbar">
-                {/* Local Camera Thumbnail */}
-                <div className="relative w-36 md:w-48 h-full bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800">
-                  <div className="absolute top-2 left-2 z-10">
-                    <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
-                  </div>
-                  <video
-                    ref={(node) => {
-                      if (node && localStreamRef.current) {
-                        node.srcObject = localStreamRef.current
-                      }
-                    }}
-                    autoPlay
-                    playsInline
-                    muted
-                    className={`w-full h-full object-cover ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
-                  />
-                  {!videoEnabled && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                      <VideoOff size={16} className="text-white/40" />
-                    </div>
+                  {pinnedUserId === spotlightTarget.user_id && (
+                    <span className="chip text-[9px] px-2 py-0.5 border border-amber-500/30 text-amber-400 bg-amber-500/20 flex items-center gap-1.5 backdrop-blur-md font-sans">
+                      📌 Fijado
+                    </span>
                   )}
                 </div>
 
+                {/* Spotlight Overlay Toolbar */}
+                <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+                  {pinnedUserId === spotlightTarget.user_id ? (
+                    <button
+                      onClick={() => setPinnedUserId(null)}
+                      className="p-1.5 bg-black/60 hover:bg-black/80 text-amber-400 rounded-full border border-amber-500/20 transition-colors"
+                      title="Desfijar de la pantalla principal"
+                    >
+                      <Hand size={14} className="rotate-45" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setPinnedUserId(spotlightTarget.user_id)}
+                      className="p-1.5 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
+                      title="Fijar en la pantalla principal"
+                    >
+                      <Hand size={14} />
+                    </button>
+                  )}
+                  <button
+                    onClick={toggleSpotlightFullScreen}
+                    className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
+                    title={isSpotlightFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa de esta vista'}
+                  >
+                    {isSpotlightFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                  </button>
+                </div>
+
+                {spotlightTarget.isLocal ? (
+                  spotlightTarget.isScreen ? (
+                    <video
+                      ref={(node) => {
+                        if (node && screenStreamRef.current) {
+                          node.srcObject = screenStreamRef.current
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <video
+                      ref={(node) => {
+                        if (node && localStreamRef.current) {
+                          node.srcObject = localStreamRef.current
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full object-cover ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                  )
+                ) : (
+                  <video
+                    ref={(el) => { remoteVideoRefs.current[spotlightTarget.user_id] = el }}
+                    autoPlay
+                    playsInline
+                    className={spotlightTarget.isScreen ? "w-full h-full object-contain" : "w-full h-full object-cover"}
+                  />
+                )}
+              </div>
+
+              {/* Cameras Sidebar / Bottom Strip */}
+              <div className="h-28 md:h-36 lg:h-full lg:w-60 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex lg:flex-col items-center p-2 gap-2 overflow-x-auto lg:overflow-y-auto no-scrollbar">
+                {/* Local Camera Thumbnail */}
+                {spotlightTarget.user_id !== user?.user_id && (
+                  <div className="relative w-36 md:w-48 lg:w-full h-full lg:h-32 bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800 group">
+                    <div className="absolute top-2 left-2 z-10 font-sans flex items-center gap-1">
+                      <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
+                    </div>
+                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => setPinnedUserId(user!.user_id)}
+                        className="p-1 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
+                        title="Fijar mi cámara"
+                      >
+                        <Hand size={10} />
+                      </button>
+                    </div>
+                    <video
+                      ref={(node) => {
+                        if (node && localStreamRef.current) {
+                          node.srcObject = localStreamRef.current
+                        }
+                      }}
+                      autoPlay
+                      playsInline
+                      muted
+                      className={`w-full h-full object-cover ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                    {!videoEnabled && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                        <VideoOff size={16} className="text-white/40" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Remote Camera Thumbnails */}
-                {participants.filter(p => p.user_id !== user?.user_id && p.user_id !== activePresenter?.user_id).map((part) => (
-                  <div key={part.user_id} className="relative w-36 md:w-48 h-full bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800">
-                    <div className="absolute top-2 left-2 z-10 truncate max-w-[90%]">
+                {participants.filter(p => p.user_id !== spotlightTarget.user_id).map((part) => (
+                  <div key={part.user_id} className="relative w-36 md:w-48 lg:w-full h-full lg:h-32 bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800 group">
+                    <div className="absolute top-2 left-2 z-10 truncate max-w-[70%] font-sans flex items-center gap-1.5">
                       <span className="text-[8px] px-1 bg-black/60 text-white rounded truncate">{part.username}</span>
+                      {renderNetworkIndicator(part.user_id)}
+                    </div>
+                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => setPinnedUserId(part.user_id)}
+                        className="p-1 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
+                        title="Fijar participante"
+                      >
+                        <Hand size={10} />
+                      </button>
                     </div>
                     <video
                       ref={(el) => { remoteVideoRefs.current[part.user_id] = el }}
@@ -1086,13 +1294,28 @@ export default function LiveSessionPage() {
               {/* Primary Feed: Local User */}
               <div className="relative group overflow-hidden bg-black h-full min-h-[250px] md:min-h-[300px]">
                 <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                  <span className="chip text-[9px] px-1.5 py-0.5 border border-sky-500/20 text-sky-500 bg-sky-500/20">
+                  <span className="chip text-[9px] px-1.5 py-0.5 border border-sky-500/20 text-sky-500 bg-sky-500/20 font-sans">
                     Tú ({user?.username})
                   </span>
                 </div>
                 
+                {/* Pin Button */}
+                <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => setPinnedUserId(user!.user_id)}
+                    className="p-1.5 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
+                    title="Fijar mi cámara"
+                  >
+                    <Hand size={14} />
+                  </button>
+                </div>
+
                 <video
-                  ref={setLocalVideoRef}
+                  ref={(node) => {
+                    if (node && localStreamRef.current) {
+                      node.srcObject = localStreamRef.current
+                    }
+                  }}
                   autoPlay
                   playsInline
                   muted
@@ -1105,13 +1328,13 @@ export default function LiveSessionPage() {
                       <div className="w-16 h-16 border border-white/10 rounded-full flex items-center justify-center text-white bg-white/5">
                         <VideoOff size={24} />
                       </div>
-                      <p className="label-micro text-white">Cámara inactiva</p>
+                      <p className="label-micro text-white font-sans">Cámara inactiva</p>
                     </div>
                   </div>
                 )}
 
                 {!micEnabled && (
-                  <div className="absolute top-4 right-4 bg-red-600 text-white p-2 rounded-full">
+                  <div className="absolute top-4 right-14 bg-red-600 text-white p-2 rounded-full">
                     <MicOff size={16} />
                   </div>
                 )}
@@ -1120,10 +1343,22 @@ export default function LiveSessionPage() {
               {/* Remote Feeds */}
               {participants.filter(p => p.user_id !== user?.user_id).map((part) => (
                 <div key={part.user_id} className="relative group overflow-hidden bg-black h-full min-h-[250px] md:min-h-[300px]">
-                  <div className="absolute top-3 left-3 md:top-4 md:left-4 z-20 pointer-events-none">
-                    <span className="chip text-[8px] md:text-[9px] px-1.5 py-0.5 bg-black/50 text-white backdrop-blur-md">
+                  <div className="absolute top-3 left-3 md:top-4 md:left-4 z-20 pointer-events-none flex items-center gap-1.5">
+                    <span className="chip text-[8px] md:text-[9px] px-1.5 py-0.5 bg-black/50 text-white backdrop-blur-md font-sans">
                       {part.username} {part.is_teacher && '(Profesor)'}
                     </span>
+                    {renderNetworkIndicator(part.user_id)}
+                  </div>
+
+                  {/* Pin Button */}
+                  <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => setPinnedUserId(part.user_id)}
+                      className="p-1.5 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
+                      title="Fijar participante"
+                    >
+                      <Hand size={14} />
+                    </button>
                   </div>
 
                   <video
@@ -1141,7 +1376,7 @@ export default function LiveSessionPage() {
                             <Loader2 className="w-5 h-5 text-sky-500 animate-spin" />
                           </div>
                         </div>
-                        <p className="label-micro text-white/50 uppercase tracking-widest">Conectando...</p>
+                        <p className="label-micro text-white/50 uppercase tracking-widest font-sans">Conectando...</p>
                       </div>
                     </div>
                   )}
@@ -1205,6 +1440,18 @@ export default function LiveSessionPage() {
             </div>
 
             <div className="flex gap-1 md:gap-2">
+              <button
+                onClick={() => setViewMode(viewMode === 'grid' ? 'speaker' : 'grid')}
+                className={`h-8 w-8 md:h-9 md:w-9 border flex items-center justify-center transition-colors bg-white dark:bg-transparent ${
+                  viewMode === 'speaker'
+                    ? 'bg-sky-500 border-sky-500 text-white'
+                    : 'border-slate-900/10 dark:border-white/10 text-slate-400 hover:text-sky-500'
+                }`}
+                title={viewMode === 'speaker' ? 'Vista de Enfoque Activa (Clic para Mosaico)' : 'Cambiar a Vista de Enfoque (Speaker)'}
+              >
+                {viewMode === 'speaker' ? <Radio size={14} /> : <Users size={14} />}
+              </button>
+
               <button
                 onClick={() => setShowChat(!showChat)}
                 className={`h-8 w-8 md:h-9 md:w-9 border flex items-center justify-center transition-colors bg-white dark:bg-transparent ${
