@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { apiClient } from '@/infrastructure/http/axios-client'
 import { localTokenStorage } from '@/infrastructure/storage/local-token-storage'
@@ -93,16 +93,6 @@ export default function LiveSessionPage() {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const localStreamRef = useRef<MediaStream | null>(null)
   const screenStreamRef = useRef<MediaStream | null>(null)
-  const localVideoRef = useRef<HTMLVideoElement | null>(null)
-  const setLocalVideoRef = useCallback((el: HTMLVideoElement | null) => {
-    localVideoRef.current = el
-    if (el) {
-      const stream = localStreamRef.current
-      if (stream && el.srcObject !== stream) {
-        el.srcObject = stream
-      }
-    }
-  }, [])
   const peerConnections = useRef<Record<number, RTCPeerConnection>>({})
   const iceCandidatesBuffer = useRef<Record<number, RTCIceCandidateInit[]>>({})
   const [remoteStreams, setRemoteStreams] = useState<Record<number, MediaStream>>({})
@@ -214,8 +204,6 @@ export default function LiveSessionPage() {
             frameRate: { max: 10 }
           }).catch(err => console.error("Error applying camera constraints:", err))
         }
-
-        if (localVideoRef.current) localVideoRef.current.srcObject = stream
 
         videoTrack.onended = () => stopScreenShare()
         setIsScreenSharing(true)
@@ -402,13 +390,6 @@ export default function LiveSessionPage() {
       localStreamRef.current?.getTracks().forEach(track => track.stop())
     }
   }, [isEnded, accessDenied])
-
-  // Bind local video element whenever localStream changes (callback ref handles mount, this handles stream-ready-after-mount)
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream
-    }
-  }, [localStream, isLoading])
 
   // Attach local tracks to existing peer connections when localStream becomes ready
   useEffect(() => {
@@ -929,7 +910,6 @@ export default function LiveSessionPage() {
   }
 
   const isPresentingLocalScreen = isScreenSharing
-  const isPresentingRemoteScreen = activePresenter !== null
 
   const getSpotlightUser = () => {
     if (pinnedUserId !== null) {
