@@ -958,10 +958,14 @@ export default function LiveSessionPage() {
           ) : (
             /* Normal Grid View */
             <div className={`flex-1 grid gap-px bg-slate-900/10 dark:bg-white/10 min-h-0 overflow-y-auto ${
-              participants.length <= 1 ? 'grid-cols-1' : participants.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+              participants.length <= 1 
+                ? 'grid-cols-1' 
+                : participants.length === 2 
+                  ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1' 
+                  : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr'
             }`}>
               {/* Primary Feed: Local User */}
-              <div className={`relative group overflow-hidden bg-black ${participants.length === 1 ? 'h-full' : 'h-[40vh] md:h-full'}`}>
+              <div className="relative group overflow-hidden bg-black h-full min-h-[250px] md:min-h-[300px]">
                 <div className="absolute top-4 left-4 z-20 pointer-events-none">
                   <span className="chip text-[9px] px-1.5 py-0.5 border border-sky-500/20 text-sky-500 bg-sky-500/20">
                     Tú ({user?.username})
@@ -996,7 +1000,7 @@ export default function LiveSessionPage() {
 
               {/* Remote Feeds */}
               {participants.filter(p => p.user_id !== user?.user_id).map((part) => (
-                <div key={part.user_id} className="relative group overflow-hidden bg-black min-h-[200px] md:min-h-[300px]">
+                <div key={part.user_id} className="relative group overflow-hidden bg-black h-full min-h-[250px] md:min-h-[300px]">
                   <div className="absolute top-3 left-3 md:top-4 md:left-4 z-20 pointer-events-none">
                     <span className="chip text-[8px] md:text-[9px] px-1.5 py-0.5 bg-black/50 text-white backdrop-blur-md">
                       {part.username} {part.is_teacher && '(Profesor)'}
