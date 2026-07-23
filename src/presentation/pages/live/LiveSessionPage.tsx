@@ -162,11 +162,7 @@ export default function LiveSessionPage() {
     try {
       if (!isScreenSharing) {
         const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: {
-            frameRate: { max: 15 },
-            width: { max: 1920 },
-            height: { max: 1080 }
-          },
+          video: { width: { max: 1920 }, height: { max: 1080 }, frameRate: { max: 15 } },
           audio: true
         })
         screenStreamRef.current = stream
@@ -214,6 +210,7 @@ export default function LiveSessionPage() {
     if (screenStreamRef.current) {
       screenStreamRef.current.getTracks().forEach(t => t.stop())
     }
+    screenStreamRef.current = null
     const videoTrack = localStreamRef.current?.getVideoTracks()[0]
     if (videoTrack) {
       // Restore camera web stream to original constraints
@@ -227,7 +224,6 @@ export default function LiveSessionPage() {
         const sender = pc.getSenders().find(s => s.track?.kind === 'video')
         if (sender) sender.replaceTrack(videoTrack)
       })
-      if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current
     }
     setIsScreenSharing(false)
     setActivePresenter(null)
@@ -455,22 +451,27 @@ export default function LiveSessionPage() {
     let reconnectTimeout: any
     let hasEverConnected = false
 
-    const rtcConfig: RTCConfiguration = {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' },
-        { urls: 'stun:stun4.l.google.com:19302' },
-        { urls: 'stun:stun.services.mozilla.com' },
-        {
-          urls: 'turn:178.105.61.61:3478',
-          username: 'admin',
-          credential: 'admin1234'
-        }
-      ],
-      iceTransportPolicy: 'all'
-    }
+  const rtcConfig: RTCConfiguration = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun4.l.google.com:19302' },
+      { urls: 'stun:stun.services.mozilla.com' },
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ],
+    iceTransportPolicy: 'all'
+  }
 
     const processBufferedCandidates = async (targetId: number, pc: RTCPeerConnection) => {
       const buffer = iceCandidatesBuffer.current[targetId] || []
@@ -497,8 +498,39 @@ export default function LiveSessionPage() {
             const screenTrack = screenStreamRef.current.getVideoTracks()[0]
             if (screenTrack) trackToSend = screenTrack
           }
-          pc.addTrack(trackToSend, localStreamRef.current!)
+          const sender = pc.addTrack(trackToSend, localStreamRef.current!)
+          
+          // Priorizar audio en la red
+          if (trackToSend.kind === 'audio' && sender.setParameters) {
+            const params = sender.getParameters()
+            if (!params.encodings) params.encodings = [{}]
+            if (params.encodings.length > 0) {
+              (params.encodings[0] as any).networkPriority = 'high'
+              sender.setParameters(params).catch(e => console.warn('No se pudo priorizar audio', e))
+            }
+          }
         })
+
+        // Preferir codecs ligeros (VP8/H.264) en lugar de los pesados AV1/VP9
+        if (typeof RTCRtpReceiver !== 'undefined' && 'getCapabilities' in RTCRtpReceiver) {
+          pc.getTransceivers().forEach(transceiver => {
+            if (transceiver.receiver && transceiver.receiver.track.kind === 'video') {
+              try {
+                const capabilities = RTCRtpReceiver.getCapabilities('video')
+                if (capabilities && capabilities.codecs) {
+                  const codecs = capabilities.codecs
+                  const preferredCodecs = codecs.filter(c => c.mimeType.includes('video/VP8') || c.mimeType.includes('video/H264'))
+                  if (preferredCodecs.length > 0 && typeof transceiver.setCodecPreferences === 'function') {
+                    // Ponemos los preferidos primero, seguidos de los demás
+                    transceiver.setCodecPreferences([...preferredCodecs, ...codecs.filter(c => !preferredCodecs.includes(c))])
+                  }
+                }
+              } catch (e) {
+                console.warn('No se pudo preferir codecs', e)
+              }
+            }
+          })
+        }
       }
 
       // Configure priorities for senders (high priority for audio)
@@ -974,7 +1006,11 @@ export default function LiveSessionPage() {
 
                 {isScreenSharing ? (
                   <video
-                    ref={setLocalVideoRef}
+                    ref={(node) => {
+                      if (node && screenStreamRef.current) {
+                        node.srcObject = screenStreamRef.current
+                      }
+                    }}
                     autoPlay
                     playsInline
                     muted
@@ -1000,7 +1036,11 @@ export default function LiveSessionPage() {
                     <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
                   </div>
                   <video
-                    ref={setLocalVideoRef}
+                    ref={(node) => {
+                      if (node && localStreamRef.current) {
+                        node.srcObject = localStreamRef.current
+                      }
+                    }}
                     autoPlay
                     playsInline
                     muted
