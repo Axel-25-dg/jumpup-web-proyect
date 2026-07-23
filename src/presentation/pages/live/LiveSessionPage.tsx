@@ -471,8 +471,39 @@ export default function LiveSessionPage() {
             const screenTrack = screenStreamRef.current.getVideoTracks()[0]
             if (screenTrack) trackToSend = screenTrack
           }
-          pc.addTrack(trackToSend, localStreamRef.current!)
+          const sender = pc.addTrack(trackToSend, localStreamRef.current!)
+          
+          // Priorizar audio en la red
+          if (trackToSend.kind === 'audio' && sender.setParameters) {
+            const params = sender.getParameters()
+            if (!params.encodings) params.encodings = [{}]
+            if (params.encodings.length > 0) {
+              (params.encodings[0] as any).networkPriority = 'high'
+              sender.setParameters(params).catch(e => console.warn('No se pudo priorizar audio', e))
+            }
+          }
         })
+
+        // Preferir codecs ligeros (VP8/H.264) en lugar de los pesados AV1/VP9
+        if (typeof RTCRtpReceiver !== 'undefined' && 'getCapabilities' in RTCRtpReceiver) {
+          pc.getTransceivers().forEach(transceiver => {
+            if (transceiver.receiver && transceiver.receiver.track.kind === 'video') {
+              try {
+                const capabilities = RTCRtpReceiver.getCapabilities('video')
+                if (capabilities && capabilities.codecs) {
+                  const codecs = capabilities.codecs
+                  const preferredCodecs = codecs.filter(c => c.mimeType.includes('video/VP8') || c.mimeType.includes('video/H264'))
+                  if (preferredCodecs.length > 0 && typeof transceiver.setCodecPreferences === 'function') {
+                    // Ponemos los preferidos primero, seguidos de los demás
+                    transceiver.setCodecPreferences([...preferredCodecs, ...codecs.filter(c => !preferredCodecs.includes(c))])
+                  }
+                }
+              } catch (e) {
+                console.warn('No se pudo preferir codecs', e)
+              }
+            }
+          })
+        }
       }
 
       pc.onicecandidate = (event) => {
