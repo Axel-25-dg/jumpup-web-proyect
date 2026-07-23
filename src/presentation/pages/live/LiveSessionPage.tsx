@@ -883,7 +883,7 @@ export default function LiveSessionPage() {
 
           {/* Stage View: If someone is sharing screen */}
           {activePresenter || isScreenSharing ? (
-            <div className="flex-1 flex flex-col min-h-0 bg-black">
+            <div key="stage" className="flex-1 flex flex-col min-h-0 bg-black">
               {/* Primary Stage Presenter */}
               <div className="flex-1 relative overflow-hidden bg-slate-950 flex items-center justify-center">
                 <div className="absolute top-4 left-4 z-20 pointer-events-none">
@@ -957,7 +957,7 @@ export default function LiveSessionPage() {
             </div>
           ) : (
             /* Normal Grid View */
-            <div className={`flex-1 grid gap-px bg-slate-900/10 dark:bg-white/10 min-h-0 overflow-y-auto ${
+            <div key="grid" className={`flex-1 grid gap-px bg-slate-900/10 dark:bg-white/10 min-h-0 overflow-y-auto ${
               participants.length <= 1 
                 ? 'grid-cols-1' 
                 : participants.length === 2 
