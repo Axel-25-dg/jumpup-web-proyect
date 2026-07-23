@@ -994,7 +994,7 @@ export default function LiveSessionPage() {
 
           {/* Stage View: If someone is sharing screen */}
           {activePresenter || isScreenSharing ? (
-            <div key="stage" className="flex-1 flex flex-col min-h-0 bg-black">
+            <div key="stage" className="flex-1 flex flex-col lg:flex-row min-h-0 bg-black">
               {/* Primary Stage Presenter */}
               <div className="flex-1 relative overflow-hidden bg-slate-950 flex items-center justify-center">
                 <div className="absolute top-4 left-4 z-20 pointer-events-none">
@@ -1028,11 +1028,11 @@ export default function LiveSessionPage() {
                 )}
               </div>
 
-              {/* Bottom Thumbnail Strip */}
-              <div className="h-28 md:h-36 bg-slate-900 border-t border-slate-800 flex items-center p-2 gap-2 overflow-x-auto no-scrollbar">
+              {/* Cameras Sidebar / Bottom Strip */}
+              <div className="h-28 md:h-36 lg:h-full lg:w-60 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex lg:flex-col items-center p-2 gap-2 overflow-x-auto lg:overflow-y-auto no-scrollbar">
                 {/* Local Camera Thumbnail */}
-                <div className="relative w-36 md:w-48 h-full bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800">
-                  <div className="absolute top-2 left-2 z-10">
+                <div className="relative w-36 md:w-48 lg:w-full h-full lg:h-32 bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800">
+                  <div className="absolute top-2 left-2 z-10 font-sans">
                     <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
                   </div>
                   <video
@@ -1055,8 +1055,8 @@ export default function LiveSessionPage() {
 
                 {/* Remote Camera Thumbnails */}
                 {participants.filter(p => p.user_id !== user?.user_id && p.user_id !== activePresenter?.user_id).map((part) => (
-                  <div key={part.user_id} className="relative w-36 md:w-48 h-full bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800">
-                    <div className="absolute top-2 left-2 z-10 truncate max-w-[90%]">
+                  <div key={part.user_id} className="relative w-36 md:w-48 lg:w-full h-full lg:h-32 bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800">
+                    <div className="absolute top-2 left-2 z-10 truncate max-w-[90%] font-sans">
                       <span className="text-[8px] px-1 bg-black/60 text-white rounded truncate">{part.username}</span>
                     </div>
                     <video
