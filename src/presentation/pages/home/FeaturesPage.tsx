@@ -17,6 +17,11 @@ import {
 } from 'lucide-react';
 import { SectionAnimated } from '@/presentation/components/ui/SectionAnimated';
 import { useOutletContext } from 'react-router-dom';
+import SEO from '@/presentation/components/SEO';
+import { AnimatedLetters } from '@/presentation/components/ui/AnimatedLetters';
+import { AnimatedImage } from '@/presentation/components/ui/AnimatedImage';
+import { soundFx } from '@/presentation/utils/sound';
+import { motion } from 'framer-motion';
 
 interface OutletContextType {
   theme: 'light' | 'dark';
@@ -114,6 +119,12 @@ export default function FeaturesPage() {
       direction="up"
       className={`relative w-full overflow-hidden transition-colors duration-300 ${t.bg} ${t.text}`}
     >
+      <SEO
+        title="Características y Metodología - JumpUp Idiomas"
+        description="Descubre todas las características de JumpUp: tutoría IA 24/7, gamificación, minijuegos educativos, tienda de recompensas y comunidad global."
+        canonicalUrl="https://jumpup-idiomas.uaeftt-ute.site/features"
+      />
+
       {/* ===== HERO (alineado al diseño editorial) ===== */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className={`grid grid-cols-1 gap-0 border-b lg:grid-cols-12 ${t.line}`}>
@@ -130,9 +141,11 @@ export default function FeaturesPage() {
             </div>
 
             <h1 className="mt-8 text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
-              Más que una app,
+              <AnimatedLetters text="Más que una app," />
               <br />
-              un <span className="font-light italic">ecosistema</span> completo.
+              un <span className="font-light italic">
+                <AnimatedLetters text="ecosistema completo." />
+              </span>
             </h1>
 
             <p className={`mt-6 max-w-md text-pretty text-base leading-relaxed ${t.sub}`}>
@@ -145,6 +158,8 @@ export default function FeaturesPage() {
                 href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/latest/download/app-release.apk"
                 target="_blank"
                 rel="noopener noreferrer"
+                onMouseEnter={() => soundFx.playPopSound()}
+                onClick={() => soundFx.playJumpSound()}
                 className={`group inline-flex items-center justify-center gap-2 px-7 py-4 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 ${t.accentBg}`}
               >
                 <Download className="h-4 w-4" />
@@ -153,6 +168,7 @@ export default function FeaturesPage() {
               </a>
               <a
                 href="#"
+                onMouseEnter={() => soundFx.playPopSound()}
                 className={`inline-flex items-center justify-center gap-2 border px-6 py-4 text-sm font-medium transition-colors ${t.lineStrong} ${t.cardHover}`}
               >
                 <Globe className="h-4 w-4" />
@@ -162,7 +178,11 @@ export default function FeaturesPage() {
 
             <div className="mt-10 flex flex-wrap gap-x-6 gap-y-2">
               {highlights.map((h) => (
-                <span key={h} className={`inline-flex items-center gap-2 text-xs ${t.sub}`}>
+                <span
+                  key={h}
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  className={`inline-flex items-center gap-2 text-xs cursor-pointer ${t.sub}`}
+                >
                   <Check className={`h-3.5 w-3.5 ${t.accent}`} />
                   {h}
                 </span>
@@ -171,19 +191,12 @@ export default function FeaturesPage() {
           </div>
 
           {/* Imagen hero (alineada al estilo original) */}
-          <div className="relative lg:col-span-6">
-            <div className="group relative h-full min-h-[380px] overflow-hidden">
-              <img
-                src="https://guaman-idiomas-ute.online/media/media/f428dd43-eb62-47/acfecaf6e0154ba692b99bad561caee2.png"
-                alt="Aplicación móvil de JumpUp Idiomas"
-                className="h-full w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0"
-              />
-              <div className={`pointer-events-none absolute inset-0 ${isDark ? 'bg-sky-500/10' : 'bg-sky-500/5'} mix-blend-multiply`} />
-              <div className="absolute bottom-5 left-5 flex items-center gap-2 bg-sky-500 px-4 py-2 text-xs font-medium text-white">
-                <Smartphone className="h-3.5 w-3.5" />
-                Disponible en Android
-              </div>
-            </div>
+          <div className="relative lg:col-span-6 flex items-center justify-center p-4">
+            <AnimatedImage
+              src="https://guaman-idiomas-ute.online/media/media/f428dd43-eb62-47/acfecaf6e0154ba692b99bad561caee2.png"
+              alt="Aplicación móvil de JumpUp Idiomas"
+              badgeText="Disponible en Android"
+            />
           </div>
 
         </div>
@@ -191,12 +204,16 @@ export default function FeaturesPage() {
       {/* ===== STATS ===== */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className={`grid grid-cols-2 border-b divide-x md:grid-cols-4 ${t.line} ${t.grid} border-l border-r-0`}>
-          {stats.map((s) => (
-            <div key={s.label} className={`border-r px-6 py-10 ${t.line}`}>
+          {stats.map((s, idx) => (
+            <motion.div
+              key={s.label}
+              onMouseEnter={() => soundFx.playLetterSound(idx * 2)}
+              className={`border-r px-6 py-10 ${t.line} cursor-pointer hover:bg-sky-500/5 transition-colors`}
+            >
               <s.icon className={`h-5 w-5 ${t.accent}`} />
               <div className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">{s.value}</div>
               <div className={`mt-1 text-xs uppercase tracking-wider ${t.faint}`}>{s.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -217,9 +234,11 @@ export default function FeaturesPage() {
 
         <div className={`grid grid-cols-1 border-l border-b sm:grid-cols-2 lg:grid-cols-3 ${t.line}`}>
           {features.map((f, i) => (
-            <div
+            <motion.div
               key={f.title}
-              className={`group relative border-r border-t p-8 transition-colors ${t.line} ${t.cardHover}`}
+              onMouseEnter={() => soundFx.playLetterSound(i * 3)}
+              whileHover={{ y: -4 }}
+              className={`group relative border-r border-t p-8 transition-colors ${t.line} ${t.cardHover} cursor-pointer`}
             >
               <div className="flex items-start justify-between">
                 <span className={`flex h-11 w-11 items-center justify-center border ${t.lineStrong}`}>
@@ -234,7 +253,7 @@ export default function FeaturesPage() {
               <ArrowUpRight
                 className={`mt-6 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 ${t.accent}`}
               />
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -292,40 +311,34 @@ export default function FeaturesPage() {
         </div>
         <div className={`grid grid-cols-1 border-l border-b md:grid-cols-3 ${t.line}`}>
           {steps.map((s, i) => (
-            <div key={s.title} className={`border-r border-t p-8 ${t.line}`}>
+            <motion.div
+              key={s.title}
+              onMouseEnter={() => soundFx.playLetterSound(i * 2)}
+              className={`border-r border-t p-8 ${t.line} cursor-pointer hover:bg-sky-500/5 transition-colors`}
+            >
               <div className={`text-5xl font-semibold tracking-tight ${t.accent}`}>
                 {String(i + 1).padStart(2, '0')}
               </div>
               <h3 className="mt-5 text-lg font-semibold tracking-tight">{s.title}</h3>
               <p className={`mt-2 text-sm leading-relaxed ${t.sub}`}>{s.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
       {/* ===== COMMUNITY + GAMIFICATION IMAGES ===== */}
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className={`grid grid-cols-1 border-b md:grid-cols-2 ${t.line}`}>
-          <figure className={`group relative overflow-hidden border-r ${t.line}`}>
-            <img
-              src="https://guaman-idiomas-ute.online/media/media/2ee4ffa8-f984-4b/0fdcb6a5ec5440d79725eee011863236.jpg"
-              alt="Comunidad de estudiantes de idiomas"
-              className="h-72 w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 md:h-96"
-            />
-            <figcaption className="absolute bottom-5 left-5 bg-sky-500 px-4 py-2 text-xs font-medium text-white">
-              Comunidad global
-            </figcaption>
-          </figure>
-          <figure className="group relative overflow-hidden">
-            <img
-              src="https://guaman-idiomas-ute.online/media/media/12c8316f-077b-47/64462f2b8ae4434ca6726577ee24da9d.png"
-              alt="Minijuegos educativos en la app"
-              className="h-72 w-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 md:h-96"
-            />
-            <figcaption className="absolute bottom-5 left-5 bg-sky-500 px-4 py-2 text-xs font-medium text-white">
-              Aprende jugando
-            </figcaption>
-          </figure>
+        <div className={`grid grid-cols-1 border-b md:grid-cols-2 ${t.line} gap-6 py-6`}>
+          <AnimatedImage
+            src="https://guaman-idiomas-ute.online/media/media/2ee4ffa8-f984-4b/0fdcb6a5ec5440d79725eee011863236.jpg"
+            alt="Comunidad de estudiantes de idiomas JumpUp"
+            badgeText="Comunidad global"
+          />
+          <AnimatedImage
+            src="https://guaman-idiomas-ute.online/media/media/12c8316f-077b-47/64462f2b8ae4434ca6726577ee24da9d.png"
+            alt="Minijuegos educativos en la app JumpUp"
+            badgeText="Aprende jugando"
+          />
         </div>
       </div>
 
@@ -343,6 +356,8 @@ export default function FeaturesPage() {
               href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/latest/download/app-release.apk"
               target="_blank"
               rel="noopener noreferrer"
+              onMouseEnter={() => soundFx.playPopSound()}
+              onClick={() => soundFx.playJumpSound()}
               className={`group inline-flex items-center justify-center gap-2 px-8 py-4 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 ${t.accentBg}`}
             >
               <Download className="h-4 w-4" />
@@ -350,6 +365,7 @@ export default function FeaturesPage() {
             </a>
             <a
               href="#"
+              onMouseEnter={() => soundFx.playPopSound()}
               className={`inline-flex items-center justify-center gap-2 border px-8 py-4 text-sm font-medium transition-colors ${t.lineStrong} ${t.cardHover}`}
             >
               <Apple className="h-4 w-4" />

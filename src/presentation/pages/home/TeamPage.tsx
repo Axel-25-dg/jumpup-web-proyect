@@ -4,6 +4,11 @@ import { Badge } from '@/presentation/components/ui/badge';
 import { SectionAnimated } from '@/presentation/components/ui/SectionAnimated';
 import { useOutletContext } from 'react-router-dom';
 import { ArrowUpRight, Briefcase, Target, Zap, Award } from 'lucide-react';
+import SEO from '@/presentation/components/SEO';
+import { AnimatedLetters } from '@/presentation/components/ui/AnimatedLetters';
+import { AnimatedImage } from '@/presentation/components/ui/AnimatedImage';
+import { soundFx } from '@/presentation/utils/sound';
+import { motion } from 'framer-motion';
 
 interface OutletContextType {
   theme: 'light' | 'dark';
@@ -104,6 +109,12 @@ export default function TeamPage() {
       direction="up"
       className={`relative w-full overflow-hidden py-24 transition-colors duration-500 sm:py-32 ${t.section}`}
     >
+      <SEO
+        title="Nuestro Equipo - JumpUp Idiomas"
+        description="Conoce al equipo técnico de ingenieros y diseñadores detrás de la plataforma JumpUp de la Universidad UTE."
+        canonicalUrl="https://jumpup-idiomas.uaeftt-ute.site/team"
+      />
+
       <div className="relative z-10 mx-auto max-w-6xl px-6 lg:px-8">
         {/* ===== ENCABEZADO EDITORIAL ===== */}
         <header className={`border-b pb-14 ${t.hairline}`}>
@@ -121,10 +132,12 @@ export default function TeamPage() {
 
           <div className="mt-10 grid gap-8 md:grid-cols-12 md:items-end">
             <h1 className="col-span-8 text-balance text-5xl font-semibold leading-[0.95] tracking-tight sm:text-6xl md:text-7xl">
-              Personas que{' '}
+              <AnimatedLetters text="Personas que" />{' '}
               <span className="italic font-light">construyen</span>
               <br />
-              productos que <span className={t.accent}>importan.</span>
+              productos que <span className={t.accent}>
+                <AnimatedLetters text="importan." />
+              </span>
             </h1>
             <p className={`col-span-4 text-pretty text-base leading-relaxed ${t.subtle}`}>
               Un equipo reducido de ingenieros obsesionados con el detalle, la
@@ -136,9 +149,11 @@ export default function TeamPage() {
         {/* ===== PERFILES ===== */}
         <div className="mt-16 grid gap-6 md:grid-cols-3">
           {TEAM_MEMBERS.map((member, index) => (
-            <article
+            <motion.article
               key={member.name}
-              className={`group flex flex-col overflow-hidden rounded-2xl border transition-all duration-500 hover:-translate-y-1.5 ${t.card} ${isDark ? 'hover:border-neutral-700' : 'hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.15)]'
+              onMouseEnter={() => soundFx.playLetterSound(index * 3)}
+              whileHover={{ y: -6 }}
+              className={`group flex flex-col overflow-hidden rounded-2xl border transition-all duration-500 cursor-pointer ${t.card} ${isDark ? 'hover:border-neutral-700' : 'hover:shadow-[0_20px_60px_-20px_rgba(0,0,0,0.15)]'
                 }`}
             >
               <div className="relative aspect-[4/5] overflow-hidden">
@@ -147,16 +162,17 @@ export default function TeamPage() {
                 >
                   0{index + 1}
                 </span>
-                <img
+                <AnimatedImage
                   src={member.image || '/placeholder.svg'}
                   alt={member.name}
-                  className="h-full w-full object-cover grayscale transition-all duration-700 ease-out group-hover:scale-[1.04] group-hover:grayscale-0"
+                  badgeText={member.role}
+                  containerClassName="h-full w-full border-none rounded-none"
                 />
                 <div
                   className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-neutral-950 via-neutral-950/10' : 'from-black/40 via-transparent'
-                    } to-transparent`}
+                    } to-transparent pointer-events-none`}
                 />
-                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5">
+                <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5 pointer-events-none">
                   <div>
                     <h3 className="text-xl font-semibold tracking-tight text-white">
                       {member.name}
@@ -202,6 +218,10 @@ export default function TeamPage() {
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          soundFx.playPopSound();
+                        }}
                         className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors duration-300 ${t.social}`}
                       >
                         <Icon size={14} />
@@ -210,21 +230,22 @@ export default function TeamPage() {
                   </div>
                 </div>
               </div>
-            </article>
+            </motion.article>
           ))}
         </div>
 
         {/* ===== ESTADÍSTICAS ===== */}
         <div className={`mt-20 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border md:grid-cols-4 ${t.hairline} ${isDark ? 'bg-neutral-800/60' : 'bg-neutral-200'}`}>
-          {teamStats.map((stat) => (
-            <div
+          {teamStats.map((stat, idx) => (
+            <motion.div
               key={stat.label}
-              className={`flex flex-col gap-2 p-8 ${isDark ? 'bg-[#0a0a0b]' : 'bg-[#f7f6f3]'}`}
+              onMouseEnter={() => soundFx.playLetterSound(idx * 2)}
+              className={`flex flex-col gap-2 p-8 cursor-pointer ${isDark ? 'bg-[#0a0a0b]' : 'bg-[#f7f6f3]'}`}
             >
               <stat.icon className={`h-5 w-5 ${t.muted}`} />
               <div className="text-4xl font-semibold tracking-tight">{stat.value}</div>
               <div className={`text-sm ${t.muted}`}>{stat.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
@@ -240,17 +261,19 @@ export default function TeamPage() {
           </div>
 
           <div className={`mt-10 grid gap-px overflow-hidden rounded-2xl border md:grid-cols-3 ${t.hairline} ${isDark ? 'bg-neutral-800/60' : 'bg-neutral-200'}`}>
-            {values.map((val) => (
-              <div
+            {values.map((val, idx) => (
+              <motion.div
                 key={val.index}
-                className={`group p-8 transition-colors duration-300 ${isDark ? 'bg-[#0a0a0b] hover:bg-neutral-950' : 'bg-[#f7f6f3] hover:bg-white'}`}
+                onMouseEnter={() => soundFx.playLetterSound(idx * 3)}
+                whileHover={{ y: -3 }}
+                className={`group p-8 transition-colors duration-300 cursor-pointer ${isDark ? 'bg-[#0a0a0b] hover:bg-neutral-950' : 'bg-[#f7f6f3] hover:bg-white'}`}
               >
                 <span className={`text-sm font-medium tracking-widest ${t.accent}`}>
                   {val.index}
                 </span>
                 <h3 className="mt-4 text-lg font-semibold tracking-tight">{val.title}</h3>
                 <p className={`mt-2 text-sm leading-relaxed ${t.subtle}`}>{val.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

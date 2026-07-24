@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+  <!-- Página Principal / Home (Puntuación máxima para Sitelinks) -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <!-- Sitelink 1: Historia -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/story</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Sitelink 2: Tecnología -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/tech</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Sitelink 3: Equipo -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/team</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Sitelink 4: Características -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/features</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Sitelink 5: Catálogo de Cursos -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/catalog</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <!-- Iniciar Sesión -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/login</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <!-- Registro -->
+  <url>
+    <loc>https://jumpup-idiomas.uaeftt-ute.site/register</loc>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

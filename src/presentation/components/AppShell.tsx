@@ -236,8 +236,22 @@ export default function AppShell() {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input row */}
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800/50">
-          <Search className="h-5 w-5 text-sky-500 shrink-0" />
+        <form onSubmit={(e) => {
+          e.preventDefault()
+          if (searchQuery.trim()) {
+            setIsSearchOpen(false)
+            navigate(`/catalog?q=${encodeURIComponent(searchQuery.trim())}`)
+          }
+        }} className="flex items-center gap-3 px-5 py-4 border-b border-neutral-800/50">
+          <Search
+            className="h-5 w-5 text-sky-500 shrink-0 cursor-pointer"
+            onClick={() => {
+              if (searchQuery.trim()) {
+                setIsSearchOpen(false)
+                navigate(`/catalog?q=${encodeURIComponent(searchQuery.trim())}`)
+              }
+            }}
+          />
           <input
             ref={searchInputRef}
             type="text"
@@ -251,7 +265,17 @@ export default function AppShell() {
                 : 'text-neutral-900 placeholder:text-neutral-400'
             )}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="text-xs text-neutral-400 hover:text-neutral-200 px-1"
+            >
+              Limpiar
+            </button>
+          )}
           <button
+            type="button"
             onClick={() => setIsSearchOpen(false)}
             className={cn(
               'p-1 transition-colors cursor-pointer',
@@ -262,7 +286,7 @@ export default function AppShell() {
           >
             <X className="h-5 w-5" />
           </button>
-        </div>
+        </form>
 
         {/* Quick links */}
         <div className="p-5">

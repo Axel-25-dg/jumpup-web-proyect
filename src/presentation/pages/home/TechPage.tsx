@@ -16,6 +16,10 @@ import {
 } from 'lucide-react'
 import { SectionAnimated } from '@/presentation/components/ui/SectionAnimated'
 import { useOutletContext } from 'react-router-dom'
+import SEO from '@/presentation/components/SEO'
+import { AnimatedLetters } from '@/presentation/components/ui/AnimatedLetters'
+import { soundFx } from '@/presentation/utils/sound'
+import { motion } from 'framer-motion'
 
 interface OutletContextType {
   theme: 'light' | 'dark'
@@ -125,6 +129,12 @@ export default function TechPage() {
       direction="up"
       className={`py-0 relative w-full transition-colors duration-500 overflow-hidden ${t.page}`}
     >
+      <SEO
+        title="Tecnología e IA Adaptativa - JumpUp"
+        description="Descubre la arquitectura técnica de JumpUp: Django REST, Flutter, PostgreSQL, Redis e IA adaptativa para el aprendizaje acelerado de idiomas."
+        canonicalUrl="https://jumpup-idiomas.uaeftt-ute.site/tech"
+      />
+
       {/* ===== HERO ===== */}
       <header className="max-w-7xl mx-auto px-6 lg:px-8 pt-24 pb-16">
         <div className="grid lg:grid-cols-12 gap-10 items-end">
@@ -139,9 +149,12 @@ export default function TechPage() {
             </div>
 
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-semibold leading-[0.98] tracking-tight text-balance">
-              Tecnología construida
+              <AnimatedLetters text="Tecnología construida" />
               <br />
-              para <span className={`italic font-light ${t.accent}`}>escalar</span> sin fricción.
+              para{' '}
+              <span className={`italic font-light ${t.accent}`}>
+                <AnimatedLetters text="escalar sin fricción." />
+              </span>
             </h1>
           </div>
 
@@ -155,7 +168,8 @@ export default function TechPage() {
               {['Flutter', 'Django', 'PostgreSQL', 'Redis', 'Docker'].map((tech) => (
                 <span
                   key={tech}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border ${t.chip}`}
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border ${t.chip} cursor-pointer hover:border-sky-400`}
                 >
                   {tech}
                 </span>
@@ -177,11 +191,13 @@ export default function TechPage() {
         </div>
 
         <div className={`grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 border-t border-l ${t.border}`}>
-          {techLogos.map((tech) => (
-            <div
+          {techLogos.map((tech, idx) => (
+            <motion.div
               key={tech.name}
               title={tech.name}
-              className={`group flex flex-col items-center justify-center gap-3 aspect-square border-r border-b ${t.border} ${t.cardHover} transition-colors duration-300`}
+              onMouseEnter={() => soundFx.playLetterSound(idx * 2)}
+              whileHover={{ scale: 1.05 }}
+              className={`group flex flex-col items-center justify-center gap-3 aspect-square border-r border-b ${t.border} ${t.cardHover} transition-colors duration-300 cursor-pointer`}
             >
               <img
                 src={tech.img || "/placeholder.svg"}
@@ -189,7 +205,7 @@ export default function TechPage() {
                 className="w-10 h-10 object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500"
               />
               <span className={`text-[11px] font-medium ${t.muted}`}>{tech.name}</span>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -207,10 +223,12 @@ export default function TechPage() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px">
-          {layers.map((layer) => (
-            <article
+          {layers.map((layer, idx) => (
+            <motion.article
               key={layer.title}
-              className={`group relative flex flex-col p-7 border ${t.border} ${t.card} ${t.cardHover} transition-colors duration-300`}
+              onMouseEnter={() => soundFx.playLetterSound(idx * 3)}
+              whileHover={{ y: -4 }}
+              className={`group relative flex flex-col p-7 border ${t.border} ${t.card} ${t.cardHover} transition-colors duration-300 cursor-pointer`}
             >
               <div className="flex items-start justify-between mb-8">
                 <span className={`text-sm font-mono ${t.faint}`}>{layer.index}</span>
@@ -227,7 +245,7 @@ export default function TechPage() {
                   </span>
                 ))}
               </div>
-            </article>
+            </motion.article>
           ))}
         </div>
       </section>
@@ -242,15 +260,19 @@ export default function TechPage() {
           <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] gap-6 md:gap-4 items-stretch">
             {flow.map((node, i) => (
               <div key={node.title} className="contents">
-                <div className={`flex flex-col gap-4 p-6 rounded-xl border ${t.border} ${t.card}`}>
+                <motion.div
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  whileHover={{ scale: 1.02 }}
+                  className={`flex flex-col gap-4 p-6 rounded-xl border ${t.border} ${t.card} cursor-pointer`}
+                >
                   <span className={`grid place-items-center h-11 w-11 rounded-lg ${t.accentBg}`}>
                     <node.icon className={`h-5 w-5 ${t.accent}`} strokeWidth={1.75} />
                   </span>
                   <div>
-                    <h4 className="font-semibold">{node.title}</h4>
+                    <h3 className="font-semibold">{node.title}</h3>
                     <p className={`text-sm mt-1 ${t.muted}`}>{node.desc}</p>
                   </div>
-                </div>
+                </motion.div>
 
                 {i < flow.length - 1 && (
                   <div className="flex items-center justify-center">
@@ -275,10 +297,12 @@ export default function TechPage() {
         </div>
 
         <div className={`grid grid-cols-1 md:grid-cols-3 border-t border-l ${t.border}`}>
-          {pillars.map((p) => (
-            <div
+          {pillars.map((p, idx) => (
+            <motion.div
               key={p.title}
-              className={`group p-8 border-r border-b ${t.border} ${t.cardHover} transition-colors duration-300`}
+              onMouseEnter={() => soundFx.playLetterSound(idx * 3)}
+              whileHover={{ y: -4 }}
+              className={`group p-8 border-r border-b ${t.border} ${t.cardHover} transition-colors duration-300 cursor-pointer`}
             >
               <div className="flex items-center justify-between mb-6">
                 <span className={`grid place-items-center h-11 w-11 rounded-lg ${t.accentBg}`}>
@@ -288,7 +312,7 @@ export default function TechPage() {
               </div>
               <h3 className="text-lg font-semibold mb-2">{p.title}</h3>
               <p className={`text-sm leading-relaxed ${t.muted}`}>{p.desc}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -296,17 +320,19 @@ export default function TechPage() {
       {/* ===== ESTADÍSTICAS ===== */}
       <section className="max-w-7xl mx-auto px-6 lg:px-8 pb-20">
         <div className={`grid grid-cols-2 md:grid-cols-4 border-t border-l ${t.border}`}>
-          {stats.map((stat) => (
-            <div
+          {stats.map((stat, idx) => (
+            <motion.div
               key={stat.label}
-              className={`p-8 border-r border-b ${t.border}`}
+              onMouseEnter={() => soundFx.playLetterSound(idx * 2)}
+              whileHover={{ backgroundColor: 'rgba(56, 189, 248, 0.05)' }}
+              className={`p-8 border-r border-b ${t.border} cursor-pointer`}
             >
               <stat.icon className={`h-5 w-5 mb-6 ${t.accent}`} strokeWidth={1.75} />
               <div className="text-4xl md:text-5xl font-semibold tracking-tight">
                 {stat.value}
               </div>
               <div className={`mt-2 text-sm ${t.muted}`}>{stat.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
