@@ -16,6 +16,11 @@ import {
   Quote,
 } from 'lucide-react'
 import { Button } from '@/presentation/components/ui/button'
+import SEO from '@/presentation/components/SEO'
+import { AnimatedLetters } from '@/presentation/components/ui/AnimatedLetters'
+import { AnimatedImage } from '@/presentation/components/ui/AnimatedImage'
+import { SoundToggle } from '@/presentation/components/ui/SoundToggle'
+import { soundFx } from '@/presentation/utils/sound'
 
 export default function HomePage() {
   const { theme } = useOutletContext<{ theme: 'light' | 'dark' }>()
@@ -49,7 +54,6 @@ export default function HomePage() {
     { value: '4.9', label: 'Valoración media' },
     { value: '24/7', label: 'Tutoría con IA' },
   ]
-
 
   const features = [
     {
@@ -115,16 +119,28 @@ export default function HomePage() {
 
   return (
     <div className={`w-full relative flex flex-col transition-colors duration-300 ${t.page}`}>
-      {/* --- HERO WITH ROCKSTAR PARALLAX --- */}
+      {/* Dynamic SEO Tags */}
+      <SEO
+        title="JumpUp - La Revolución del Aprendizaje de Idiomas"
+        description="Domina un nuevo idioma con JumpUp, la plataforma que combina inteligencia artificial adaptativa, gamificación inmersiva y una comunidad global en la Universidad UTE."
+        keywords="JumpUp, aprender idiomas, app de idiomas, inteligencia artificial idiomas, UTE, cursos de idiomas, ingles online"
+        canonicalUrl="https://jumpup-idiomas.uaeftt-ute.site/"
+      />
+
+      {/* Floating Audio Toggle */}
+      <SoundToggle />
+
+      {/* --- HERO WITH ROCKSTAR PARALLAX & ANIMATED LETTERS --- */}
       <section className="relative h-screen w-full overflow-hidden flex flex-col justify-center items-center">
         <motion.div style={{ y }} className="absolute inset-0 z-0 h-[120vh] w-full">
           <motion.img
             src={heroImage || '/placeholder.svg'}
-            alt="Estudiantes dando el salto hacia la fluidez"
+            alt="JumpUp - Estudiantes dando el salto hacia la fluidez"
             className="w-full h-full object-cover object-center grayscale-[35%]"
             initial={{ scale: 1 }}
             animate={{ scale: 1.15 }}
             transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+            onMouseEnter={() => soundFx.playImageShimmer()}
           />
         </motion.div>
 
@@ -140,7 +156,8 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-white/25 bg-white/5 backdrop-blur-md"
+            onMouseEnter={() => soundFx.playPopSound()}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-white/25 bg-white/5 backdrop-blur-md cursor-pointer hover:border-sky-400/60 transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5 text-sky-400" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-100">
@@ -148,16 +165,13 @@ export default function HomePage() {
             </span>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="mt-8 text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[0.92] text-white text-balance"
-          >
-            Salta al siguiente
+          <h1 className="mt-8 text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[0.92] text-white text-balance">
+            <AnimatedLetters text="Salta al siguiente" letterClassName="hover:text-sky-300" />
             <br />
-            <span className="italic font-light text-sky-400">nivel de fluidez.</span>
-          </motion.h1>
+            <span className="italic font-light text-sky-400">
+              <AnimatedLetters text="nivel de fluidez." letterClassName="hover:text-white" />
+            </span>
+          </h1>
 
           <motion.p
             initial={{ opacity: 0, y: 35 }}
@@ -178,6 +192,8 @@ export default function HomePage() {
             <Button
               asChild
               size="lg"
+              onMouseEnter={() => soundFx.playPopSound()}
+              onClick={() => soundFx.playJumpSound()}
               className="w-full sm:w-auto h-14 px-10 rounded-none bg-sky-500 hover:bg-sky-400 text-white font-bold text-base tracking-wide transition-all group cursor-pointer"
             >
               <Link to="/register" className="flex items-center justify-center gap-2">
@@ -189,6 +205,8 @@ export default function HomePage() {
               asChild
               variant="outline"
               size="lg"
+              onMouseEnter={() => soundFx.playPopSound()}
+              onClick={() => soundFx.playPopSound()}
               className="w-full sm:w-auto h-14 px-10 rounded-none border border-white/30 bg-transparent text-white font-bold text-base tracking-wide hover:bg-white/10 transition-all cursor-pointer"
             >
               <Link to="/login" className="flex items-center justify-center">
@@ -209,21 +227,24 @@ export default function HomePage() {
       <section className={`w-full border-y ${t.hairline} ${t.sectionAlt}`}>
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4">
           {stats.map((s, i) => (
-            <div
+            <motion.div
               key={s.label}
-              className={`px-6 py-10 md:py-14 border-b md:border-b-0 ${t.hairline} ${i !== 0 ? `md:border-l ${t.hairline}` : ''
-                } ${i % 2 !== 0 ? `border-l ${t.hairline} md:border-l` : ''}`}
+              onMouseEnter={() => soundFx.playLetterSound(i * 2)}
+              whileHover={{ backgroundColor: 'rgba(56, 189, 248, 0.05)' }}
+              className={`px-6 py-10 md:py-14 border-b md:border-b-0 cursor-pointer transition-colors ${t.hairline} ${
+                i !== 0 ? `md:border-l ${t.hairline}` : ''
+              } ${i % 2 !== 0 ? `border-l ${t.hairline} md:border-l` : ''}`}
             >
               <div className={`text-4xl md:text-5xl font-black tracking-tight ${t.heading}`}>
                 {s.value}
               </div>
               <div className={`mt-2 text-xs uppercase tracking-[0.2em] ${t.muted}`}>{s.label}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* --- SECCIÓN 1: INFORMACIÓN GENERAL --- */}
+      {/* --- SECCIÓN 1: INFORMACIÓN GENERAL CON IMAGEN ANIMADA --- */}
       <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.sectionAlt}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-16 items-center">
@@ -236,7 +257,9 @@ export default function HomePage() {
               </div>
               <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
                 Un salto estratégico hacia tu{' '}
-                <span className="italic font-light text-sky-500">futuro bilingüe.</span>
+                <span className="italic font-light text-sky-500">
+                  <AnimatedLetters text="futuro bilingüe." />
+                </span>
               </h2>
               <p className={`text-base sm:text-lg leading-relaxed text-pretty ${t.body}`}>
                 JumpUp es un ecosistema interactivo de vanguardia diseñado para acelerar tu
@@ -246,17 +269,23 @@ export default function HomePage() {
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-transparent">
-                <div className={`flex items-start gap-3 py-4 pr-6 border-t ${t.hairline}`}>
+                <div
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  className={`flex items-start gap-3 py-4 pr-6 border-t ${t.hairline} hover:bg-sky-500/5 transition-colors cursor-pointer`}
+                >
                   <GraduationCap className="h-6 w-6 text-sky-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className={`font-bold ${t.heading}`}>Metodología activa</h4>
+                    <h3 className={`font-bold ${t.heading}`}>Metodología activa</h3>
                     <p className={`text-sm ${t.muted}`}>Aprende haciendo con simulaciones reales.</p>
                   </div>
                 </div>
-                <div className={`flex items-start gap-3 py-4 pr-6 border-t ${t.hairline}`}>
+                <div
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  className={`flex items-start gap-3 py-4 pr-6 border-t ${t.hairline} hover:bg-sky-500/5 transition-colors cursor-pointer`}
+                >
                   <Sparkles className="h-6 w-6 text-sky-500 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className={`font-bold ${t.heading}`}>Tutoría IA inteligente</h4>
+                    <h3 className={`font-bold ${t.heading}`}>Tutoría IA inteligente</h3>
                     <p className={`text-sm ${t.muted}`}>Corrección gramatical inmediata por voz.</p>
                   </div>
                 </div>
@@ -265,23 +294,16 @@ export default function HomePage() {
 
             {/* Rockstar zoom image */}
             <div className="lg:w-1/2 w-full">
-              <div className={`relative overflow-hidden border ${t.hairline}`}>
-                <div className="overflow-hidden aspect-[4/3] relative group">
-                  <motion.img
-                    src="https://guaman-idiomas-ute.online/media/media/1bd96a4a-5826-42/62bec80165d448f991d501745c5b0c3c.jpg"
-                    alt="Estudiantes en el campus"
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-[filter] duration-700"
-                    initial={{ scale: 1 }}
-                    animate={{ scale: 1.12 }}
-                    transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-                  />
-                </div>
-                <div className={`flex items-center justify-between px-5 py-4 border-t ${t.hairline} ${t.cardBg}`}>
-                  <span className={`text-xs uppercase tracking-[0.2em] ${t.muted}`}>
-                    Experiencia inmersiva
-                  </span>
-                  <ArrowUpRight className="h-4 w-4 text-sky-500" />
-                </div>
+              <AnimatedImage
+                src="https://guaman-idiomas-ute.online/media/media/1bd96a4a-5826-42/62bec80165d448f991d501745c5b0c3c.jpg"
+                alt="JumpUp - Estudiantes en el campus UTE"
+                badgeText="Comunidad de aprendizaje UTE"
+              />
+              <div className={`flex items-center justify-between px-5 py-4 border-t ${t.hairline} ${t.cardBg}`}>
+                <span className={`text-xs uppercase tracking-[0.2em] ${t.muted}`}>
+                  Experiencia inmersiva
+                </span>
+                <ArrowUpRight className="h-4 w-4 text-sky-500" />
               </div>
             </div>
           </div>
@@ -300,22 +322,26 @@ export default function HomePage() {
             </div>
             <h2 className={`mt-6 text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
               Todo lo que necesitas para{' '}
-              <span className="italic font-light text-sky-500">hablar de verdad.</span>
+              <span className="italic font-light text-sky-500">
+                <AnimatedLetters text="hablar de verdad." />
+              </span>
             </h2>
           </div>
 
           <div className={`mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-l ${t.hairline}`}>
-            {features.map((f) => (
-              <div
+            {features.map((f, idx) => (
+              <motion.div
                 key={f.title}
-                className={`group p-8 border-b border-r ${t.hairline} ${t.cardBg} transition-colors hover:bg-sky-500/[0.04]`}
+                onMouseEnter={() => soundFx.playLetterSound(idx * 3)}
+                whileHover={{ y: -4 }}
+                className={`group p-8 border-b border-r ${t.hairline} ${t.cardBg} transition-colors hover:bg-sky-500/[0.04] cursor-pointer`}
               >
-                <div className={`flex h-12 w-12 items-center justify-center border ${t.hairline}`}>
-                  <f.icon className="h-6 w-6 text-sky-500" />
+                <div className={`flex h-12 w-12 items-center justify-center border ${t.hairline} group-hover:border-sky-400 transition-colors`}>
+                  <f.icon className="h-6 w-6 text-sky-500 group-hover:scale-110 transition-transform" />
                 </div>
                 <h3 className={`mt-6 text-xl font-bold ${t.heading}`}>{f.title}</h3>
                 <p className={`mt-3 text-sm leading-relaxed ${t.body}`}>{f.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -327,7 +353,9 @@ export default function HomePage() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
               Fluidez en{' '}
-              <span className="italic font-light text-sky-500">tres pasos.</span>
+              <span className="italic font-light text-sky-500">
+                <AnimatedLetters text="tres pasos." />
+              </span>
             </h2>
             <p className={`max-w-md text-base ${t.body}`}>
               Un método probado que convierte minutos diarios en resultados reales, medibles y
@@ -336,18 +364,23 @@ export default function HomePage() {
           </div>
 
           <div className={`mt-16 grid grid-cols-1 md:grid-cols-3 border-t border-l ${t.hairline}`}>
-            {steps.map((s) => (
-              <div key={s.k} className={`p-8 md:p-10 border-b border-r ${t.hairline}`}>
+            {steps.map((s, idx) => (
+              <motion.div
+                key={s.k}
+                onMouseEnter={() => soundFx.playLetterSound(idx * 2)}
+                whileHover={{ backgroundColor: 'rgba(56, 189, 248, 0.03)' }}
+                className={`p-8 md:p-10 border-b border-r ${t.hairline} cursor-pointer transition-colors`}
+              >
                 <span className="text-5xl font-black text-sky-500/80">{s.k}</span>
                 <h3 className={`mt-6 text-2xl font-bold ${t.heading}`}>{s.title}</h3>
                 <p className={`mt-3 text-base leading-relaxed ${t.body}`}>{s.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- SECCIÓN 2: UBICACIÓN UTE --- */}
+      {/* --- SECCIÓN 2: UBICACIÓN UTE CON IMAGEN INTERACTIVA --- */}
       <section className={`py-24 md:py-32 w-full border-b ${t.hairline} ${t.page}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row-reverse gap-16 items-center">
@@ -360,7 +393,9 @@ export default function HomePage() {
               </div>
               <h2 className={`text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
                 Estamos situados en la{' '}
-                <span className="italic font-light text-sky-500">Universidad UTE.</span>
+                <span className="italic font-light text-sky-500">
+                  <AnimatedLetters text="Universidad UTE." />
+                </span>
               </h2>
               <p className={`text-base sm:text-lg leading-relaxed text-pretty ${t.body}`}>
                 Nuestras operaciones académicas y de desarrollo tecnológico tienen su sede principal
@@ -376,13 +411,11 @@ export default function HomePage() {
             </div>
 
             <div className="lg:w-1/2 w-full">
-              <div className={`relative overflow-hidden border ${t.hairline} group`}>
-                <img
-                  src="https://guaman-idiomas-ute.online/media/media/b380d01b-3573-41/e081bd96730d4cc3a8c1159eae4a8a41.png"
-                  alt="Campus de la Universidad UTE"
-                  className="w-full h-auto block grayscale group-hover:grayscale-0 transition-[filter] duration-700"
-                />
-              </div>
+              <AnimatedImage
+                src="https://guaman-idiomas-ute.online/media/media/b380d01b-3573-41/e081bd96730d4cc3a8c1159eae4a8a41.png"
+                alt="JumpUp - Campus de la Universidad UTE en Quito"
+                badgeText="Campus Universidad UTE"
+              />
             </div>
           </div>
         </div>
@@ -400,13 +433,20 @@ export default function HomePage() {
             </div>
             <h2 className={`mt-6 text-3xl sm:text-4xl md:text-5xl font-black leading-tight text-balance ${t.heading}`}>
               Miles de saltos{' '}
-              <span className="italic font-light text-sky-500">ya cumplidos.</span>
+              <span className="italic font-light text-sky-500">
+                <AnimatedLetters text="ya cumplidos." />
+              </span>
             </h2>
           </div>
 
           <div className={`mt-16 grid grid-cols-1 md:grid-cols-3 border-t border-l ${t.hairline}`}>
-            {testimonials.map((tm) => (
-              <figure key={tm.name} className={`p-8 md:p-10 border-b border-r ${t.hairline} ${t.cardBg}`}>
+            {testimonials.map((tm, idx) => (
+              <motion.figure
+                key={tm.name}
+                onMouseEnter={() => soundFx.playLetterSound(idx * 4)}
+                whileHover={{ y: -4 }}
+                className={`p-8 md:p-10 border-b border-r ${t.hairline} ${t.cardBg} transition-all cursor-pointer`}
+              >
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="h-4 w-4 fill-sky-500 text-sky-500" />
@@ -421,7 +461,7 @@ export default function HomePage() {
                   <div className={`font-bold ${t.heading}`}>{tm.name}</div>
                   <div className={`text-sm ${t.muted}`}>{tm.role}</div>
                 </figcaption>
-              </figure>
+              </motion.figure>
             ))}
           </div>
         </div>
@@ -444,6 +484,8 @@ export default function HomePage() {
                 <Button
                   asChild
                   size="lg"
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  onClick={() => soundFx.playJumpSound()}
                   className="w-full sm:w-auto h-14 px-10 rounded-none bg-white text-sky-600 hover:bg-slate-100 font-bold text-base tracking-wide transition-all group cursor-pointer"
                 >
                   <Link to="/register" className="flex items-center justify-center gap-2">
@@ -455,6 +497,8 @@ export default function HomePage() {
                   asChild
                   variant="outline"
                   size="lg"
+                  onMouseEnter={() => soundFx.playPopSound()}
+                  onClick={() => soundFx.playPopSound()}
                   className="w-full sm:w-auto h-14 px-10 rounded-none border border-white/60 bg-transparent text-white font-bold text-base tracking-wide hover:bg-white/10 transition-all cursor-pointer"
                 >
                   <Link to="/login" className="flex items-center justify-center">

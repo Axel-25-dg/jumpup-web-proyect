@@ -19,6 +19,11 @@ import {
 } from 'lucide-react'
 import { SectionAnimated } from '@/presentation/components/ui/SectionAnimated'
 import { useOutletContext } from 'react-router-dom'
+import SEO from '@/presentation/components/SEO'
+import { AnimatedLetters } from '@/presentation/components/ui/AnimatedLetters'
+import { AnimatedImage } from '@/presentation/components/ui/AnimatedImage'
+import { soundFx } from '@/presentation/utils/sound'
+import { motion } from 'framer-motion'
 
 export default function StoryPage() {
   const { theme } = useOutletContext<{ theme: 'light' | 'dark' }>()
@@ -107,12 +112,18 @@ export default function StoryPage() {
       direction="up"
       className={`py-0 sm:py-0 relative w-full transition-colors duration-500 overflow-hidden ${t.bg} ${t.text}`}
     >
+      <SEO
+        title="Nuestra Historia - JumpUp Idiomas"
+        description="Conoce la historia detrás de JumpUp: cómo cuatro estudiantes de Software de la Universidad UTE crearon la plataforma que revolucionó el aprendizaje de idiomas con IA."
+        canonicalUrl="https://jumpup-idiomas.uaeftt-ute.site/story"
+      />
+
       {/* ===== HERO ===== */}
       <div className="relative min-h-[92vh] flex items-end overflow-hidden">
         <div className="absolute inset-0">
           <img
             src="https://guaman-idiomas-ute.online/media/media/9ead07c7-1f71-4e/7af66d79fabf4d0b9f2edad7725a8229.jpg"
-            alt="Equipo JumpUp"
+            alt="Equipo JumpUp Universidad UTE"
             className="w-full h-full object-cover grayscale"
           />
           <div
@@ -134,9 +145,11 @@ export default function StoryPage() {
           </div>
 
           <h1 className="text-5xl sm:text-7xl md:text-8xl font-semibold leading-[0.98] tracking-tight text-balance max-w-4xl">
-            El código que
+            <AnimatedLetters text="El código que" />
             <br />
-            <span className={`${t.accent} italic font-light`}>rompió las barreras.</span>
+            <span className={`${t.accent} italic font-light`}>
+              <AnimatedLetters text="rompió las barreras." />
+            </span>
           </h1>
 
           <p className={`mt-8 max-w-xl text-base md:text-lg leading-relaxed ${t.muted}`}>
@@ -152,7 +165,11 @@ export default function StoryPage() {
               { icon: Users, label: 'Comunidad Global' },
               { icon: Award, label: 'Excelencia Académica' },
             ].map((chip, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div
+                key={i}
+                onMouseEnter={() => soundFx.playPopSound()}
+                className="flex items-center gap-2 cursor-pointer"
+              >
                 <chip.icon className={`h-4 w-4 ${t.accent}`} />
                 <span className={`text-sm font-medium ${t.text}`}>{chip.label}</span>
               </div>
@@ -172,8 +189,10 @@ export default function StoryPage() {
         </div>
         <p className="text-3xl md:text-5xl font-semibold leading-[1.1] tracking-tight text-pretty">
           Aprender un idioma no debería sentirse como una tarea, sino como el{' '}
-          <span className={`${t.accent} italic font-light`}>nivel de un juego</span> que no
-          quieres soltar.
+          <span className={`${t.accent} italic font-light`}>
+            <AnimatedLetters text="nivel de un juego" />
+          </span>{' '}
+          que no quieres soltar.
         </p>
         <p className={`mt-8 text-base md:text-lg leading-relaxed max-w-2xl ${t.muted}`}>
           No construimos otra app de tarjetas de vocabulario. Construimos un mundo donde
@@ -182,16 +201,16 @@ export default function StoryPage() {
         </p>
       </div>
 
-      {/* ===== SECCIONES IMAGEN + TEXTO ===== */}
+      {/* ===== SECCIONES IMAGEN + TEXTO CON ANIMACIÓN DE IMÁGENES ===== */}
       <div className={`border-t ${t.line}`}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           {/* Fila 1 */}
           <div className={`grid md:grid-cols-2 gap-10 md:gap-16 items-center py-20 md:py-28 border-b ${t.line}`}>
-            <div className="order-2 md:order-1 overflow-hidden group">
-              <img
+            <div className="order-2 md:order-1">
+              <AnimatedImage
                 src="https://guaman-idiomas-ute.online/media/media/adfac6b1-38f8-4e/3930d9f4fe544aa0bb1e22a8ee0c851e.png"
-                alt="Código en pantalla"
-                className="object-cover w-full h-80 md:h-[28rem] grayscale group-hover:grayscale-0 transition-all duration-700"
+                alt="Código de desarrollo JumpUp UTE"
+                badgeText="Desarrollo de Software UTE"
               />
             </div>
             <div className="order-1 md:order-2">
@@ -226,14 +245,14 @@ export default function StoryPage() {
               <p className={`mt-6 text-base md:text-lg leading-relaxed ${t.muted}`}>
                 Lo que empezó como un proyecto universitario hoy conecta a más de 20,000 personas
                 en 50 países. Cada día, estudiantes de diferentes culturas aprenden juntos,
-                comparten sus logros y se motivan para seguir avanzando.
+                comparten sus logros y se motivan para seguir advancing.
               </p>
             </div>
-            <div className="overflow-hidden group">
-              <img
+            <div>
+              <AnimatedImage
                 src="https://guaman-idiomas-ute.online/media/media/46b487f9-ca0a-43/2108f1cc3a76477297e17bc1fb4c08fd.jpg"
-                alt="Comunidad global"
-                className="object-cover w-full h-80 md:h-[28rem] grayscale group-hover:grayscale-0 transition-all duration-700"
+                alt="Comunidad global JumpUp"
+                badgeText="Red Global de Estudiantes"
               />
             </div>
           </div>
@@ -260,9 +279,11 @@ export default function StoryPage() {
 
           <div className={`border-t ${t.line}`}>
             {timeline.map((item, index) => (
-              <div
+              <motion.div
                 key={index}
-                className={`grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 py-8 md:py-10 border-b ${t.line} group items-start`}
+                onMouseEnter={() => soundFx.playLetterSound(index * 3)}
+                whileHover={{ x: 6 }}
+                className={`grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 py-8 md:py-10 border-b ${t.line} group items-start cursor-pointer`}
               >
                 <div className="md:col-span-2 flex items-center gap-4">
                   <span className={`text-sm font-mono ${t.faint}`}>
@@ -281,7 +302,7 @@ export default function StoryPage() {
                 <p className={`md:col-span-6 text-base leading-relaxed ${t.muted}`}>
                   {item.desc}
                 </p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -303,9 +324,11 @@ export default function StoryPage() {
 
           <div className={`grid grid-cols-1 sm:grid-cols-2 border-t border-l ${t.line}`}>
             {values.map((v, i) => (
-              <div
+              <motion.div
                 key={i}
-                className={`p-8 md:p-10 border-b border-r ${t.line} ${t.cardHover} transition-colors group`}
+                onMouseEnter={() => soundFx.playPopSound()}
+                whileHover={{ y: -4 }}
+                className={`p-8 md:p-10 border-b border-r ${t.line} ${t.cardHover} transition-colors group cursor-pointer`}
               >
                 <div className="flex items-start justify-between mb-8">
                   <span className={`h-11 w-11 grid place-items-center border ${t.line} ${t.accent}`}>
@@ -315,7 +338,7 @@ export default function StoryPage() {
                 </div>
                 <h3 className="text-xl font-semibold tracking-tight mb-3">{v.title}</h3>
                 <p className={`text-base leading-relaxed ${t.muted}`}>{v.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -326,9 +349,11 @@ export default function StoryPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className={`grid grid-cols-2 md:grid-cols-4 border-l ${t.line}`}>
             {stats.map((stat, idx) => (
-              <div
+              <motion.div
                 key={idx}
-                className={`py-12 md:py-16 px-6 border-r ${t.line} text-center group`}
+                onMouseEnter={() => soundFx.playLetterSound(idx * 2)}
+                whileHover={{ backgroundColor: 'rgba(56, 189, 248, 0.05)' }}
+                className={`py-12 md:py-16 px-6 border-r ${t.line} text-center group cursor-pointer`}
               >
                 <stat.icon className={`mx-auto h-6 w-6 mb-5 ${t.accent}`} />
                 <div className="text-4xl md:text-6xl font-semibold tracking-tight tabular-nums">
@@ -337,7 +362,7 @@ export default function StoryPage() {
                 <div className={`mt-2 text-xs font-semibold uppercase tracking-[0.2em] ${t.muted}`}>
                   {stat.label}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

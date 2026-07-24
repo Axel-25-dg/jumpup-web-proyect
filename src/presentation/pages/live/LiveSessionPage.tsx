@@ -1283,105 +1283,137 @@ export default function LiveSessionPage() {
               </div>
             </div>
           ) : (
-            /* Normal Grid View */
-            <div key="grid" className={`flex-1 grid gap-px bg-slate-900/10 dark:bg-white/10 min-h-0 overflow-y-auto ${
-              participants.length <= 1 
-                ? 'grid-cols-1' 
-                : participants.length === 2 
-                  ? 'grid-cols-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1' 
-                  : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-fr'
-            }`}>
-              {/* Primary Feed: Local User */}
-              <div className="relative group overflow-hidden bg-black h-full min-h-[250px] md:min-h-[300px]">
-                <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                  <span className="chip text-[9px] px-1.5 py-0.5 border border-sky-500/20 text-sky-500 bg-sky-500/20 font-sans">
-                    Tú ({user?.username})
-                  </span>
-                </div>
-                
-                {/* Pin Button */}
-                <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => setPinnedUserId(user!.user_id)}
-                    className="p-1.5 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
-                    title="Fijar mi cámara"
-                  >
-                    <Hand size={14} />
-                  </button>
-                </div>
-
-                <video
-                  ref={(node) => {
-                    if (node && localStreamRef.current) {
-                      node.srcObject = localStreamRef.current
-                    }
-                  }}
-                  autoPlay
-                  playsInline
-                  muted
-                  className={`w-full h-full object-cover transition-opacity ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
-                />
-
-                {!videoEnabled && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-16 h-16 border border-white/10 rounded-full flex items-center justify-center text-white bg-white/5">
-                        <VideoOff size={24} />
-                      </div>
-                      <p className="label-micro text-white font-sans">Cámara inactiva</p>
-                    </div>
-                  </div>
-                )}
-
-                {!micEnabled && (
-                  <div className="absolute top-4 right-14 bg-red-600 text-white p-2 rounded-full">
-                    <MicOff size={16} />
-                  </div>
-                )}
-              </div>
-
-              {/* Remote Feeds */}
-              {participants.filter(p => p.user_id !== user?.user_id).map((part) => (
-                <div key={part.user_id} className="relative group overflow-hidden bg-black h-full min-h-[250px] md:min-h-[300px]">
-                  <div className="absolute top-3 left-3 md:top-4 md:left-4 z-20 pointer-events-none flex items-center gap-1.5">
-                    <span className="chip text-[8px] md:text-[9px] px-1.5 py-0.5 bg-black/50 text-white backdrop-blur-md font-sans">
-                      {part.username} {part.is_teacher && '(Profesor)'}
+            /* Zoom-Style Dynamic Grid View */
+            <div key="grid" className="flex-1 p-3 md:p-6 overflow-y-auto bg-[#07090e] flex items-center justify-center min-h-0">
+              <div className={`w-full max-w-7xl h-full flex flex-wrap items-center justify-center gap-3 md:gap-4 content-center overflow-y-auto ${
+                participants.length <= 1
+                  ? 'max-w-4xl max-h-[75vh]'
+                  : participants.length === 2
+                    ? 'max-w-5xl'
+                    : 'max-w-7xl'
+              }`}>
+                {/* Primary Feed: Local User */}
+                <div
+                  className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border transition-all duration-300 shadow-2xl flex items-center justify-center ${
+                    micEnabled ? 'border-white/10' : 'border-red-500/30'
+                  } ${
+                    participants.length <= 1
+                      ? 'w-full aspect-video max-h-[70vh]'
+                      : participants.length === 2
+                        ? 'w-full md:w-[calc(50%-0.5rem)] aspect-video'
+                        : participants.length <= 4
+                          ? 'w-[calc(50%-0.5rem)] aspect-video'
+                          : 'w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.75rem)] lg:w-[calc(25%-0.75rem)] aspect-video'
+                  }`}
+                >
+                  {/* Participant Name Badge */}
+                  <div className="absolute bottom-3 left-3 z-20 pointer-events-none flex items-center gap-2">
+                    <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-white flex items-center gap-1.5 border border-white/10">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Tú ({user?.username})
                     </span>
-                    {renderNetworkIndicator(part.user_id)}
                   </div>
 
-                  {/* Pin Button */}
-                  <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Pin / Controls Overlay */}
+                  <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
                     <button
-                      onClick={() => setPinnedUserId(part.user_id)}
-                      className="p-1.5 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
-                      title="Fijar participante"
+                      onClick={() => setPinnedUserId(user!.user_id)}
+                      className="p-2 bg-black/75 hover:bg-sky-600 text-white rounded-full transition-all border border-white/20"
+                      title="Fijar en pantalla principal"
                     >
                       <Hand size={14} />
                     </button>
                   </div>
 
+                  {/* Mic Status Badge */}
+                  {!micEnabled && (
+                    <div className="absolute top-3 left-3 z-20 bg-red-600/90 text-white p-1.5 rounded-full shadow-lg border border-red-400/40">
+                      <MicOff size={14} />
+                    </div>
+                  )}
+
+                  {/* Video Stream Element */}
                   <video
-                    ref={(el) => { remoteVideoRefs.current[part.user_id] = el }}
+                    ref={(node) => {
+                      if (node && localStreamRef.current) {
+                        node.srcObject = localStreamRef.current
+                      }
+                    }}
                     autoPlay
                     playsInline
-                    className="w-full h-full object-cover"
+                    muted
+                    className={`w-full h-full object-cover rounded-2xl transition-opacity duration-300 ${
+                      videoEnabled ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                    }`}
                   />
 
-                  {!remoteStreams[part.user_id] && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="relative">
-                          <div className="w-10 h-10 border border-white/10 rounded-full flex items-center justify-center">
-                            <Loader2 className="w-5 h-5 text-sky-500 animate-spin" />
-                          </div>
-                        </div>
-                        <p className="label-micro text-white/50 uppercase tracking-widest font-sans">Conectando...</p>
+                  {/* Camera Disabled Fallback */}
+                  {!videoEnabled && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950 rounded-2xl p-4">
+                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-sky-500/20 border-2 border-sky-500/40 flex items-center justify-center text-sky-400 font-bold text-xl md:text-2xl shadow-lg mb-2">
+                        {user?.username?.slice(0, 2).toUpperCase() || 'TU'}
                       </div>
+                      <span className="text-xs font-semibold text-neutral-300">Cámara desactivada</span>
                     </div>
                   )}
                 </div>
-              ))}
+
+                {/* Remote Participants */}
+                {participants.filter(p => p.user_id !== user?.user_id).map((part) => (
+                  <div
+                    key={part.user_id}
+                    className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border border-white/10 transition-all duration-300 shadow-2xl flex items-center justify-center ${
+                      participants.length <= 1
+                        ? 'w-full aspect-video max-h-[70vh]'
+                        : participants.length === 2
+                          ? 'w-full md:w-[calc(50%-0.5rem)] aspect-video'
+                          : participants.length <= 4
+                            ? 'w-[calc(50%-0.5rem)] aspect-video'
+                            : 'w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.75rem)] lg:w-[calc(25%-0.75rem)] aspect-video'
+                    }`}
+                  >
+                    {/* Participant Name Badge */}
+                    <div className="absolute bottom-3 left-3 z-20 pointer-events-none flex items-center gap-2">
+                      <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-white flex items-center gap-1.5 border border-white/10">
+                        {part.username} {part.is_teacher && <span className="text-sky-400 text-[10px] uppercase font-bold">(Profesor)</span>}
+                        {renderNetworkIndicator(part.user_id)}
+                      </span>
+                    </div>
+
+                    {/* Pin Controls Overlay */}
+                    <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                      <button
+                        onClick={() => setPinnedUserId(part.user_id)}
+                        className="p-2 bg-black/75 hover:bg-sky-600 text-white rounded-full transition-all border border-white/20"
+                        title="Fijar participante"
+                      >
+                        <Hand size={14} />
+                      </button>
+                    </div>
+
+                    {/* Video Stream Element */}
+                    <video
+                      ref={(el) => { remoteVideoRefs.current[part.user_id] = el }}
+                      autoPlay
+                      playsInline
+                      className="w-full h-full object-cover rounded-2xl"
+                    />
+
+                    {/* Stream Loading Fallback */}
+                    {!remoteStreams[part.user_id] && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950 rounded-2xl p-4">
+                        <div className="w-14 h-14 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-neutral-400 font-bold text-lg mb-3">
+                          {part.username.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-sky-400 font-medium">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Conectando cámara...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
