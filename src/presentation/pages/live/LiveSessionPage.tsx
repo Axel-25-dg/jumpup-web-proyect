@@ -45,7 +45,7 @@ export default function LiveSessionPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showChat, setShowChat] = useState(false)
   const [sidebarTab, setSidebarTab] = useState<'chat' | 'participants'>('chat')
-  const [messages, setMessages] = useState<{sender: string, text: string, time: string}[]>([])
+  const [messages, setMessages] = useState<{ sender: string, text: string, time: string }[]>([])
   const [chatInput, setChatInput] = useState('')
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [mediaReady, setMediaReady] = useState(false)
@@ -319,7 +319,7 @@ export default function LiveSessionPage() {
   const handleFinalizeSession = async (reason = 'teacher_ended') => {
     if (!id) return
     try {
-      await apiClient.post(`/live-sessions/${id}/end/`).catch(() => {})
+      await apiClient.post(`/live-sessions/${id}/end/`).catch(() => { })
       if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
         socketRef.current.send(JSON.stringify({ type: 'end_session', reason }))
       }
@@ -349,7 +349,7 @@ export default function LiveSessionPage() {
 
     const baseWs = wsOrigin.replace(/\/$/, '')
     const wsEndpoint = baseWs.endsWith('/ws') ? baseWs : `${baseWs}/ws`
-    
+
     // Lista de variantes de URL de WebSocket para fallback
     const wsUrlVariants = [
       `${wsEndpoint}/live-session/${id}/?token=${encodeURIComponent(token)}`,
@@ -876,9 +876,8 @@ export default function LiveSessionPage() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Central Stage */}
-        <div className={`flex-1 flex flex-col overflow-hidden relative transition-all duration-300 ${
-          showChat ? 'h-[50vh] md:h-full' : 'h-full'
-        }`}>
+        <div className={`flex-1 flex flex-col overflow-hidden relative transition-all duration-300 ${showChat ? 'h-[50vh] md:h-full' : 'h-full'
+          }`}>
           {/* Toast Notification Banner */}
           {toastMessage && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-neutral-900/90 text-white border border-sky-500/40 px-4 py-2 rounded-full text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
@@ -991,9 +990,8 @@ export default function LiveSessionPage() {
               <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr items-center justify-center overflow-y-auto">
                 {/* Local User Camera Card */}
                 <div
-                  className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border transition-all duration-300 shadow-2xl flex items-center justify-center w-full h-full min-h-[220px] aspect-video ${
-                    micEnabled ? 'border-white/10' : 'border-red-500/40'
-                  }`}
+                  className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border transition-all duration-300 shadow-2xl flex items-center justify-center w-full h-full min-h-[220px] aspect-video ${micEnabled ? 'border-white/10' : 'border-red-500/40'
+                    }`}
                 >
                   {/* Name Tag */}
                   <div className="absolute bottom-3 left-3 z-20 pointer-events-none">
@@ -1020,9 +1018,8 @@ export default function LiveSessionPage() {
                     autoPlay
                     playsInline
                     muted
-                    className={`w-full h-full object-cover rounded-2xl transition-opacity duration-300 ${
-                      videoEnabled ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                    }`}
+                    className={`w-full h-full object-cover rounded-2xl transition-opacity duration-300 ${videoEnabled ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                      }`}
                   />
 
                   {/* Camera Off Avatar Fallback */}
@@ -1090,11 +1087,10 @@ export default function LiveSessionPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleToggleScreenShare}
-                className={`p-3 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
-                  isScreenSharing
-                    ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
-                    : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white hover:border-sky-500/50'
-                }`}
+                className={`p-3 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${isScreenSharing
+                  ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
+                  : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white hover:border-sky-500/50'
+                  }`}
                 title="Compartir pantalla"
               >
                 <MonitorUp size={18} />
@@ -1106,11 +1102,10 @@ export default function LiveSessionPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setMicEnabled(!micEnabled)}
-                className={`p-3.5 rounded-full border flex items-center justify-center transition-all shadow-xl ${
-                  micEnabled
-                    ? 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700'
-                    : 'bg-red-600 border-red-600 text-white shadow-red-600/30'
-                }`}
+                className={`p-3.5 rounded-full border flex items-center justify-center transition-all shadow-xl ${micEnabled
+                  ? 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700'
+                  : 'bg-red-600 border-red-600 text-white shadow-red-600/30'
+                  }`}
                 title={micEnabled ? 'Silenciar micrófono' : 'Activar micrófono'}
               >
                 {micEnabled ? <Mic size={20} /> : <MicOff size={20} />}
@@ -1118,11 +1113,10 @@ export default function LiveSessionPage() {
 
               <button
                 onClick={() => setVideoEnabled(!videoEnabled)}
-                className={`p-3.5 rounded-full border flex items-center justify-center transition-all shadow-xl ${
-                  videoEnabled
-                    ? 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700'
-                    : 'bg-red-600 border-red-600 text-white shadow-red-600/30'
-                }`}
+                className={`p-3.5 rounded-full border flex items-center justify-center transition-all shadow-xl ${videoEnabled
+                  ? 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700'
+                  : 'bg-red-600 border-red-600 text-white shadow-red-600/30'
+                  }`}
                 title={videoEnabled ? 'Desactivar cámara' : 'Activar cámara'}
               >
                 {videoEnabled ? <Radio size={20} /> : <VideoOff size={20} />}
@@ -1133,11 +1127,10 @@ export default function LiveSessionPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode(viewMode === 'grid' ? 'speaker' : 'grid')}
-                className={`p-3 rounded-xl border transition-all ${
-                  viewMode === 'speaker'
-                    ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white'
-                }`}
+                className={`p-3 rounded-xl border transition-all ${viewMode === 'speaker'
+                  ? 'bg-sky-500 border-sky-500 text-white'
+                  : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white'
+                  }`}
                 title={viewMode === 'speaker' ? 'Vista Mosaico' : 'Vista Enfoque'}
               >
                 <Users size={18} />
@@ -1145,11 +1138,10 @@ export default function LiveSessionPage() {
 
               <button
                 onClick={() => setShowChat(!showChat)}
-                className={`p-3 rounded-xl border transition-all ${
-                  showChat
-                    ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white'
-                }`}
+                className={`p-3 rounded-xl border transition-all ${showChat
+                  ? 'bg-sky-500 border-sky-500 text-white'
+                  : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white'
+                  }`}
               >
                 <MessageSquare size={18} />
               </button>
@@ -1171,17 +1163,15 @@ export default function LiveSessionPage() {
             <div className="flex items-center border-b border-white/10">
               <button
                 onClick={() => setSidebarTab('chat')}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-                  sidebarTab === 'chat' ? 'text-sky-400 border-b-2 border-sky-400' : 'text-neutral-400 hover:text-white'
-                }`}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${sidebarTab === 'chat' ? 'text-sky-400 border-b-2 border-sky-400' : 'text-neutral-400 hover:text-white'
+                  }`}
               >
                 Chat de Clase
               </button>
               <button
                 onClick={() => setSidebarTab('participants')}
-                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
-                  sidebarTab === 'participants' ? 'text-sky-400 border-b-2 border-sky-400' : 'text-neutral-400 hover:text-white'
-                }`}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${sidebarTab === 'participants' ? 'text-sky-400 border-b-2 border-sky-400' : 'text-neutral-400 hover:text-white'
+                  }`}
               >
                 Participantes ({participants.length + 1})
               </button>
