@@ -6,8 +6,7 @@ import { useAuthStore } from '@/presentation/store/auth.store'
 import { API_CONFIG } from '@/infrastructure/config/api.config'
 import {
   Radio, VideoOff, Mic, MicOff, PhoneOff, Users, Loader2,
-  MessageSquare, Settings, Hand, MonitorUp,
-  Signal, Shield, Sparkles, ArrowRight, Maximize2, Minimize2
+  MessageSquare, MonitorUp, Signal, Shield, Sparkles, Maximize2, Minimize2
 } from 'lucide-react'
 
 interface Participant {
@@ -58,14 +57,11 @@ export default function LiveSessionPage() {
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number | null>(null)
 
   // Screen Sharing Permissions & Stage View State
-  const [allowedToShareScreen, setAllowedToShareScreen] = useState(false)
-  const [permittedUsers, setPermittedUsers] = useState<Record<number, boolean>>({})
   const [activePresenter, setActivePresenter] = useState<{ user_id: number; username: string } | null>(null)
-  const [permissionRequests, setPermissionRequests] = useState<{ user_id: number; username: string }[]>([])
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // Spotlight, alternate view modes, and network qualities
-  const [pinnedUserId, setPinnedUserId] = useState<number | null>(null)
+  // Spotlight and view modes
+  const [pinnedUserId] = useState<number | null>(null)
   const [viewMode, setViewMode] = useState<'grid' | 'speaker'>('grid')
   const [networkQualities, setNetworkQualities] = useState<Record<number, 'excellent' | 'good' | 'poor'>>({})
   const spotlightContainerRef = useRef<HTMLDivElement>(null)
@@ -120,278 +116,131 @@ export default function LiveSessionPage() {
     }
   }
 
-  const [isSpotlightFullScreen, setIsSpotlightFullScreen] = useState(false)
-
-  useEffect(() => {
-    const handleSpotlightFSChange = () => {
-      setIsSpotlightFullScreen(!!document.fullscreenElement && document.fullscreenElement === spotlightContainerRef.current)
-    }
-    document.addEventListener('fullscreenchange', handleSpotlightFSChange)
-    return () => document.removeEventListener('fullscreenchange', handleSpotlightFSChange)
-  }, [])
-
-  const toggleSpotlightFullScreen = () => {
-    if (!spotlightContainerRef.current) return
-    if (document.fullscreenElement !== spotlightContainerRef.current) {
-      if (spotlightContainerRef.current.requestFullscreen) {
-        spotlightContainerRef.current.requestFullscreen().catch(err => {
-          console.error("Error al activar pantalla completa de spotlight:", err)
-        })
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(err => console.error("Error al salir de pantalla completa:", err))
-      }
-    }
-  }
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, showChat])
 
-  const handleSendMessage = () => {
-    if (!chatInput.trim() || !socketRef.current) return
-    const msg = {
-      type: 'chat_message',
-      message: chatInput,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-    socketRef.current.send(JSON.stringify(msg))
-    setMessages(prev => [...prev, { sender: 'Tú', text: chatInput, time: msg.timestamp }])
-    setChatInput('')
-  }
-
-  const handleToggleScreenShare = () => {
-    const canShare = isTeacherOrHost || allowedToShareScreen
-    if (!canShare) {
-      if (!isScreenSharing) {
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-          socketRef.current.send(JSON.stringify({
-            type: 'request_screen_share',
-            user_id: user?.user_id,
-            username: user?.username
-          }))
-        }
-        showToast('Permiso requerido. Se ha enviado la solicitud al profesor.')
-        return
-      }
-    }
-    toggleScreenShare()
-  }
-
-  const toggleScreenShare = async () => {
-    try {
-      if (!isScreenSharing) {
-        const stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { width: { max: 1920 }, height: { max: 1080 }, frameRate: { max: 15 } },
-          audio: true
-        })
-        screenStreamRef.current = stream
-        const videoTrack = stream.getVideoTracks()[0]
-
-        // Replace track in all peer connections
-        Object.values(peerConnections.current).forEach(pc => {
-          const sender = pc.getSenders().find(s => s.track?.kind === 'video')
-          if (sender) sender.replaceTrack(videoTrack)
-        })
-
-        // Lower camera web stream to low resolution to save CPU and bandwidth
-        const localCameraTrack = localStreamRef.current?.getVideoTracks()[0]
-        if (localCameraTrack) {
-          await localCameraTrack.applyConstraints({
-            width: { ideal: 320 },
-            height: { ideal: 240 },
-            frameRate: { max: 10 }
-          }).catch(err => console.error("Error applying camera constraints:", err))
-        }
-
-        videoTrack.onended = () => stopScreenShare()
-        setIsScreenSharing(true)
-        setActivePresenter({ user_id: user!.user_id, username: 'Tú' })
-
-        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-          socketRef.current.send(JSON.stringify({
-            type: 'screen_share_status',
-            is_sharing: true,
-            user_id: user?.user_id,
-            username: user?.username
-          }))
-        }
-      } else {
-        await stopScreenShare()
-      }
-    } catch (err) {
-      console.error("Error sharing screen:", err)
-    }
-  }
-
-  const stopScreenShare = async () => {
-    if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach(t => t.stop())
-    }
-    screenStreamRef.current = null
-    const videoTrack = localStreamRef.current?.getVideoTracks()[0]
-    if (videoTrack) {
-      // Restore camera web stream to original constraints
-      await videoTrack.applyConstraints({
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { max: 30 }
-      }).catch(err => console.error("Error restoring camera constraints:", err))
-
-      Object.values(peerConnections.current).forEach(pc => {
-        const sender = pc.getSenders().find(s => s.track?.kind === 'video')
-        if (sender) sender.replaceTrack(videoTrack)
-      })
-    }
-    setIsScreenSharing(false)
-    setActivePresenter(null)
-
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        type: 'screen_share_status',
-        is_sharing: false,
-        user_id: user?.user_id,
-        username: user?.username
-      }))
-    }
-  }
-
-  const handleGrantScreenShare = (targetUserId: number, targetUsername: string, allow: boolean) => {
-    setPermittedUsers(prev => ({ ...prev, [targetUserId]: allow }))
-    setPermissionRequests(prev => prev.filter(r => r.user_id !== targetUserId))
-
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({
-        type: 'grant_screen_share',
-        target_user_id: targetUserId,
-        allowed: allow
-      }))
-    }
-    showToast(allow ? `Permiso de pantalla otorgado a ${targetUsername}` : `Permiso revocado a ${targetUsername}`)
-  }
-
-  // Load Session details & check authorization
+  // Attach remote streams to video elements without triggering re-render flickering
   useEffect(() => {
-    async function loadSession() {
-      if (!id || !user) return
-      if (session && String(session.id) === String(id)) return
+    Object.entries(remoteStreams).forEach(([userIdStr, stream]) => {
+      const userId = Number(userIdStr)
+      const videoEl = remoteVideoRefs.current[userId]
+      if (videoEl && stream && videoEl.srcObject !== stream) {
+        videoEl.srcObject = stream
+        videoEl.play().catch(e => console.debug('Play remote stream:', e))
+      }
+    })
+  }, [remoteStreams, participants])
+
+  // Cargar detalles de la sesión
+  useEffect(() => {
+    if (!id) return
+    const fetchSession = async () => {
       try {
         setIsLoading(true)
-        const res = await apiClient.get<any>(`/live-sessions/${id}/`)
-        const sessData = res.data
-        setSession(sessData)
+        const res = await apiClient.get(`/live-sessions/${id}/`)
+        const data: LiveSessionDetails = res.data
+        setSession(data)
 
-        // Check if ended
-        if (sessData.status === 'ended' || sessData.status === 'cancelled') {
+        if (data.status === 'ended' || data.status === 'finalized') {
           setIsEnded(true)
+          setEndNotice('Esta clase en vivo ha concluido y ya no está activa.')
           setIsLoading(false)
           return
         }
 
-        // Enrollment Check for Students ("Sin Infiltrados")
-        const isTeacherOrAdmin =
-          user.role === 'teacher' ||
-          user.role === 'admin' ||
-          (user as any).is_teacher ||
-          sessData.teacher === user.user_id ||
-          sessData.teacher_id === user.user_id
+        if (data.scheduled_at && (data.duration_min || data.duration_minutes)) {
+          const duration = data.duration_min || data.duration_minutes || 60
+          const startTime = new Date(data.scheduled_at).getTime()
+          const endTime = startTime + duration * 60 * 1000
+          const now = Date.now()
+          const diffSec = Math.floor((endTime - now) / 1000)
 
-        if (!isTeacherOrAdmin) {
-          try {
-            const classRes = await apiClient.get<any[]>('/classrooms/mine/')
-            const classList = Array.isArray(classRes.data)
-              ? classRes.data
-              : (classRes.data as any)?.results || []
-
-            const sessionClassId = sessData.classroom || sessData.classroom_id
-            const sessionCourseId = sessData.course || sessData.course_id
-
-            const isEnrolled = classList.some((c: any) => {
-              const cClassId = c.id
-              const cCourseId = c.course || c.course_info?.id
-              return (
-                (sessionClassId && String(cClassId) === String(sessionClassId)) ||
-                (sessionCourseId && String(cCourseId) === String(sessionCourseId))
-              )
-            })
-
-            if (!isEnrolled && classList.length > 0) {
-              setAccessDenied(true)
-              setIsLoading(false)
-              return
-            }
-          } catch (e) {
-            console.error('Error comprobando aulas del estudiante:', e)
+          if (diffSec <= 0) {
+            setIsEnded(true)
+            setEndNotice('El tiempo programado para esta clase ha finalizado.')
+            setIsLoading(false)
+            return
+          } else {
+            setTimeLeftSeconds(diffSec)
           }
         }
-
-        await apiClient.post(`/live-sessions/${id}/join/`).catch(() => {})
-      } catch (err) {
-        console.error('Error loading live session details:', err)
+      } catch (err: any) {
+        console.error('Error al cargar sesión en vivo:', err)
+        if (err.response?.status === 403) {
+          setAccessDenied(true)
+        }
       } finally {
         setIsLoading(false)
       }
     }
-    loadSession()
-  }, [id, user?.user_id])
 
-  // Session Timer Countdown
+    fetchSession()
+  }, [id])
+
+  // Temporizador de sesión
   useEffect(() => {
-    if (!session || isEnded || accessDenied) return
+    if (timeLeftSeconds === null || isEnded || accessDenied) return
 
-    const durationMin = session.duration_min || session.duration_minutes || 60
-    const scheduledTime = session.scheduled_at ? new Date(session.scheduled_at).getTime() : Date.now()
-    const endTime = scheduledTime + durationMin * 60 * 1000
-
-    const updateTimer = () => {
-      const remainingMs = endTime - Date.now()
-      const secondsLeft = Math.max(0, Math.floor(remainingMs / 1000))
-      setTimeLeftSeconds(secondsLeft)
-
-      if (secondsLeft <= 0) {
-        const isHost =
-          user?.role === 'teacher' ||
-          user?.role === 'admin' ||
-          session.teacher === user?.user_id ||
-          session.teacher_id === user?.user_id
-
-        if (isHost && !isEnded) {
+    const interval = setInterval(() => {
+      setTimeLeftSeconds(prev => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval)
           handleFinalizeSession('time_expired')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [timeLeftSeconds, isEnded, accessDenied])
+
+  // Capturar stream de webcam local
+  useEffect(() => {
+    let isMounted = true
+
+    const getMedia = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: true
+        })
+        if (isMounted) {
+          setLocalStream(stream)
+          localStreamRef.current = stream
+          setMediaReady(true)
+        }
+      } catch (err) {
+        console.warn('No se pudo acceder a cámara/micrófono completos, intentando solo audio:', err)
+        try {
+          const audioOnlyStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+          if (isMounted) {
+            setLocalStream(audioOnlyStream)
+            localStreamRef.current = audioOnlyStream
+            setVideoEnabled(false)
+            setMediaReady(true)
+          }
+        } catch (audioErr) {
+          console.error('Tampoco se pudo acceder al micrófono:', audioErr)
+          if (isMounted) {
+            setMediaReady(true)
+          }
         }
       }
     }
 
-    updateTimer()
-    const interval = setInterval(updateTimer, 1000)
-    return () => clearInterval(interval)
-  }, [session, isEnded, accessDenied, user])
-
-  // Media initialization on mount
-  useEffect(() => {
-    if (isEnded || accessDenied) return
-    let activeStream: MediaStream | null = null
-
-    async function initMedia() {
-      try {
-        activeStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        localStreamRef.current = activeStream
-        setLocalStream(activeStream)
-      } catch (err) {
-        console.error('Error accessing media devices.', err)
-      } finally {
-        setMediaReady(true)
-      }
-    }
-    initMedia()
+    getMedia()
 
     return () => {
-      activeStream?.getTracks().forEach(track => track.stop())
-      localStreamRef.current?.getTracks().forEach(track => track.stop())
+      isMounted = false
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(t => t.stop())
+      }
     }
-  }, [isEnded, accessDenied])
+  }, [])
 
-  // Attach local tracks to existing peer connections when localStream becomes ready
+  // Actualizar remitentes WebRTC cuando cambia la transmisión local
   useEffect(() => {
     if (!localStream) return
     Object.values(peerConnections.current).forEach(pc => {
@@ -407,7 +256,7 @@ export default function LiveSessionPage() {
     })
   }, [localStream])
 
-  // Monitor network quality for each WebRTC PeerConnection
+  // Calidad de red WebRTC
   useEffect(() => {
     if (isEnded || accessDenied) return
 
@@ -444,8 +293,8 @@ export default function LiveSessionPage() {
           } else {
             qualities[userId] = 'excellent'
           }
-        } catch (e) {
-          console.debug(`Could not get network stats for peer ${userId}:`, e)
+        } catch {
+          // Ignorar si falla la estadística
         }
       }
 
@@ -484,6 +333,7 @@ export default function LiveSessionPage() {
     }, 2000)
   }
 
+  // WebSocket y WebRTC Signaling
   useEffect(() => {
     if (!session || isEnded || accessDenied || !mediaReady) return
 
@@ -499,39 +349,42 @@ export default function LiveSessionPage() {
 
     const baseWs = wsOrigin.replace(/\/$/, '')
     const wsEndpoint = baseWs.endsWith('/ws') ? baseWs : `${baseWs}/ws`
-    // Try both naming conventions: live_session (Django) and live-session (REST-style)
+    
+    // Lista de variantes de URL de WebSocket para fallback
     const wsUrlVariants = [
-      `${wsEndpoint}/live_session/${id}/?token=${encodeURIComponent(token)}`,
       `${wsEndpoint}/live-session/${id}/?token=${encodeURIComponent(token)}`,
+      `${wsEndpoint}/live_session/${id}/?token=${encodeURIComponent(token)}`,
+      `${wsEndpoint}/live/${id}/?token=${encodeURIComponent(token)}`,
+      `${wsEndpoint}/live-session/${id}/`,
+      `${wsEndpoint}/live_session/${id}/`
     ]
     let wsUrlIndex = 0
     let isClosedIntentionally = false
 
     let ws: WebSocket | null = null
     let reconnectTimeout: any
-    let hasEverConnected = false
 
-  const rtcConfig: RTCConfiguration = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:stun3.l.google.com:19302' },
-      { urls: 'stun:stun4.l.google.com:19302' },
-      { urls: 'stun:stun.services.mozilla.com' },
-      {
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      },
-      {
-        urls: 'turn:openrelay.metered.ca:443',
-        username: 'openrelayproject',
-        credential: 'openrelayproject'
-      }
-    ],
-    iceTransportPolicy: 'all'
-  }
+    const rtcConfig: RTCConfiguration = {
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        },
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject'
+        }
+      ],
+      iceTransportPolicy: 'all'
+    }
 
     const processBufferedCandidates = async (targetId: number, pc: RTCPeerConnection) => {
       const buffer = iceCandidatesBuffer.current[targetId] || []
@@ -558,71 +411,8 @@ export default function LiveSessionPage() {
             const screenTrack = screenStreamRef.current.getVideoTracks()[0]
             if (screenTrack) trackToSend = screenTrack
           }
-          const sender = pc.addTrack(trackToSend, localStreamRef.current!)
-          
-          // Priorizar audio en la red
-          if (trackToSend.kind === 'audio' && sender.setParameters) {
-            const params = sender.getParameters()
-            if (!params.encodings) params.encodings = [{}]
-            if (params.encodings.length > 0) {
-              (params.encodings[0] as any).networkPriority = 'high'
-              sender.setParameters(params).catch(e => console.warn('No se pudo priorizar audio', e))
-            }
-          }
+          pc.addTrack(trackToSend, localStreamRef.current!)
         })
-
-        // Preferir codecs ligeros (VP8/H.264) en lugar de los pesados AV1/VP9
-        if (typeof RTCRtpReceiver !== 'undefined' && 'getCapabilities' in RTCRtpReceiver) {
-          pc.getTransceivers().forEach(transceiver => {
-            if (transceiver.receiver && transceiver.receiver.track.kind === 'video') {
-              try {
-                const capabilities = RTCRtpReceiver.getCapabilities('video')
-                if (capabilities && capabilities.codecs) {
-                  const codecs = capabilities.codecs
-                  const preferredCodecs = codecs.filter(c => c.mimeType.includes('video/VP8') || c.mimeType.includes('video/H264'))
-                  if (preferredCodecs.length > 0 && typeof transceiver.setCodecPreferences === 'function') {
-                    // Ponemos los preferidos primero, seguidos de los demás
-                    transceiver.setCodecPreferences([...preferredCodecs, ...codecs.filter(c => !preferredCodecs.includes(c))])
-                  }
-                }
-              } catch (e) {
-                console.warn('No se pudo preferir codecs', e)
-              }
-            }
-          })
-        }
-      }
-
-      // Configure priorities for senders (high priority for audio)
-      try {
-        pc.getSenders().forEach(sender => {
-          if (sender.track?.kind === 'audio' && sender.setParameters) {
-            const params = sender.getParameters()
-            if (!params.encodings) params.encodings = [{}]
-            params.encodings[0].networkPriority = 'high'
-            sender.setParameters(params).catch(() => {})
-          }
-        })
-      } catch (e) {
-        console.error("Error setting sender priority:", e)
-      }
-
-      // Negotiate H.264 or VP8 codecs for lower CPU consumption
-      try {
-        pc.getTransceivers().forEach(transceiver => {
-          if (transceiver.receiver.track.kind === 'video') {
-            const capabilities = RTCRtpReceiver.getCapabilities?.('video')
-            if (capabilities && capabilities.codecs) {
-              const codecs = capabilities.codecs
-              const preferredCodecs = codecs.filter(c => c.mimeType === 'video/H264' || c.mimeType === 'video/VP8')
-              if (preferredCodecs.length > 0 && transceiver.setCodecPreferences) {
-                transceiver.setCodecPreferences(preferredCodecs)
-              }
-            }
-          }
-        })
-      } catch (e) {
-        console.error("Error setting codec preferences:", e)
       }
 
       pc.onicecandidate = (event) => {
@@ -637,16 +427,8 @@ export default function LiveSessionPage() {
 
       pc.ontrack = (event) => {
         console.log(`[WebRTC] Track recibido de ${targetUserId}:`, event.track.kind)
-        const stream = event.streams[0]
+        const stream = event.streams[0] || new MediaStream([event.track])
         setRemoteStreams(prev => ({ ...prev, [targetUserId]: stream }))
-      }
-
-      pc.oniceconnectionstatechange = () => {
-        console.log(`[WebRTC] ICE State ${targetUserId}:`, pc.iceConnectionState)
-      }
-
-      pc.onconnectionstatechange = () => {
-        console.log(`[WebRTC] Connection State ${targetUserId}:`, pc.connectionState)
       }
 
       return pc
@@ -669,14 +451,12 @@ export default function LiveSessionPage() {
             return
           }
           setIsConnected(true)
-          hasEverConnected = true
         }
 
         ws.onmessage = async (event) => {
           if (isClosedIntentionally) return
           try {
             const data = JSON.parse(event.data)
-            console.log('[WS] Mensaje recibido:', data.type, data)
             if (data.type === 'participants') {
               const allUsers: { user_id: number; username: string; is_teacher?: boolean }[] =
                 (data.participants || data.users || data.data || []).map((u: any) => ({
@@ -684,13 +464,11 @@ export default function LiveSessionPage() {
                   username: u.username ?? u.name ?? u.display_name ?? `Usuario ${u.user_id ?? u.id}`,
                   is_teacher: u.is_teacher ?? u.is_host ?? false
                 }))
-              // Filter out self from participants list
               const users = allUsers.filter(u => u.user_id !== user?.user_id)
               setParticipants(users)
-              // Connect to all existing participants in the room when we join
+
               for (const remoteUser of users) {
-                if (peerConnections.current[remoteUser.user_id]) continue // already connected
-                // Only the user with the HIGHER user_id sends the offer to avoid double-offer race
+                if (peerConnections.current[remoteUser.user_id]) continue
                 if ((user?.user_id ?? 0) > remoteUser.user_id) {
                   const pc = createPeerConnection(remoteUser.user_id)
                   const offer = await pc.createOffer()
@@ -703,7 +481,6 @@ export default function LiveSessionPage() {
                     }))
                   }
                 } else {
-                  // Lower ID user just creates the PC and waits for the offer
                   createPeerConnection(remoteUser.user_id)
                 }
               }
@@ -714,19 +491,6 @@ export default function LiveSessionPage() {
               setTimeout(() => {
                 handleLeaveSession()
               }, 2500)
-            } else if (data.type === 'request_screen_share') {
-              if (isTeacherOrHost) {
-                setPermissionRequests(prev => {
-                  if (prev.some(r => r.user_id === data.user_id)) return prev
-                  return [...prev, { user_id: data.user_id, username: data.username }]
-                })
-                showToast(`El estudiante ${data.username} solicita permiso para compartir pantalla.`)
-              }
-            } else if (data.type === 'grant_screen_share') {
-              if (data.target_user_id === user?.user_id) {
-                setAllowedToShareScreen(data.allowed)
-                showToast(data.allowed ? 'El profesor te ha concedido permiso para compartir pantalla.' : 'El profesor ha revocado tu permiso para compartir pantalla.')
-              }
             } else if (data.type === 'screen_share_status') {
               if (data.is_sharing) {
                 setActivePresenter({ user_id: data.user_id, username: data.username })
@@ -735,7 +499,6 @@ export default function LiveSessionPage() {
                 setActivePresenter(prev => (prev?.user_id === data.user_id ? null : prev))
               }
             } else if (data.type === 'user_joined') {
-              // Skip if this is the current user joining themselves
               if (data.user_id === user?.user_id) return
               const joinedUser = {
                 user_id: data.user_id ?? data.id,
@@ -817,14 +580,9 @@ export default function LiveSessionPage() {
           setIsConnected(false)
           if (isClosedIntentionally) return
           if (!isEnded && !accessDenied) {
-            // If never connected and there's a fallback URL, try it
-            if (!hasEverConnected && wsUrlIndex < wsUrlVariants.length - 1) {
-              wsUrlIndex++
-              console.log('[LiveSession] Intentando URL alternativa...')
-              reconnectTimeout = setTimeout(connect, 500)
-            } else {
-              reconnectTimeout = setTimeout(connect, 3000)
-            }
+            wsUrlIndex = (wsUrlIndex + 1) % wsUrlVariants.length
+            console.log('[LiveSession] Reintentando conexión con variante:', wsUrlIndex)
+            reconnectTimeout = setTimeout(connect, 2000)
           }
         }
 
@@ -837,11 +595,11 @@ export default function LiveSessionPage() {
         console.error('Error al instanciar WebSocket:', e)
         if (isClosedIntentionally) return
         if (!isEnded && !accessDenied) {
+          wsUrlIndex = (wsUrlIndex + 1) % wsUrlVariants.length
           reconnectTimeout = setTimeout(connect, 3000)
         }
       }
     }
-
 
     connect()
 
@@ -853,16 +611,6 @@ export default function LiveSessionPage() {
       peerConnections.current = {}
     }
   }, [session, id, isEnded, accessDenied, mediaReady])
-
-  useEffect(() => {
-    participants.forEach(p => {
-      const stream = remoteStreams[p.user_id]
-      const videoEl = remoteVideoRefs.current[p.user_id]
-      if (videoEl && stream && videoEl.srcObject !== stream) {
-        videoEl.srcObject = stream
-      }
-    })
-  }, [remoteStreams, participants])
 
   const renderNetworkIndicator = (userId: number) => {
     const quality = networkQualities[userId] || 'excellent'
@@ -878,32 +626,6 @@ export default function LiveSessionPage() {
 
     return (
       <span className={`inline-flex items-center ${color}`} title={`Conexión: ${text}`}>
-        <Signal size={10} />
-      </span>
-    )
-  }
-
-  const renderLocalNetworkIndicator = () => {
-    const activeQualities = Object.values(networkQualities)
-    let quality = 'excellent'
-    if (activeQualities.includes('poor')) {
-      quality = 'poor'
-    } else if (activeQualities.includes('good')) {
-      quality = 'good'
-    }
-
-    let color = 'text-emerald-500'
-    let text = 'Excelente'
-    if (quality === 'good') {
-      color = 'text-amber-500'
-      text = 'Aceptable'
-    } else if (quality === 'poor') {
-      color = 'text-red-500'
-      text = 'Lenta o inestable'
-    }
-
-    return (
-      <span className={`inline-flex items-center gap-1 ${color}`} title={`Tu conexión: ${text}`}>
         <Signal size={10} />
       </span>
     )
@@ -951,14 +673,75 @@ export default function LiveSessionPage() {
     navigate('/classrooms')
   }
 
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!chatInput.trim() || !socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return
+
+    const msg = chatInput.trim()
+    socketRef.current.send(JSON.stringify({
+      type: 'chat_message',
+      message: msg
+    }))
+
+    setMessages(prev => [...prev, {
+      sender: user?.username || 'Tú',
+      text: msg,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }])
+
+    setChatInput('')
+  }
+
+  const handleToggleScreenShare = async () => {
+    if (isScreenSharing) {
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach(t => t.stop())
+        screenStreamRef.current = null
+      }
+      setIsScreenSharing(false)
+      if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+        socketRef.current.send(JSON.stringify({
+          type: 'screen_share_status',
+          is_sharing: false
+        }))
+      }
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true })
+        screenStreamRef.current = stream
+        setIsScreenSharing(true)
+
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          socketRef.current.send(JSON.stringify({
+            type: 'screen_share_status',
+            is_sharing: true
+          }))
+        }
+
+        stream.getVideoTracks()[0].onended = () => {
+          setIsScreenSharing(false)
+          screenStreamRef.current = null
+          if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+            socketRef.current.send(JSON.stringify({
+              type: 'screen_share_status',
+              is_sharing: false
+            }))
+          }
+        }
+      } catch (err) {
+        console.error('Error al compartir pantalla:', err)
+      }
+    }
+  }
+
   if (isLoading) {
     return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
-        <div className="border border-slate-900/10 dark:border-white/10 p-8 flex flex-col items-center gap-6 max-w-sm w-full bg-white dark:bg-white/[0.02]">
+      <div className="fixed inset-0 flex flex-col items-center justify-center z-50 bg-[#0a0e14] text-white">
+        <div className="border border-white/10 p-8 flex flex-col items-center gap-6 max-w-sm w-full bg-white/[0.03] backdrop-blur-xl rounded-2xl">
           <Loader2 className="h-10 w-10 animate-spin text-sky-500" />
           <div className="text-center space-y-2">
-            <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Conectando...</h2>
-            <p className="label-micro text-slate-400">Estableciendo conexión segura con la sala virtual.</p>
+            <h2 className="text-sm font-black uppercase tracking-widest text-white">Conectando...</h2>
+            <p className="text-xs text-slate-400">Estableciendo conexión segura con la sala virtual.</p>
           </div>
         </div>
       </div>
@@ -967,18 +750,18 @@ export default function LiveSessionPage() {
 
   if (accessDenied) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
-        <div className="max-w-md w-full border border-slate-900/10 dark:border-white/10 p-8 text-center space-y-6 bg-white dark:bg-white/[0.02]">
-          <div className="inline-flex p-4 border border-red-500/20 text-red-500 bg-red-500/10">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0e14] text-white">
+        <div className="max-w-md w-full border border-white/10 p-8 text-center space-y-6 bg-white/[0.03] backdrop-blur-xl rounded-2xl">
+          <div className="inline-flex p-4 border border-red-500/20 text-red-500 bg-red-500/10 rounded-full">
             <Shield size={32} />
           </div>
           <div className="space-y-2">
-            <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Acceso Denegado</h2>
-            <p className="label-micro text-slate-400">Esta sesión en vivo es privada y solo está disponible para estudiantes inscritos en el curso correspondiente.</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Acceso Denegado</h2>
+            <p className="text-xs text-slate-400">Esta sesión en vivo es privada y solo está disponible para estudiantes inscritos en el curso correspondiente.</p>
           </div>
           <button
             onClick={() => navigate('/classrooms')}
-            className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs uppercase tracking-wider transition-colors"
+            className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
           >
             Volver a Aulas
           </button>
@@ -989,18 +772,18 @@ export default function LiveSessionPage() {
 
   if (isEnded) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
-        <div className="max-w-md w-full border border-slate-900/10 dark:border-white/10 p-8 text-center space-y-6 bg-white dark:bg-white/[0.02]">
-          <div className="inline-flex p-4 border border-amber-500/20 text-amber-500 bg-amber-500/10">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0e14] text-white">
+        <div className="max-w-md w-full border border-white/10 p-8 text-center space-y-6 bg-white/[0.03] backdrop-blur-xl rounded-2xl">
+          <div className="inline-flex p-4 border border-amber-500/20 text-amber-500 bg-amber-500/10 rounded-full">
             <Radio size={32} />
           </div>
           <div className="space-y-2">
-            <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Sesión Finalizada</h2>
-            <p className="label-micro text-slate-400">{endNotice || 'Esta clase en vivo ha concluido y ya no está activa.'}</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Sesión Finalizada</h2>
+            <p className="text-xs text-slate-400">{endNotice || 'Esta clase en vivo ha concluido y ya no está activa.'}</p>
           </div>
           <button
             onClick={() => navigate('/classrooms')}
-            className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs uppercase tracking-wider transition-colors"
+            className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
           >
             Volver a Aulas
           </button>
@@ -1011,18 +794,18 @@ export default function LiveSessionPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-[#f7f6f3] dark:bg-[#0a0a0b]">
-        <div className="max-w-md w-full border border-slate-900/10 dark:border-white/10 p-8 text-center space-y-6 bg-white dark:bg-white/[0.02]">
-          <div className="inline-flex p-4 border border-slate-900/10 dark:border-white/10 text-sky-500 bg-slate-50 dark:bg-white/5">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0e14] text-white">
+        <div className="max-w-md w-full border border-white/10 p-8 text-center space-y-6 bg-white/[0.03] backdrop-blur-xl rounded-2xl">
+          <div className="inline-flex p-4 border border-white/10 text-sky-500 bg-white/5 rounded-full">
             <PhoneOff size={32} />
           </div>
           <div className="space-y-2">
-            <h2 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">Sesión no encontrada</h2>
-            <p className="label-micro text-slate-400">El enlace de la sesión ha expirado o es inválido.</p>
+            <h2 className="text-lg font-black uppercase tracking-tight text-white">Sesión no encontrada</h2>
+            <p className="text-xs text-slate-400">El enlace de la sesión ha expirado o es inválido.</p>
           </div>
           <button
             onClick={() => navigate('/classrooms')}
-            className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs uppercase tracking-wider transition-colors"
+            className="w-full py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors"
           >
             Volver a aulas
           </button>
@@ -1032,87 +815,57 @@ export default function LiveSessionPage() {
   }
 
   return (
-    <div ref={mainContainerRef} className="h-screen flex flex-col overflow-hidden bg-[#f7f6f3] dark:bg-[#0a0a0b] safe-area-inset-top">
+    <div ref={mainContainerRef} className="h-screen flex flex-col overflow-hidden bg-[#07090e] text-white safe-area-inset-top">
       {/* Top Header */}
-      <header className="border-b border-slate-900/10 dark:border-white/10 flex flex-col md:flex-row items-stretch bg-white dark:bg-white/[0.02] z-20">
-        <div className="p-3 md:p-4 md:px-8 border-r border-slate-900/10 dark:border-white/10 flex items-center justify-between md:justify-start gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className={`w-9 h-9 md:w-10 md:h-10 border flex items-center justify-center transition-colors ${isConnected ? 'border-emerald-200 text-emerald-600 bg-emerald-500/10' : 'border-amber-200 text-amber-600 bg-amber-500/10 animate-pulse'}`}>
-                <Radio className="h-4 w-4 md:h-5 md:w-5" />
-              </div>
-              {isConnected && <div className="absolute -top-0.5 -right-0.5 w-2 h-2 md:w-2.5 md:h-2.5 bg-emerald-500 border border-white dark:border-[#0a0a0b]" />}
+      <header className="border-b border-white/10 flex items-center justify-between px-6 py-3 bg-neutral-950/80 backdrop-blur-md z-20">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className={`w-10 h-10 border rounded-xl flex items-center justify-center transition-colors ${isConnected ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10' : 'border-amber-500/40 text-amber-400 bg-amber-500/10 animate-pulse'}`}>
+              <Radio className="h-5 w-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="chip px-1 py-0 text-[8px] md:text-[9px]">En vivo</span>
-                <span className={`text-[9px] md:label-micro font-bold ${isConnected ? 'text-emerald-500' : 'text-amber-500 animate-pulse'}`}>
-                  {isConnected ? 'Conectado' : 'Conectando'}
-                </span>
-              </div>
-              <h1 className="text-xs md:text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white line-clamp-1">
-                {session.title}
-              </h1>
-            </div>
+            {isConnected && <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border border-black rounded-full" />}
           </div>
-
-          <div className="flex md:hidden gap-1">
-            <button className="p-2 text-slate-400">
-              <Settings size={16} />
-            </button>
-            <button onClick={handleLeaveSession} className="p-2 text-red-500">
-              <PhoneOff size={16} />
-            </button>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-bold uppercase tracking-wider">
+                En vivo
+              </span>
+              <span className={`text-[10px] font-bold ${isConnected ? 'text-emerald-400' : 'text-amber-400 animate-pulse'}`}>
+                {isConnected ? 'Conectado' : 'Conectando'}
+              </span>
+            </div>
+            <h1 className="text-sm font-black uppercase tracking-tight text-white line-clamp-1">
+              {session.title}
+            </h1>
           </div>
         </div>
 
-        <div className="hidden md:flex flex-1 items-center px-6 gap-8 overflow-x-auto no-scrollbar py-2 md:py-0 border-t md:border-t-0 border-slate-900/10 dark:border-white/10">
-          <div className="flex flex-col">
-            <span className="label-micro text-slate-400">Aula</span>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{session.course_title || 'General'}</span>
-          </div>
+        {/* Informative Stats & End button */}
+        <div className="flex items-center gap-6">
           {timeLeftSeconds !== null && (
-            <div className="flex flex-col">
-              <span className="label-micro text-slate-400">Tiempo Restante</span>
-              <span className={`text-xs font-bold font-mono flex items-center gap-1 ${timeLeftSeconds < 300 ? 'text-red-500 animate-pulse' : 'text-slate-700 dark:text-slate-300'}`}>
+            <div className="hidden sm:flex flex-col items-end">
+              <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider">Tiempo Restante</span>
+              <span className={`text-xs font-bold font-mono ${timeLeftSeconds < 300 ? 'text-red-400 animate-pulse' : 'text-slate-200'}`}>
                 ⏱️ {String(Math.floor(timeLeftSeconds / 60)).padStart(2, '0')}:{String(timeLeftSeconds % 60).padStart(2, '0')}
               </span>
             </div>
           )}
-          <div className="flex flex-col">
-            <span className="label-micro text-slate-400">Red</span>
-            <span className="text-xs font-bold flex items-center gap-1">
-              {renderLocalNetworkIndicator()} WebRTC Activo
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="label-micro text-slate-400">Seguridad</span>
-            <span className="text-xs font-bold text-sky-500 flex items-center gap-1">
-              <Shield size={10} /> AES-256
-            </span>
-          </div>
-        </div>
 
-        <div className="hidden md:flex border-l border-slate-900/10 dark:border-white/10">
-          <button className="p-4 text-slate-400 hover:text-sky-500 transition-colors border-r border-slate-900/10 dark:border-white/10">
-            <Settings size={18} />
-          </button>
-
-          {(user?.role === 'teacher' || user?.role === 'admin' || (user as any)?.is_teacher || session.teacher === user?.user_id || session.teacher_id === user?.user_id) ? (
+          {isTeacherOrHost ? (
             <button
               onClick={() => {
                 if (window.confirm('¿Seguro que deseas finalizar la clase para todos los participantes?')) {
                   handleFinalizeSession('teacher_ended')
                 }
               }}
-              className="px-6 bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg flex items-center gap-2"
             >
               <PhoneOff size={14} /> Finalizar Clase
             </button>
           ) : (
             <button
               onClick={handleLeaveSession}
-              className="px-6 bg-slate-700 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all border border-white/10 flex items-center gap-2"
             >
               <PhoneOff size={14} /> Salir
             </button>
@@ -1123,118 +876,82 @@ export default function LiveSessionPage() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {/* Central Stage */}
-        <div className={`flex-1 flex flex-col overflow-hidden border-r border-slate-900/10 dark:border-white/10 relative transition-all duration-300 ${
-          showChat ? 'h-[40vh] md:h-full' : 'h-full'
+        <div className={`flex-1 flex flex-col overflow-hidden relative transition-all duration-300 ${
+          showChat ? 'h-[50vh] md:h-full' : 'h-full'
         }`}>
           {/* Toast Notification Banner */}
           {toastMessage && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white border border-sky-500/40 px-4 py-2 text-xs font-bold shadow-xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-neutral-900/90 text-white border border-sky-500/40 px-4 py-2 rounded-full text-xs font-bold shadow-2xl backdrop-blur-md flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
               <Sparkles className="w-4 h-4 text-sky-400" />
               <span>{toastMessage}</span>
             </div>
           )}
 
-          {/* Stage View (Spotlight/Sidebar layout if there's a spotlight target) */}
+          {/* Spotlight View */}
           {spotlightTarget ? (
             <div key="stage" ref={spotlightContainerRef} className="flex-1 flex flex-col lg:flex-row min-h-0 bg-black relative">
-              {/* Primary Stage Presenter */}
-              <div className="flex-1 relative overflow-hidden bg-slate-950 flex items-center justify-center">
+              <div className="flex-1 relative overflow-hidden bg-neutral-950 flex items-center justify-center p-2">
                 <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2">
-                  <span className="chip text-[9px] px-2 py-0.5 border border-sky-500/30 text-sky-400 bg-sky-500/20 flex items-center gap-1.5 backdrop-blur-md font-sans">
-                    {spotlightTarget.isScreen ? <MonitorUp size={12} /> : <Users size={12} />}
+                  <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-sky-400 border border-sky-500/30 flex items-center gap-1.5">
+                    {spotlightTarget.isScreen ? <MonitorUp size={14} /> : <Users size={14} />}
                     {spotlightTarget.isScreen ? 'Presentando: ' : 'Enfoque: '} {spotlightTarget.username}
                   </span>
-                  {pinnedUserId === spotlightTarget.user_id && (
-                    <span className="chip text-[9px] px-2 py-0.5 border border-amber-500/30 text-amber-400 bg-amber-500/20 flex items-center gap-1.5 backdrop-blur-md font-sans">
-                      📌 Fijado
-                    </span>
-                  )}
                 </div>
 
-                {/* Spotlight Overlay Toolbar */}
-                <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-                  {pinnedUserId === spotlightTarget.user_id ? (
-                    <button
-                      onClick={() => setPinnedUserId(null)}
-                      className="p-1.5 bg-black/60 hover:bg-black/80 text-amber-400 rounded-full border border-amber-500/20 transition-colors"
-                      title="Desfijar de la pantalla principal"
-                    >
-                      <Hand size={14} className="rotate-45" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setPinnedUserId(spotlightTarget.user_id)}
-                      className="p-1.5 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
-                      title="Fijar en la pantalla principal"
-                    >
-                      <Hand size={14} />
-                    </button>
-                  )}
-                  <button
-                    onClick={toggleSpotlightFullScreen}
-                    className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors"
-                    title={isSpotlightFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa de esta vista'}
-                  >
-                    {isSpotlightFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                  </button>
-                </div>
-
+                {/* Video Stage element */}
                 {spotlightTarget.isLocal ? (
                   spotlightTarget.isScreen ? (
                     <video
                       ref={(node) => {
-                        if (node && screenStreamRef.current) {
+                        if (node && screenStreamRef.current && node.srcObject !== screenStreamRef.current) {
                           node.srcObject = screenStreamRef.current
                         }
                       }}
                       autoPlay
                       playsInline
                       muted
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-contain rounded-2xl"
                     />
                   ) : (
                     <video
                       ref={(node) => {
-                        if (node && localStreamRef.current) {
+                        if (node && localStreamRef.current && node.srcObject !== localStreamRef.current) {
                           node.srcObject = localStreamRef.current
                         }
                       }}
                       autoPlay
                       playsInline
                       muted
-                      className={`w-full h-full object-cover ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
+                      className={`w-full h-full object-contain rounded-2xl ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
                     />
                   )
                 ) : (
                   <video
-                    ref={(el) => { remoteVideoRefs.current[spotlightTarget.user_id] = el }}
+                    ref={(el) => {
+                      if (el) {
+                        remoteVideoRefs.current[spotlightTarget.user_id] = el
+                        const stream = remoteStreams[spotlightTarget.user_id]
+                        if (stream && el.srcObject !== stream) {
+                          el.srcObject = stream
+                        }
+                      }
+                    }}
                     autoPlay
                     playsInline
-                    className={spotlightTarget.isScreen ? "w-full h-full object-contain" : "w-full h-full object-cover"}
+                    className="w-full h-full object-contain rounded-2xl"
                   />
                 )}
               </div>
 
-              {/* Cameras Sidebar / Bottom Strip */}
-              <div className="h-28 md:h-36 lg:h-full lg:w-60 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex lg:flex-col items-center p-2 gap-2 overflow-x-auto lg:overflow-y-auto no-scrollbar">
+              {/* Thumbnails Sidebar */}
+              <div className="h-28 md:h-36 lg:h-full lg:w-64 bg-neutral-950 border-t lg:border-t-0 lg:border-l border-white/10 flex lg:flex-col items-center p-3 gap-3 overflow-x-auto lg:overflow-y-auto">
                 {/* Local Camera Thumbnail */}
                 {spotlightTarget.user_id !== user?.user_id && (
-                  <div className="relative w-36 md:w-48 lg:w-full h-full lg:h-32 bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800 group">
-                    <div className="absolute top-2 left-2 z-10 font-sans flex items-center gap-1">
-                      <span className="text-[8px] px-1 bg-black/60 text-white rounded">Tú</span>
-                    </div>
-                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => setPinnedUserId(user!.user_id)}
-                        className="p-1 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
-                        title="Fijar mi cámara"
-                      >
-                        <Hand size={10} />
-                      </button>
-                    </div>
+                  <div className="relative w-44 lg:w-full h-full lg:h-36 bg-neutral-900 rounded-xl overflow-hidden flex-shrink-0 border border-white/10 group">
+                    <span className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-black/75 text-white text-[10px] font-semibold rounded-md backdrop-blur-md">Tú</span>
                     <video
                       ref={(node) => {
-                        if (node && localStreamRef.current) {
+                        if (node && localStreamRef.current && node.srcObject !== localStreamRef.current) {
                           node.srcObject = localStreamRef.current
                         }
                       }}
@@ -1243,99 +960,60 @@ export default function LiveSessionPage() {
                       muted
                       className={`w-full h-full object-cover ${videoEnabled ? 'opacity-100' : 'opacity-0'}`}
                     />
-                    {!videoEnabled && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                        <VideoOff size={16} className="text-white/40" />
-                      </div>
-                    )}
                   </div>
                 )}
 
-                {/* Remote Camera Thumbnails */}
+                {/* Remote Thumbnails */}
                 {participants.filter(p => p.user_id !== spotlightTarget.user_id).map((part) => (
-                  <div key={part.user_id} className="relative w-36 md:w-48 lg:w-full h-full lg:h-32 bg-black rounded overflow-hidden flex-shrink-0 border border-slate-800 group">
-                    <div className="absolute top-2 left-2 z-10 truncate max-w-[70%] font-sans flex items-center gap-1.5">
-                      <span className="text-[8px] px-1 bg-black/60 text-white rounded truncate">{part.username}</span>
-                      {renderNetworkIndicator(part.user_id)}
-                    </div>
-                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => setPinnedUserId(part.user_id)}
-                        className="p-1 bg-black/60 hover:bg-black/80 text-white hover:text-amber-400 rounded-full transition-colors"
-                        title="Fijar participante"
-                      >
-                        <Hand size={10} />
-                      </button>
-                    </div>
+                  <div key={part.user_id} className="relative w-44 lg:w-full h-full lg:h-36 bg-neutral-900 rounded-xl overflow-hidden flex-shrink-0 border border-white/10 group">
+                    <span className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-black/75 text-white text-[10px] font-semibold rounded-md backdrop-blur-md truncate max-w-[80%]">{part.username}</span>
                     <video
-                      ref={(el) => { remoteVideoRefs.current[part.user_id] = el }}
+                      ref={(el) => {
+                        if (el) {
+                          remoteVideoRefs.current[part.user_id] = el
+                          const stream = remoteStreams[part.user_id]
+                          if (stream && el.srcObject !== stream) {
+                            el.srcObject = stream
+                          }
+                        }
+                      }}
                       autoPlay
                       playsInline
                       className="w-full h-full object-cover"
                     />
-                    {!remoteStreams[part.user_id] && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-                        <Loader2 className="w-4 h-4 text-sky-500 animate-spin" />
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            /* Zoom-Style Dynamic Grid View */
-            <div key="grid" className="flex-1 p-3 md:p-6 overflow-y-auto bg-[#07090e] flex items-center justify-center min-h-0">
-              <div className={`w-full max-w-7xl h-full flex flex-wrap items-center justify-center gap-3 md:gap-4 content-center overflow-y-auto ${
-                participants.length <= 1
-                  ? 'max-w-4xl max-h-[75vh]'
-                  : participants.length === 2
-                    ? 'max-w-5xl'
-                    : 'max-w-7xl'
-              }`}>
-                {/* Primary Feed: Local User */}
+            /* Adaptative Responsive Camera Grid Layout (Uno al lado del otro, se acomodan hacia abajo) */
+            <div key="grid" className="flex-1 p-4 md:p-6 overflow-y-auto bg-[#07090e] min-h-0">
+              <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-fr items-center justify-center overflow-y-auto">
+                {/* Local User Camera Card */}
                 <div
-                  className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border transition-all duration-300 shadow-2xl flex items-center justify-center ${
-                    micEnabled ? 'border-white/10' : 'border-red-500/30'
-                  } ${
-                    participants.length <= 1
-                      ? 'w-full aspect-video max-h-[70vh]'
-                      : participants.length === 2
-                        ? 'w-full md:w-[calc(50%-0.5rem)] aspect-video'
-                        : participants.length <= 4
-                          ? 'w-[calc(50%-0.5rem)] aspect-video'
-                          : 'w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.75rem)] lg:w-[calc(25%-0.75rem)] aspect-video'
+                  className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border transition-all duration-300 shadow-2xl flex items-center justify-center w-full h-full min-h-[220px] aspect-video ${
+                    micEnabled ? 'border-white/10' : 'border-red-500/40'
                   }`}
                 >
-                  {/* Participant Name Badge */}
-                  <div className="absolute bottom-3 left-3 z-20 pointer-events-none flex items-center gap-2">
-                    <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-white flex items-center gap-1.5 border border-white/10">
+                  {/* Name Tag */}
+                  <div className="absolute bottom-3 left-3 z-20 pointer-events-none">
+                    <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-white flex items-center gap-2 border border-white/10">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       Tú ({user?.username})
                     </span>
                   </div>
 
-                  {/* Pin / Controls Overlay */}
-                  <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                    <button
-                      onClick={() => setPinnedUserId(user!.user_id)}
-                      className="p-2 bg-black/75 hover:bg-sky-600 text-white rounded-full transition-all border border-white/20"
-                      title="Fijar en pantalla principal"
-                    >
-                      <Hand size={14} />
-                    </button>
-                  </div>
-
-                  {/* Mic Status Badge */}
+                  {/* Mic Muted Badge */}
                   {!micEnabled && (
-                    <div className="absolute top-3 left-3 z-20 bg-red-600/90 text-white p-1.5 rounded-full shadow-lg border border-red-400/40">
+                    <div className="absolute top-3 left-3 z-20 bg-red-600 text-white p-1.5 rounded-full shadow-lg">
                       <MicOff size={14} />
                     </div>
                   )}
 
-                  {/* Video Stream Element */}
+                  {/* Local Video Stream */}
                   <video
                     ref={(node) => {
-                      if (node && localStreamRef.current) {
+                      if (node && localStreamRef.current && node.srcObject !== localStreamRef.current) {
                         node.srcObject = localStreamRef.current
                       }
                     }}
@@ -1347,53 +1025,43 @@ export default function LiveSessionPage() {
                     }`}
                   />
 
-                  {/* Camera Disabled Fallback */}
+                  {/* Camera Off Avatar Fallback */}
                   {!videoEnabled && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950 rounded-2xl p-4">
-                      <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-sky-500/20 border-2 border-sky-500/40 flex items-center justify-center text-sky-400 font-bold text-xl md:text-2xl shadow-lg mb-2">
+                      <div className="w-20 h-20 rounded-full bg-sky-500/20 border-2 border-sky-500/40 flex items-center justify-center text-sky-400 font-bold text-2xl shadow-xl mb-2">
                         {user?.username?.slice(0, 2).toUpperCase() || 'TU'}
                       </div>
-                      <span className="text-xs font-semibold text-neutral-300">Cámara desactivada</span>
+                      <span className="text-xs font-semibold text-neutral-400">Cámara desactivada</span>
                     </div>
                   )}
                 </div>
 
-                {/* Remote Participants */}
+                {/* Remote Participant Camera Cards */}
                 {participants.filter(p => p.user_id !== user?.user_id).map((part) => (
                   <div
                     key={part.user_id}
-                    className={`relative group overflow-hidden bg-neutral-950 rounded-2xl border border-white/10 transition-all duration-300 shadow-2xl flex items-center justify-center ${
-                      participants.length <= 1
-                        ? 'w-full aspect-video max-h-[70vh]'
-                        : participants.length === 2
-                          ? 'w-full md:w-[calc(50%-0.5rem)] aspect-video'
-                          : participants.length <= 4
-                            ? 'w-[calc(50%-0.5rem)] aspect-video'
-                            : 'w-[calc(50%-0.5rem)] md:w-[calc(33.33%-0.75rem)] lg:w-[calc(25%-0.75rem)] aspect-video'
-                    }`}
+                    className="relative group overflow-hidden bg-neutral-950 rounded-2xl border border-white/10 transition-all duration-300 shadow-2xl flex items-center justify-center w-full h-full min-h-[220px] aspect-video"
                   >
-                    {/* Participant Name Badge */}
-                    <div className="absolute bottom-3 left-3 z-20 pointer-events-none flex items-center gap-2">
-                      <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-white flex items-center gap-1.5 border border-white/10">
+                    {/* Name Tag */}
+                    <div className="absolute bottom-3 left-3 z-20 pointer-events-none">
+                      <span className="px-3 py-1 bg-black/75 backdrop-blur-md rounded-full text-xs font-semibold text-white flex items-center gap-2 border border-white/10">
                         {part.username} {part.is_teacher && <span className="text-sky-400 text-[10px] uppercase font-bold">(Profesor)</span>}
                         {renderNetworkIndicator(part.user_id)}
                       </span>
                     </div>
 
-                    {/* Pin Controls Overlay */}
-                    <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                      <button
-                        onClick={() => setPinnedUserId(part.user_id)}
-                        className="p-2 bg-black/75 hover:bg-sky-600 text-white rounded-full transition-all border border-white/20"
-                        title="Fijar participante"
-                      >
-                        <Hand size={14} />
-                      </button>
-                    </div>
-
-                    {/* Video Stream Element */}
+                    {/* Remote Video Stream */}
                     <video
-                      ref={(el) => { remoteVideoRefs.current[part.user_id] = el }}
+                      ref={(el) => {
+                        if (el) {
+                          remoteVideoRefs.current[part.user_id] = el
+                          const stream = remoteStreams[part.user_id]
+                          if (stream && el.srcObject !== stream) {
+                            el.srcObject = stream
+                            el.play().catch(e => console.debug('Play remote:', e))
+                          }
+                        }
+                      }}
                       autoPlay
                       playsInline
                       className="w-full h-full object-cover rounded-2xl"
@@ -1402,7 +1070,7 @@ export default function LiveSessionPage() {
                     {/* Stream Loading Fallback */}
                     {!remoteStreams[part.user_id] && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950 rounded-2xl p-4">
-                        <div className="w-14 h-14 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-neutral-400 font-bold text-lg mb-3">
+                        <div className="w-16 h-16 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-neutral-300 font-bold text-xl mb-3 shadow-lg">
                           {part.username.slice(0, 2).toUpperCase()}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-sky-400 font-medium">
@@ -1417,273 +1085,163 @@ export default function LiveSessionPage() {
             </div>
           )}
 
-          {/* Action Control Bar */}
-          <div className="p-3 md:p-4 border-t border-slate-900/10 dark:border-white/10 flex items-center justify-between bg-white dark:bg-white/[0.02] z-20">
-            <div className="flex gap-1 md:gap-2">
-              <button className="h-8 w-8 md:h-9 md:w-9 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-slate-400 hover:text-sky-500 transition-colors bg-white dark:bg-transparent">
-                <Hand size={14} />
-              </button>
+          {/* Action Control Bar Floating / Fixed at Bottom */}
+          <div className="p-4 border-t border-white/10 flex items-center justify-between bg-neutral-950/90 backdrop-blur-xl z-20">
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleToggleScreenShare}
-                className={`h-8 w-8 md:h-9 md:w-9 border flex items-center justify-center transition-colors relative ${
+                className={`p-3 rounded-xl border flex items-center gap-2 text-xs font-bold transition-all ${
                   isScreenSharing
-                    ? 'bg-sky-500 border-sky-500 text-white'
-                    : (isTeacherOrHost || allowedToShareScreen)
-                      ? 'border-slate-900/10 dark:border-white/10 text-slate-400 hover:text-sky-500 bg-white dark:bg-transparent'
-                      : 'border-amber-500/30 text-amber-500/70 bg-amber-500/5 hover:border-amber-500'
+                    ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
+                    : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white hover:border-sky-500/50'
                 }`}
-                title={
-                  isTeacherOrHost || allowedToShareScreen
-                    ? (isScreenSharing ? 'Detener compartir pantalla' : 'Compartir pantalla')
-                    : 'Solicitar permiso para compartir pantalla'
-                }
+                title="Compartir pantalla"
               >
-                <MonitorUp size={14} />
-                {!isTeacherOrHost && !allowedToShareScreen && (
-                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full" />
-                )}
+                <MonitorUp size={18} />
+                <span className="hidden sm:inline">{isScreenSharing ? 'Compartiendo' : 'Compartir Pantalla'}</span>
               </button>
             </div>
 
-            <div className="flex items-center gap-1.5 md:gap-3">
+            {/* Mic and Camera Controls */}
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setMicEnabled(!micEnabled)}
-                className={`h-9 md:h-11 px-3 md:px-4 border flex items-center gap-2 font-bold text-[10px] md:text-xs transition-colors ${
+                className={`p-3.5 rounded-full border flex items-center justify-center transition-all shadow-xl ${
                   micEnabled
-                    ? 'bg-white dark:bg-transparent border-slate-900/10 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-sky-500/30 hover:text-sky-500'
-                    : 'bg-red-600 border-red-600 text-white'
+                    ? 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700'
+                    : 'bg-red-600 border-red-600 text-white shadow-red-600/30'
                 }`}
+                title={micEnabled ? 'Silenciar micrófono' : 'Activar micrófono'}
               >
-                {micEnabled ? <Mic size={14} /> : <MicOff size={14} />}
-                <span className="hidden xs:inline">{micEnabled ? 'MUTE' : 'UNMUTE'}</span>
+                {micEnabled ? <Mic size={20} /> : <MicOff size={20} />}
               </button>
 
               <button
                 onClick={() => setVideoEnabled(!videoEnabled)}
-                className={`h-9 md:h-11 px-3 md:px-4 border flex items-center gap-2 font-bold text-[10px] md:text-xs transition-colors ${
+                className={`p-3.5 rounded-full border flex items-center justify-center transition-all shadow-xl ${
                   videoEnabled
-                    ? 'bg-white dark:bg-transparent border-slate-900/10 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-sky-500/30 hover:text-sky-500'
-                    : 'bg-red-600 border-red-600 text-white'
+                    ? 'bg-neutral-800 border-white/10 text-white hover:bg-neutral-700'
+                    : 'bg-red-600 border-red-600 text-white shadow-red-600/30'
                 }`}
+                title={videoEnabled ? 'Desactivar cámara' : 'Activar cámara'}
               >
-                {videoEnabled ? <Radio size={14} /> : <VideoOff size={14} />}
-                <span className="hidden xs:inline">{videoEnabled ? 'CAM OFF' : 'CAM ON'}</span>
+                {videoEnabled ? <Radio size={20} /> : <VideoOff size={20} />}
               </button>
             </div>
 
-            <div className="flex gap-1 md:gap-2">
+            {/* View & Chat Options */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode(viewMode === 'grid' ? 'speaker' : 'grid')}
-                className={`h-8 w-8 md:h-9 md:w-9 border flex items-center justify-center transition-colors bg-white dark:bg-transparent ${
+                className={`p-3 rounded-xl border transition-all ${
                   viewMode === 'speaker'
                     ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'border-slate-900/10 dark:border-white/10 text-slate-400 hover:text-sky-500'
+                    : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white'
                 }`}
-                title={viewMode === 'speaker' ? 'Vista de Enfoque Activa (Clic para Mosaico)' : 'Cambiar a Vista de Enfoque (Speaker)'}
+                title={viewMode === 'speaker' ? 'Vista Mosaico' : 'Vista Enfoque'}
               >
-                {viewMode === 'speaker' ? <Radio size={14} /> : <Users size={14} />}
+                <Users size={18} />
               </button>
 
               <button
                 onClick={() => setShowChat(!showChat)}
-                className={`h-8 w-8 md:h-9 md:w-9 border flex items-center justify-center transition-colors bg-white dark:bg-transparent ${
+                className={`p-3 rounded-xl border transition-all ${
                   showChat
                     ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'border-slate-900/10 dark:border-white/10 text-slate-400 hover:text-sky-500'
+                    : 'border-white/10 bg-neutral-900 text-slate-300 hover:text-white'
                 }`}
               >
-                <div className="relative">
-                  <MessageSquare size={14} />
-                  {messages.length > 0 && !showChat && <div className="absolute -top-1 -right-1 w-2 h-2 bg-sky-500 rounded-full" />}
-                </div>
+                <MessageSquare size={18} />
               </button>
+
               <button
                 onClick={toggleFullScreen}
-                className={`h-8 w-8 md:h-9 md:w-9 border flex items-center justify-center transition-colors bg-white dark:bg-transparent ${
-                  isFullScreen
-                    ? 'bg-sky-500 border-sky-500 text-white'
-                    : 'border-slate-900/10 dark:border-white/10 text-slate-400 hover:text-sky-500'
-                }`}
-                title={isFullScreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                className="p-3 rounded-xl border border-white/10 bg-neutral-900 text-slate-300 hover:text-white transition-all"
+                title="Pantalla Completa"
               >
-                {isFullScreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
             </div>
           </div>
         </div>
 
-        {/* Sidebar Overlay for Mobile - only backdrop if needed, but here we want to allow clicking stage to close */}
+        {/* Chat / Sidebar Drawer */}
         {showChat && (
-          <div
-            className="fixed inset-0 bg-black/20 dark:bg-black/40 z-30 md:hidden"
-            onClick={() => setShowChat(false)}
-            style={{ height: '40vh' }}
-          />
-        )}
+          <div className="w-full md:w-80 h-[50vh] md:h-full bg-neutral-950 border-t md:border-t-0 md:border-l border-white/10 flex flex-col z-30">
+            <div className="flex items-center border-b border-white/10">
+              <button
+                onClick={() => setSidebarTab('chat')}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  sidebarTab === 'chat' ? 'text-sky-400 border-b-2 border-sky-400' : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                Chat de Clase
+              </button>
+              <button
+                onClick={() => setSidebarTab('participants')}
+                className={`flex-1 py-3 text-xs font-bold uppercase tracking-wider transition-colors ${
+                  sidebarTab === 'participants' ? 'text-sky-400 border-b-2 border-sky-400' : 'text-neutral-400 hover:text-white'
+                }`}
+              >
+                Participantes ({participants.length + 1})
+              </button>
+            </div>
 
-        {/* Sidebar */}
-        <aside className={`
-          fixed md:relative z-40 bg-white dark:bg-[#0a0a0b] border-l border-slate-900/10 dark:border-white/10 flex flex-col transition-all duration-300
-          inset-x-0 bottom-0 h-[60vh] md:h-full md:inset-auto md:w-80 md:translate-y-0
-          ${showChat ? 'translate-y-0' : 'translate-y-full md:hidden md:translate-x-full'}
-        `}>
-          {/* Sidebar Tabs */}
-          <div className="flex border-b border-slate-900/10 dark:border-white/10 sticky top-0 bg-white dark:bg-[#0a0a0b] z-10">
-            <button
-              onClick={() => setSidebarTab('chat')}
-              className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${sidebarTab === 'chat' ? 'text-sky-500 border-b-2 border-sky-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-            >
-              <MessageSquare size={14} /> Chat
-            </button>
-            <button
-              onClick={() => setSidebarTab('participants')}
-              className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${sidebarTab === 'participants' ? 'text-sky-500 border-b-2 border-sky-500' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'}`}
-            >
-              <Users size={14} /> Miembros
-              {permissionRequests.length > 0 && (
-                <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
-              )}
-            </button>
-            <button
-              onClick={() => setShowChat(false)}
-              className="lg:hidden p-4 text-slate-400 hover:text-slate-600"
-            >
-              <ArrowRight size={18} />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-hidden flex flex-col">
             {sidebarTab === 'chat' ? (
               <>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages.map((msg, idx) => (
-                    <div key={idx} className={`flex flex-col ${msg.sender === 'Tú' ? 'items-end' : 'items-start'}`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{msg.sender}</span>
-                        <span className="text-[9px] text-slate-300">{msg.time}</span>
-                      </div>
-                      <div className={`px-3 py-2 text-xs font-medium max-w-[90%] ${msg.sender === 'Tú' ? 'bg-sky-500 text-white rounded-l-lg rounded-tr-lg' : 'bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 rounded-r-lg rounded-tl-lg'}`}>
-                        {msg.text}
-                      </div>
+                <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                  {messages.length === 0 ? (
+                    <div className="text-center py-12 text-neutral-500 text-xs">
+                      No hay mensajes en esta clase. ¡Sé el primero en saludar!
                     </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                  {messages.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
-                      <div className="w-12 h-12 border border-slate-900/5 dark:border-white/5 flex items-center justify-center text-slate-200 dark:text-slate-800">
-                        <MessageSquare size={24} />
+                  ) : (
+                    messages.map((m, idx) => (
+                      <div key={idx} className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-bold text-sky-400">{m.sender}</span>
+                          <span className="text-neutral-500">{m.time}</span>
+                        </div>
+                        <p className="text-xs text-neutral-200 bg-neutral-900 p-2.5 rounded-xl border border-white/5 break-words">
+                          {m.text}
+                        </p>
                       </div>
-                      <p className="label-micro text-slate-400 uppercase tracking-widest">No hay mensajes aún</p>
-                    </div>
+                    ))
                   )}
+                  <div ref={chatEndRef} />
                 </div>
 
-                <div className="p-4 border-t border-slate-900/10 dark:border-white/10 bg-slate-50 dark:bg-white/[0.01]">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder="Escribe un mensaje..."
-                      className="flex-1 bg-white dark:bg-white/5 border border-slate-900/10 dark:border-white/10 px-3 py-2 text-xs outline-none focus:border-sky-500 transition-colors dark:text-white"
-                    />
-                    <button
-                      onClick={handleSendMessage}
-                      className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-3 py-2 hover:bg-sky-500 dark:hover:bg-sky-500 hover:text-white transition-colors"
-                    >
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
-                </div>
+                <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Escribe un mensaje..."
+                    className="flex-1 bg-neutral-900 border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-sky-500 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-white font-bold text-xs rounded-xl transition-colors"
+                  >
+                    Enviar
+                  </button>
+                </form>
               </>
             ) : (
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {/* Current user */}
-                <div className="p-3 border border-slate-900/10 dark:border-white/10 flex items-center justify-between bg-slate-50 dark:bg-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-xs font-bold text-sky-500 bg-white dark:bg-transparent uppercase">
-                      {user?.username?.slice(0, 2)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase">{user?.username}</p>
-                      <p className="label-micro mt-0.5 font-bold uppercase tracking-tighter text-sky-500">
-                        {isTeacherOrHost ? 'ANFITRIÓN (TÚ)' : 'PARTICIPANTE (TÚ)'}
-                      </p>
-                    </div>
-                  </div>
+              <div className="flex-1 p-4 overflow-y-auto space-y-2">
+                <div className="flex items-center justify-between p-2.5 bg-sky-500/10 border border-sky-500/20 rounded-xl text-xs">
+                  <span className="font-bold text-sky-400">Tú ({user?.username})</span>
+                  <span className="text-[10px] text-sky-500 font-bold uppercase">En vivo</span>
                 </div>
-
-                {/* Other participants */}
-                {participants.filter(p => p.user_id !== user?.user_id).map((part, idx) => {
-                  const isPending = permissionRequests.some(r => r.user_id === part.user_id)
-                  const isPermitted = permittedUsers[part.user_id]
-
-                  return (
-                    <div key={idx} className="p-3 border border-slate-900/10 dark:border-white/10 flex items-center justify-between hover:border-sky-500/30 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 border border-slate-900/10 dark:border-white/10 flex items-center justify-center text-xs font-bold text-slate-400 uppercase">
-                          {part.username.slice(0, 2)}
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white truncate uppercase">{part.username}</p>
-                          <p className="label-micro text-slate-400 mt-0.5 uppercase">{part.is_teacher ? 'Profesor' : 'Estudiante'}</p>
-                        </div>
-                      </div>
-
-                      {isTeacherOrHost && !part.is_teacher && (
-                        <div>
-                          {isPending ? (
-                            <button
-                              onClick={() => handleGrantScreenShare(part.user_id, part.username, true)}
-                              className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold text-[9px] uppercase tracking-wider animate-pulse flex items-center gap-1"
-                            >
-                              <MonitorUp size={10} /> Aprobar
-                            </button>
-                          ) : isPermitted ? (
-                            <button
-                              onClick={() => handleGrantScreenShare(part.user_id, part.username, false)}
-                              className="px-2 py-1 bg-emerald-600 hover:bg-red-600 text-white font-bold text-[9px] uppercase tracking-wider flex items-center gap-1 transition-colors"
-                              title="Haz clic para revocar permiso"
-                            >
-                              <MonitorUp size={10} /> Concedido
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => handleGrantScreenShare(part.user_id, part.username, true)}
-                              className="px-2 py-1 border border-slate-900/10 dark:border-white/10 hover:border-sky-500 text-slate-400 hover:text-sky-500 font-bold text-[9px] uppercase tracking-wider flex items-center gap-1 transition-colors"
-                            >
-                              <MonitorUp size={10} /> Permitir
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-
-                {participants.length === 0 && (
-                  <div className="p-6 text-center border border-dashed border-slate-900/10 dark:border-white/10 space-y-2">
-                    <Sparkles size={16} className="text-sky-500 opacity-20 mx-auto" />
-                    <p className="label-micro text-slate-400 uppercase tracking-widest">Esperando miembros...</p>
+                {participants.map((p) => (
+                  <div key={p.user_id} className="flex items-center justify-between p-2.5 bg-neutral-900 border border-white/5 rounded-xl text-xs">
+                    <span className="font-medium text-neutral-200">{p.username}</span>
+                    {p.is_teacher && <span className="text-[10px] text-sky-400 font-bold uppercase">Profesor</span>}
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
-
-          {/* Technical Console panel */}
-          <div className="p-4 border-t border-slate-900/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.01]">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Live Engine Status</span>
-            </div>
-            <div className="space-y-1 font-mono text-[9px] text-slate-400">
-              <div className="flex justify-between"><span>Session ID</span> <span>#{id?.slice(-6) || 'N/A'}</span></div>
-              <div className="flex justify-between"><span>Peers</span> <span>{Object.keys(remoteStreams).length} active</span></div>
-            </div>
-          </div>
-        </aside>
+        )}
       </div>
     </div>
   )

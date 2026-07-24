@@ -54,18 +54,20 @@ export function AnimatedLetters({
 
   return (
     <motion.span
-      className={`inline-flex flex-wrap ${className}`}
+      translate="no"
+      className={`inline-flex flex-wrap notranslate ${className}`}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {words.map((word, wordIdx) => (
-        <span key={wordIdx} className="inline-block whitespace-nowrap mr-[0.25em]">
+        <span key={wordIdx} translate="no" className="inline-block whitespace-nowrap mr-[0.25em] notranslate">
           {word.split('').map((char) => {
             const currentIndex = letterGlobalIndex++
             return (
               <motion.span
                 key={currentIndex}
+                translate="no"
                 variants={childVariants}
                 whileHover={{
                   scale: 1.35,
@@ -83,7 +85,7 @@ export function AnimatedLetters({
                 onClick={() => {
                   soundFx.playJumpSound()
                 }}
-                className={`inline-block cursor-pointer select-none transition-colors ${letterClassName}`}
+                className={`inline-block cursor-pointer select-none transition-colors notranslate ${letterClassName}`}
               >
                 {char}
               </motion.span>

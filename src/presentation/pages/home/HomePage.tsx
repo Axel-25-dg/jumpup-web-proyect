@@ -157,18 +157,19 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             onMouseEnter={() => soundFx.playPopSound()}
-            className="inline-flex items-center gap-2 px-4 py-2 border border-white/25 bg-white/5 backdrop-blur-md cursor-pointer hover:border-sky-400/60 transition-colors"
+            translate="no"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-white/25 bg-white/5 backdrop-blur-md cursor-pointer hover:border-sky-400/60 transition-colors notranslate"
           >
             <Sparkles className="h-3.5 w-3.5 text-sky-400" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-100">
+            <span translate="no" className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-100 notranslate">
               La revolución del aprendizaje de idiomas
             </span>
           </motion.div>
 
-          <h1 className="mt-8 text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[0.92] text-white text-balance">
+          <h1 translate="no" className="mt-8 text-5xl sm:text-7xl md:text-8xl font-black tracking-tight leading-[0.92] text-white text-balance notranslate">
             <AnimatedLetters text="Salta al siguiente" letterClassName="hover:text-sky-300" />
             <br />
-            <span className="italic font-light text-sky-400">
+            <span translate="no" className="italic font-light text-sky-400 notranslate">
               <AnimatedLetters text="nivel de fluidez." letterClassName="hover:text-white" />
             </span>
           </h1>
