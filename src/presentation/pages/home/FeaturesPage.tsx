@@ -155,7 +155,7 @@ export default function FeaturesPage() {
 
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
               <a
-                href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/latest/download/app-release.apk"
+                href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/latest/download/app-jumpup.apk"
                 target="_blank"
                 rel="noopener noreferrer"
                 onMouseEnter={() => soundFx.playPopSound()}
@@ -353,7 +353,7 @@ export default function FeaturesPage() {
           </p>
           <div className="mt-2 flex flex-col gap-3 sm:flex-row">
             <a
-              href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/latest/download/app-release.apk"
+              href="https://github.com/Axel-25-dg/jumpup_idiomas_movil/releases/latest/download/app-jumpup.apk"
               target="_blank"
               rel="noopener noreferrer"
               onMouseEnter={() => soundFx.playPopSound()}
