@@ -22,7 +22,7 @@ const TEAM_MEMBERS = [
       'https://guaman-idiomas-ute.online/media/media/2476b91e-a692-4f/91a455be53974ca79124c1ff8d4f3645.png',
     desc: 'Arquitecturas escalables, seguridad y lógica de integración backend. Apasionado por sistemas distribuidos y DevOps.',
     social: {
-      github: 'https://github.com',
+      github: 'https://github.com/AlexMa77',
       linkedin: 'https://linkedin.com/in/tu-perfil',
       instagram: 'https://instagram.com',
     },
@@ -33,12 +33,12 @@ const TEAM_MEMBERS = [
     name: 'Alexander Guamán',
     role: 'Frontend Lead',
     image:
-      'https://guaman-idiomas-ute.online/media/media/f9b6a15d-ca88-46/73d1fc0767f448189a9e448df8356093.png',
+      'https://guaman-idiomas-ute.online/media/media/10b79474-55d6-49/18ec1e745da84844b04ede6fac5c92d2.jpeg',
     desc: 'Experto en UI/UX, animaciones complejas y diseño de interfaces reactivas. Especialista en motion design y performance.',
     social: {
-      github: 'https://github.com',
-      linkedin: 'https://linkedin.com/in/tu-perfil',
-      instagram: 'https://instagram.com',
+      github: 'https://github.com/Axel-25-dg',
+      linkedin: 'https://www.linkedin.com/in/alexander-guam%C3%A1n-517b65353/',
+      instagram: 'https://www.instagram.com/life_4lex/',
     },
     skills: ['UI/UX Senior', 'Framer Motion', 'Design Systems'],
     stats: { projects: 18, years: 8 },
@@ -47,12 +47,12 @@ const TEAM_MEMBERS = [
     name: 'Ariel Paucar',
     role: 'Backend Engineer',
     image:
-      'https://static.vecteezy.com/system/resources/thumbnails/041/641/689/small/3d-character-people-close-up-portrait-smiling-nice-3d-avartar-or-icon-png.png',
+      'https://guaman-idiomas-ute.online/media/media/69a8b2ba-a68a-4f/fcf431cebe014bccbe42e5a7b98e88e8.jpeg',
     desc: 'Especialista en procesamiento de lenguaje natural y sistemas IA. Constructor de pipelines de ML a escala.',
     social: {
-      github: 'https://github.com',
-      linkedin: 'https://linkedin.com/in/tu-perfil',
-      instagram: 'https://instagram.com',
+      github: 'https://github.com/Arielp22',
+      linkedin: 'https://www.linkedin.com/in/ariel-paucar-428b482b6?utm_source=share_via&utm_content=profile&utm_medium=member_io',
+      instagram: 'https://www.instagram.com/edwinariel22?igsh=eWFvcXBjOGt1czZn&utm_source=qr&wa_status_inline=true',
     },
     skills: ['PhD en IA', 'NLP', 'MLOps'],
     stats: { projects: 12, years: 12 },
