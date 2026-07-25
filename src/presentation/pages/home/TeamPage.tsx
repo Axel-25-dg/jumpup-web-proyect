@@ -19,7 +19,7 @@ const TEAM_MEMBERS = [
     name: 'Alex Macías',
     role: 'Fullstack Developer',
     image:
-      'https://guaman-idiomas-ute.online/media/media/2476b91e-a692-4f/91a455be53974ca79124c1ff8d4f3645.png',
+      'https://guaman-idiomas-ute.online/media/media/42e9d5d6-78f7-4f/65b9d04eeee8451a935b3a9d7284d191.jpeg',
     desc: 'Arquitecturas escalables, seguridad y lógica de integración backend. Apasionado por sistemas distribuidos y DevOps.',
     social: {
       github: 'https://github.com/AlexMa77',
